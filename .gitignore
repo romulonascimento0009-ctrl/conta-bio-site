@@ -1,0 +1,34 @@
+# dependências
+node_modules/
+
+# build
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# testes
+coverage/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ambiente e segredos
+.env
+.env.*
+!.env.example
+
+# dados locais
+.data/
+storage/
+
+# Claude Code (configuração pessoal)
+.claude/settings.local.json
+
+# sistema / editor
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
