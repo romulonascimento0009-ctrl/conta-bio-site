@@ -54,6 +54,8 @@ Formato: decisão · motivo · alternativas.
 
 **P6 — Domínio principal** da plataforma (Bio Sites em `dominio.com/empresa`). Necessário antes da produção.
 
+**P12 — Nota do Google automática.** Exibir nota e número de avaliações exige a API do Google Places (chave, custo por consulta, regras de exibição) ou digitação manual. MVP: manual. Decidir antes da Fase 6 se vale automatizar (com cache diário).
+
 **P11 — Publicação por clientes.** Na Fase 4: o cliente publica direto ou o operador aprova? Decidir antes da Fase 4.
 
 **P7 — Modelo de IA.** Recomendação: API da Claude com Sonnet 5.5 (`claude-sonnet-5-5`) para geração; avaliar Haiku 5.5 para textos curtos. Confirmar preços carregando a skill `claude-api` na Fase 4. Requer conta e chave de API.
