@@ -113,6 +113,12 @@
   /* Ordem: cartões (Instagram, Google, ações) → Wi-Fi → horários → galeria → localização por último */
   .scroll { display: flex; flex-direction: column; }
   .scroll > *, .links .card { flex-shrink: 0; }
+
+  /* Ícones com a cor da marca (mesmo formato de cartão) */
+  .card .ico.brand-ig, .social a.brand-ig { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285aeb 90%); color: #fff; border: 0; }
+  .card .ico.brand-wa, .social a.brand-wa { background: #25d366; color: #fff; border: 0; }
+  .card .ico.brand-google, .social a.brand-google { background: #fff; border: 0; }
+  .card .ico.brand-google svg { width: 24px; height: 24px; }
   .links { display: contents; }
   .links .card { margin: 0 16px 12px; }
   .links .card:first-child { margin-top: 24px; }
@@ -161,6 +167,7 @@
   <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></symbol>
   <symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 16a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19.5" r="1.3" fill="currentColor"/></symbol>
   <symbol id="i-qr" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm8-2h3v3h-3zm5 0h3v3h-3zm-5 5h3v3h-3zm5 0h3v3h-3zm-2.5-2.5h3v3h-3z"/></symbol>
+  <symbol id="i-google" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
   <symbol id="i-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></symbol>
   <symbol id="i-heart" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z"/></symbol>
@@ -205,11 +212,11 @@
           <span>FORNADA DAS 6H</span><span>ENCOMENDAS PARA FESTAS</span><span>CAFÉ COADO NA HORA</span>
         </div></div>
         <nav class="links">
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-ig"/></svg></span>
+          <a class="card" href="#"><span class="ico brand-ig"><svg><use href="#i-ig"/></svg></span>
             <span class="txt"><strong>Instagram</strong><small class="handle">@perfil</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-star"/></svg></span>
+          <a class="card" href="#"><span class="ico brand-google"><svg><use href="#i-google"/></svg></span>
             <span class="txt"><strong>Avaliar no Google</strong><small>4,9 ★ · 312 avaliações</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-wa"/></svg></span>
+          <a class="card" href="#"><span class="ico brand-wa"><svg><use href="#i-wa"/></svg></span>
             <span class="txt"><span class="badge">Responde rápido</span><strong>Fazer pedido no WhatsApp</strong><small>Retire ou receba em casa</small></span><svg class="go"><use href="#i-go"/></svg></a>
           <a class="card" href="#"><span class="ico"><svg><use href="#i-menu"/></svg></span>
             <span class="txt"><strong>Cardápio do dia</strong><small>Pães, doces e salgados</small></span><svg class="go"><use href="#i-go"/></svg></a>
@@ -231,7 +238,7 @@
           <div><span>Agora</span><span class="open">Aberto</span></div>
         </section>
         <section class="panel"><h2><svg><use href="#i-img"/></svg> Saindo do forno</h2><div class="gallery"><i></i><i></i><i></i><i></i><i></i></div></section>
-        <div class="social"><a href="#" aria-label="Instagram"><svg><use href="#i-ig"/></svg></a><a href="#" aria-label="Telefone"><svg><use href="#i-phone"/></svg></a><a href="#" aria-label="Avaliar"><svg><use href="#i-star"/></svg></a></div>
+        <div class="social"><a href="#" aria-label="Instagram" class="brand-ig"><svg><use href="#i-ig"/></svg></a><a href="#" aria-label="Telefone"><svg><use href="#i-phone"/></svg></a><a href="#" aria-label="Avaliar no Google" class="brand-google"><svg><use href="#i-google"/></svg></a></div>
         <p class="foot">feito com a sua plataforma</p>
       </div>
       <a class="fab" href="#" aria-label="WhatsApp"><svg><use href="#i-wa"/></svg></a>
@@ -256,15 +263,15 @@
           <span>AGENDA ABERTA PARA NOVEMBRO</span><span>CONSULTORIA DE CACHOS</span>
         </div></div>
         <nav class="links">
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-ig"/></svg></span>
+          <a class="card" href="#"><span class="ico brand-ig"><svg><use href="#i-ig"/></svg></span>
             <span class="txt"><strong>Instagram</strong><small class="handle">@perfil</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-star"/></svg></span>
+          <a class="card" href="#"><span class="ico brand-google"><svg><use href="#i-google"/></svg></span>
             <span class="txt"><strong>Avaliar no Google</strong><small>4,9 ★ · 312 avaliações</small></span><svg class="go"><use href="#i-go"/></svg></a>
           <a class="card" href="#"><span class="ico"><svg><use href="#i-cal"/></svg></span>
             <span class="txt"><span class="badge">Horários esta semana</span><strong>Agendar horário</strong><small>Escolha o serviço e o dia</small></span><svg class="go"><use href="#i-go"/></svg></a>
           <a class="card" href="#"><span class="ico"><svg><use href="#i-tag"/></svg></span>
             <span class="txt"><strong>Serviços e preços</strong><small>Corte a partir de R$ 90</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-wa"/></svg></span>
+          <a class="card" href="#"><span class="ico brand-wa"><svg><use href="#i-wa"/></svg></span>
             <span class="txt"><strong>Tirar dúvidas</strong><small>WhatsApp do estúdio</small></span><svg class="go"><use href="#i-go"/></svg></a>
           <a class="card light" href="#"><span class="ico"><svg><use href="#i-pin"/></svg></span>
             <span class="txt"><strong>Onde estamos</strong><small>Rua da Aurora, 45 · Boa Vista</small></span><svg class="go"><use href="#i-go"/></svg></a>
@@ -274,7 +281,7 @@
           <div><span>Ter a sex</span><span>10h – 19h</span></div>
           <div><span>Sábado</span><span>9h – 16h</span></div>
         </section>
-        <div class="social"><a href="#" aria-label="Instagram"><svg><use href="#i-ig"/></svg></a><a href="#" aria-label="Telefone"><svg><use href="#i-phone"/></svg></a><a href="#" aria-label="Avaliar"><svg><use href="#i-heart"/></svg></a></div>
+        <div class="social"><a href="#" aria-label="Instagram" class="brand-ig"><svg><use href="#i-ig"/></svg></a><a href="#" aria-label="Telefone"><svg><use href="#i-phone"/></svg></a><a href="#" aria-label="Avaliar no Google" class="brand-google"><svg><use href="#i-google"/></svg></a></div>
         <p class="foot">feito com a sua plataforma</p>
       </div>
       <a class="fab" href="#" aria-label="WhatsApp"><svg><use href="#i-wa"/></svg></a>
@@ -299,9 +306,9 @@
           <span>ACEITAMOS CONVÊNIOS</span><span>AVALIAÇÃO INICIAL</span><span>ESTACIONAMENTO NO LOCAL</span>
         </div></div>
         <nav class="links">
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-ig"/></svg></span>
+          <a class="card" href="#"><span class="ico brand-ig"><svg><use href="#i-ig"/></svg></span>
             <span class="txt"><strong>Instagram</strong><small class="handle">@perfil</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-star"/></svg></span>
+          <a class="card" href="#"><span class="ico brand-google"><svg><use href="#i-google"/></svg></span>
             <span class="txt"><strong>Avaliar no Google</strong><small>4,9 ★ · 312 avaliações</small></span><svg class="go"><use href="#i-go"/></svg></a>
           <a class="card" href="#"><span class="ico"><svg><use href="#i-cal"/></svg></span>
             <span class="txt"><span class="badge">Vagas amanhã</span><strong>Marcar avaliação</strong><small>Presencial ou online</small></span><svg class="go"><use href="#i-go"/></svg></a>
@@ -322,7 +329,7 @@
           <div><span>Seg a sex</span><span>7h – 21h</span></div>
           <div><span>Sábado</span><span>8h – 12h</span></div>
         </section>
-        <div class="social"><a href="#" aria-label="Instagram"><svg><use href="#i-ig"/></svg></a><a href="#" aria-label="Telefone"><svg><use href="#i-phone"/></svg></a><a href="#" aria-label="Avaliar"><svg><use href="#i-star"/></svg></a></div>
+        <div class="social"><a href="#" aria-label="Instagram" class="brand-ig"><svg><use href="#i-ig"/></svg></a><a href="#" aria-label="Telefone"><svg><use href="#i-phone"/></svg></a><a href="#" aria-label="Avaliar no Google" class="brand-google"><svg><use href="#i-google"/></svg></a></div>
         <p class="foot">feito com a sua plataforma</p>
       </div>
       <a class="fab" href="#" aria-label="WhatsApp"><svg><use href="#i-wa"/></svg></a>
