@@ -40,11 +40,13 @@ Fora do MVP: cadastro aberto (SaaS); cobrança; domínios personalizados; analyt
 - RF2 Briefing estruturado por empresa (genérico, com campos por segmento).
 - RF3 Upload de imagens otimizado e isolado por empresa.
 - RF4 Biblioteca de blocos (cabeçalho, faixa de aviso, cartão de ação, avaliação no Google, Wi-Fi, redes, galeria, horários, texto, endereço) com variações. Visual aprovado: `prototipos/bio-site-mescla.html` (mescla das duas referências: foto de fundo desfocada + padrão ilustrado, cartões com brilho, selos, Compartilhar, WhatsApp flutuante).
+- RF4-ordem Público principal: **quem já é cliente** da loja. Ordem padrão dos modelos: topo → faixa → **Instagram em destaque** → **avaliação no Google Meu Negócio** → cartões de ação → Wi-Fi → horários → galeria → **localização por último** → redes. Reordenável no editor.
 - RF4a Faixa de aviso: bloco **totalmente opcional** — ligar/desligar, editar as frases, escolher cor de fundo e de letra (ou usar a do tema); sem movimento para quem ativa "reduzir movimento".
 - RF4b Avaliação no Google: nota, estrelas, número de avaliações e botão "Avaliar no Google" (link direto para escrever avaliação). Nota informada manualmente no MVP; leitura automática pela API do Google fica como opção (P12).
 - RF4c Wi-Fi: nome da rede, copiar senha, QR code de conexão; aviso no editor de que a senha fica pública.
 - RF5 Temas e modelos por segmento (cores, fontes, padrão ilustrado, estilo dos cartões).
 - RF6 Editor visual na prévia do celular: clicar no bloco, editar no painel, adicionar/reordenar/ocultar/remover, desfazer/refazer.
+- RF6a **Edição rápida**: tela de formulário simples, sem precisar do editor visual, com os dados que mais mudam (Instagram, WhatsApp, rede e senha do Wi-Fi, horários, frases da faixa, link de avaliação do Google). Alterar → salvar → publicar em poucos toques, inclusive pelo celular.
 - RF7 Versões, restauração, aprovação explícita e publicação.
 - RF8 Convite de cliente (link com validade); cliente acessa só o próprio Bio Site.
 - RF9 Geração e ajustes assistidos por IA, sempre com prévia.
