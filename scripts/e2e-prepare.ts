@@ -13,3 +13,4 @@ const run = (script: string) =>
 
 run("scripts/migrate.ts");
 run("scripts/create-admin.ts");
+run("scripts/seed-demo.ts");

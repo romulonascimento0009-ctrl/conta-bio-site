@@ -50,6 +50,14 @@ describe("createLocalStorage", () => {
     expect(await store.get(key)).toBeNull();
   });
 
+  it("apaga um prefixo inteiro sem afetar outros clientes", async () => {
+    await store.put(clientKey("c1", "a", "1.webp"), new Uint8Array([1]));
+    await store.put(clientKey("c2", "a", "1.webp"), new Uint8Array([2]));
+    await store.deletePrefix("clients/c1");
+    expect(await store.get(clientKey("c1", "a", "1.webp"))).toBeNull();
+    expect(await store.get(clientKey("c2", "a", "1.webp"))).toEqual(new Uint8Array([2]));
+  });
+
   it("recusa chave que tenta sair da raiz", async () => {
     await expect(store.put("clients/../../fora", new Uint8Array())).rejects.toThrow();
   });

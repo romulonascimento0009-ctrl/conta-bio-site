@@ -1,16 +1,21 @@
 # Arquitetura
 
-Status: **aprovada em 2026-10-13**. Implementado até agora (Fase 1): autenticação, banco/migrações, armazenamento local. O restante abaixo é o desenho a seguir nas próximas fases. Escolhas e pendências em `DECISIONS.md`.
+Status: **aprovada em 2026-10-13**. Implementado: Fases 1 e 2 (autenticação, banco, armazenamento, schema do site, seções, temas, renderizador, subdomínios, clientes, briefing, imagens). Ainda por fazer: editor visual, versões/publicação pelo painel (Fase 3), IA (Fase 4). Escolhas e pendências em `DECISIONS.md`.
 
-## Mapa do código (Fase 1)
+## Mapa do código
 
 - `src/lib/env.ts` — variáveis de ambiente validadas (Zod), lidas sob demanda.
-- `src/db/` — conexão Drizzle (Postgres via `DATABASE_URL`, senão PGlite em `PGLITE_DIR`) e schema. Migrações SQL em `drizzle/`.
-- `src/lib/auth.ts` — Better Auth (e-mail/senha, cadastro público desligado, rate limit em banco). `src/lib/session.ts` — `requireSession()`.
-- `src/proxy.ts` — redirecionamento otimista de `/admin/*` sem cookie.
-- `src/lib/storage/` — interface `Storage` + driver local; `clientKey()` isola arquivos por cliente e bloqueia path traversal.
-- `src/app/login`, `src/app/admin` — telas provisórias (sem design final).
-- `scripts/` — migração, criação do operador, preparo do E2E.
+- `src/db/` — conexão Drizzle (Postgres via `DATABASE_URL`, senão PGlite em `PGLITE_DIR`) e schema (`auth.ts` gerado; `app.ts`: clients, briefings, sites, site_versions, assets). Migrações SQL em `drizzle/`.
+- `src/lib/auth.ts`, `src/lib/session.ts` — Better Auth e `requireSession()`.
+- `src/proxy.ts` + `src/lib/hosts.ts` — `<slug>.<ROOT_DOMAIN>` reescrito para `/s/<slug>`; `/s/*` bloqueado no domínio do painel; redirecionamento otimista de `/admin` e `/preview`.
+- `src/sites/` — núcleo puro (sem banco/Next): `document.ts` (schema `SiteDocument`, validação, contraste), `sections.ts` (tipos de seção e variantes), `presets.ts` (temas e documento inicial), `fonts.ts`, `links.ts` (links seguros), `color.ts`.
+- `src/sites/render/` — `SiteRenderer` e seções (componentes de servidor, sem JS no cliente), `fonts.ts` (next/font).
+- `src/clients/` — slug, briefing, situações.
+- `src/media/process.ts` — validação e variantes WebP com sharp (remove EXIF).
+- `src/data/` — **camada de acesso a dados**: única porta para o banco. Funções administrativas chamam `requireSession()`; funções públicas: `getPublishedSiteBySlug`, `findAssetVariant`.
+- `src/lib/storage/` — interface `Storage` + driver local; `clientKey()` isola por cliente.
+- `src/app/admin/clientes/...` — painel (Server Actions em `actions.ts`); `src/app/preview/[clientId]` — prévia do rascunho; `src/app/s/[slug]` — site público; `src/app/media/[assetId]/[file]` — imagens.
+- `scripts/` — migração, operador, demo (`seed-demo.ts`), preparo do E2E, capturas (`screenshots.mts`), amostra de fontes (`font-specimen.mts`).
 
 ## Princípio central
 

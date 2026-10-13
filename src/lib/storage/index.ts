@@ -11,6 +11,8 @@ export interface Storage {
   /** Retorna `null` se a chave não existir. */
   get(key: string): Promise<Uint8Array | null>;
   delete(key: string): Promise<void>;
+  /** Apaga tudo sob o prefixo (ex.: `clients/<id>` ao excluir um cliente). */
+  deletePrefix(prefix: string): Promise<void>;
 }
 
 export function createLocalStorage(rootDir: string): Storage {
@@ -40,6 +42,9 @@ export function createLocalStorage(rootDir: string): Storage {
     },
     async delete(key) {
       await rm(resolve(key), { force: true });
+    },
+    async deletePrefix(prefix) {
+      await rm(resolve(prefix), { recursive: true, force: true });
     },
   };
 }

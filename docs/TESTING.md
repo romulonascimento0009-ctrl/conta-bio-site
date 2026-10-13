@@ -13,8 +13,16 @@
 
 - `playwright.config.ts` sobe `next dev` na porta 3100 com variáveis próprias (banco `.data/e2e/pglite`, segredo de teste, operador fictício `E2E_ADMIN`).
 - `scripts/e2e-prepare.ts` apaga `.data/e2e`, aplica migrações e cria o operador antes do servidor iniciar. Recusa apagar fora de `.data/e2e/`.
+- `e2e-prepare.ts` também roda `seed-demo.ts`: o site `demo` publicado fica em `demo.localhost:3100` (Chromium resolve `*.localhost` sozinho).
+- Projeto `setup` (`e2e/auth.setup.ts`) faz um único login por API e salva a sessão em `.data/e2e/auth.json`; os testes do painel usam `test.use({ storageState: AUTH_FILE })`. Contextos anônimos precisam de `storageState: { cookies: [], origins: [] }` explícito.
 - Testes rodam em série (`workers: 1`) porque o PGlite admite um processo por diretório.
 - Testes de rate limit usam `x-forwarded-for` fictício (faixa 203.0.113.0/24) distinto por projeto.
+
+## Revisão visual e desempenho (manual, a cada mudança de seção/tema)
+
+- `npx tsx scripts/screenshots.mts http://demo.localhost:3000/ <pasta>` — conferir celular/tablet/desktop.
+- Lighthouse (celular, servidor de produção): `npm run build`, `npm start`, depois
+  `$env:CHROME_PATH=<chrome do Playwright>; npx lighthouse@13.5.0 http://demo.localhost:3000/ --chrome-flags="--headless=new"`. Meta ≥ 90 em todas as categorias.
 
 ## Regras
 

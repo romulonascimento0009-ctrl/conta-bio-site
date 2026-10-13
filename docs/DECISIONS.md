@@ -28,6 +28,18 @@ Formato: decisão · motivo · alternativas.
 
 **D12 — Dependências:** versões exatas; nenhuma com menos de 14 dias de publicação na adoção. Scripts de instalação do npm (`esbuild`, `unrs-resolver`) não aprovados — ferramentas verificadas funcionando sem eles.
 
+**D13 — Envio de imagens (Fase 2).** O navegador reduz a foto (lado maior ≤ 2400 px, JPEG 90%) e envia uma por requisição; o servidor aceita até 4 MB (`bodySizeLimit` 4,5 MB). Motivo: limite de 4,5 MB por requisição na Vercel e o `proxyClientMaxBodySize` do Next, que corta corpos grandes _sem erro_. O servidor confere o formato real (JPG/PNG/WebP/AVIF; SVG/GIF recusados), aplica a rotação EXIF e gera WebP 480/960/1600/2400 sem metadados. Alternativa futura: upload direto para R2 com URL assinada.
+
+**D14 — Mídia pública por id aleatório.** `/media/<uuid>/<largura>.webp` não exige sessão (os sites publicados precisam dela); ids UUID v4 não são adivinháveis. Imagens de rascunho são, portanto, acessíveis a quem tiver o link. Cache `immutable` de 1 ano. Reavaliar se algum cliente exigir sigilo antes de publicar.
+
+**D15 — Isolamento de imagens entre clientes.** Ao salvar o rascunho, toda imagem referenciada precisa pertencer ao mesmo cliente; na renderização, só imagens do cliente são carregadas. Imagem em uso (rascunho ou publicada) não pode ser excluída.
+
+**D16 — Fontes.** Conjunto curado de 8 famílias auto-hospedadas via `next/font` (sem requisições ao Google no navegador). Cormorant e Cormorant Garamond foram removidas: os acentos de ê/é/ô saem deslocados (verificado com `scripts/font-specimen.mts`). O tema Ateliê usa EB Garamond.
+
+**D17 — Editor JSON provisório.** Na Fase 2 o rascunho é editado como JSON validado (atende ao critério "site montado a partir de JSON"). Será substituído pelo editor visual na Fase 3. Publicação pelo painel também fica para a Fase 3; o demo é publicado por script.
+
+**D18 — Hosts.** `<slug>.<ROOT_DOMAIN>` → site; o próprio domínio, `www.` e hosts desconhecidos → painel. Domínios personalizados (futuro) entrarão como consulta a uma tabela `domains` no mesmo ponto (`resolveHost`).
+
 ## Pendentes
 
 **P5b — Segundo fator (TOTP ou passkey).** Obrigatório antes do deploy (Fase 5). Plugins `twoFactor`/`passkey` do Better Auth.
@@ -35,5 +47,7 @@ Formato: decisão · motivo · alternativas.
 **P6 — Domínio principal** para os subdomínios dos clientes. Necessário antes da publicação (Fase 5); para testes locais, Fase 2 usará `*.localhost`.
 
 **P7 — Modelo de IA.** Recomendação: API da Claude com Sonnet 5.5 (`claude-sonnet-5-5`) para geração; avaliar Haiku 5.5 para textos curtos. Confirmar preços carregando a skill `claude-api` na Fase 4. Requer conta e chave de API.
+
+**P10 — Desempenho dos sites públicos.** Lighthouse celular atual 93 (LCP 3,0 s, local). Ganhos identificados: CSS próprio para os sites (hoje compartilhado com o painel e bloqueia a renderização, ~800 ms), cache da página publicada invalidado na publicação (Fase 3), reduzir JS do Next nas páginas públicas (~50 KB não usados).
 
 **P9 — Content-Security-Policy.** Cabeçalhos básicos já ativos (nosniff, referrer, frame SAMEORIGIN, permissions). CSP com nonce fica para quando o editor (iframe) e os sites públicos existirem, para definir as regras uma vez só.

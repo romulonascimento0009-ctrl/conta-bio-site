@@ -5,6 +5,8 @@ const baseURL = `http://localhost:${PORT}`;
 
 // Ambiente isolado de teste: banco PGlite e arquivos próprios, credenciais fictícias.
 export const E2E_ADMIN = { email: "operador@teste.local", password: "senha-de-teste-123" };
+/** Sessão salva pelo projeto "setup" (e2e/auth.setup.ts). */
+export const AUTH_FILE = ".data/e2e/auth.json";
 
 const e2eEnv = {
   DATABASE_URL: "",
@@ -12,6 +14,7 @@ const e2eEnv = {
   STORAGE_DIR: ".data/e2e/storage",
   BETTER_AUTH_SECRET: "e2e-secret-nao-usar-em-producao-0123456789",
   BETTER_AUTH_URL: baseURL,
+  ROOT_DOMAIN: `localhost:${PORT}`,
   ADMIN_EMAIL: E2E_ADMIN.email,
   ADMIN_PASSWORD: E2E_ADMIN.password,
 };
@@ -25,8 +28,9 @@ export default defineConfig({
   reporter: "list",
   use: { baseURL, trace: "retain-on-failure" },
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile", use: { ...devices["Pixel 7"] } },
+    { name: "setup", testMatch: /.*\.setup\.ts/ },
+    { name: "desktop", use: { ...devices["Desktop Chrome"] }, dependencies: ["setup"] },
+    { name: "mobile", use: { ...devices["Pixel 7"] }, dependencies: ["setup"] },
   ],
   webServer: {
     command: `npx tsx scripts/e2e-prepare.ts && npx next dev --port ${PORT}`,

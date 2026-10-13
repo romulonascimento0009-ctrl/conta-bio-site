@@ -40,7 +40,7 @@ test("senha errada mostra erro e permanece no login", async ({ page }) => {
 test("login correto abre o painel e sair encerra a sessão", async ({ page }) => {
   await login(page, E2E_ADMIN.email, E2E_ADMIN.password);
   await expect(page).toHaveURL(/\/admin$/);
-  await expect(page.getByRole("heading", { name: "Painel" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Clientes" })).toBeVisible();
 
   await page.getByRole("button", { name: "Sair" }).click();
   await expect(page).toHaveURL(/\/login$/);

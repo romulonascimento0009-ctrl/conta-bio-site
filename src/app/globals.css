@@ -18,6 +18,23 @@
   --color-accent: var(--accent);
   --color-danger: var(--danger);
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Sites dos clientes: valores definidos por site no SiteRenderer (tema do documento). */
+  --color-site-bg: var(--site-bg);
+  --color-site-surface: var(--site-surface);
+  --color-site-text: var(--site-text);
+  --color-site-muted: var(--site-muted);
+  --color-site-primary: var(--site-primary);
+  --color-site-on-primary: var(--site-on-primary);
+  --font-site-heading: var(--site-font-heading);
+  --font-site-body: var(--site-font-body);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 body {

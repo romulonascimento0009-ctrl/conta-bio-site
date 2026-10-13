@@ -15,7 +15,9 @@ Concluída: check (lint, tipos, formatação, 20 unitários), build de produçã
 - Login do operador e proteção de `/admin`.
 - **Conclusão:** `dev`, `build`, `lint`, testes unitários e um E2E de login rodando com sucesso; comandos registrados no CLAUDE.md.
 
-## Fase 2 — Núcleo de sites
+## Fase 2 — Núcleo de sites ✅ (2026-10-13)
+
+Concluída: 80 unitários, 33 E2E (desktop + celular, axe sem violações no site e no painel), Lighthouse celular 93 / 100 / 100 / 100 (desempenho, acessibilidade, boas práticas, SEO) no demo, 3 temas revisados visualmente em 3 larguras.
 
 - Schema `SiteDocument`, registro de seções (conjunto inicial para beleza), tema por tokens.
 - Renderizador público com roteamento por subdomínio (testável localmente).

@@ -6,7 +6,7 @@ Plataforma interna (um único operador) para criar, editar, aprovar e publicar s
 
 ## Estado
 
-Fase 1 (fundação) concluída em 2026-10-13. Cada nova fase exige aprovação explícita do usuário. Onde paramos e próximo passo: `docs/STATE.md`.
+Fases 1 (fundação) e 2 (núcleo de sites) concluídas em 2026-10-13. Cada nova fase exige aprovação explícita do usuário. Onde paramos e próximo passo: `docs/STATE.md`.
 
 ## Documentação (ler só o necessário para a tarefa)
 
@@ -16,6 +16,7 @@ Fase 1 (fundação) concluída em 2026-10-13. Cada nova fase exige aprovação e
 - `docs/DECISIONS.md` — decisões tomadas e pendentes, com alternativas.
 - `docs/ROADMAP.md` — fases e critérios de conclusão.
 - `docs/TESTING.md` — estratégia e ambiente de testes.
+- `docs/DESIGN.md` — direção visual dos sites e do painel, temas, regras de fontes.
 - Next.js 16 mudou APIs: consultar `node_modules/next/dist/docs/` antes de usar uma API do Next (ex.: `middleware` agora é `src/proxy.ts`).
 
 ## Stack
@@ -32,7 +33,10 @@ Next.js 16 (App Router) · React 19 · TypeScript 5 estrito · Tailwind 4 · Zod
 - `npm run db:generate` — gera migração após alterar `src/db/schema/*` (usar `-- --name <nome>`)
 - `npm run db:migrate` — aplica migrações
 - `npm run admin:create` — cria o operador ou redefine a senha
-- Build e scripts exigem `.env.local` (ver `.env.example`).
+- `npm run seed:demo` — (re)cria o cliente `demo` publicado → http://demo.localhost:3000 (`$env:DEMO_THEME` escolhe o tema)
+- `npx tsx scripts/screenshots.mts <url> <pasta>` — capturas em celular/tablet/desktop para revisão visual
+- `npx tsx scripts/font-specimen.mts <url> <png>` — conferir acentos de todas as fontes (obrigatório ao adicionar fonte)
+- Build e scripts exigem `.env.local` (ver `.env.example`). Nunca apagar `.data/pglite` (contém a conta do operador); só `.data/e2e` é descartável.
 
 ## Regras de desenvolvimento
 
@@ -44,6 +48,8 @@ Next.js 16 (App Router) · React 19 · TypeScript 5 estrito · Tailwind 4 · Zod
 - Interfaces responsivas e acessíveis (WCAG 2.2 AA). Ao desenhar telas do painel ou seções de site, usar a skill `frontend-design`.
 - Para código que chama a API da Claude, carregar a skill `claude-api` antes.
 - Tabelas de autenticação (`src/db/schema/auth.ts`) são geradas pela CLI do Better Auth; não editar à mão.
+- Acesso ao banco só via `src/data/` (camada de acesso a dados). Documento de site só referencia imagens do próprio cliente.
+- Mudança incompatível no schema do `SiteDocument` (remover fonte, seção, campo) invalida documentos salvos: exige migração de documentos e `schemaVersion` novo.
 
 ## Segurança
 
