@@ -2,11 +2,11 @@
 
 # PlataformaSites
 
-Plataforma interna (um único operador) para criar, editar, aprovar e publicar sites de apresentação para clientes. Primeiro segmento: profissionais da beleza. Deve aceitar novos segmentos sem reconstrução.
+Plataforma de **Bio Sites** (mini site estilo "link na bio", celular primeiro) para empresas de qualquer segmento. O operador cria, edita, aprova e publica; empresas convidadas editam só o próprio Bio Site. Endereço: `dominio.com/empresa`.
 
 ## Estado
 
-Fases 1 (fundação) e 2 (núcleo de sites) concluídas em 2026-10-13. Cada nova fase exige aprovação explícita do usuário. Onde paramos e próximo passo: `docs/STATE.md`.
+Fases 0–2 concluídas; produto redefinido para Bio Sites em 2026-10-13 (D19–D22). O código ainda tem o formato antigo (seções + subdomínio) até a Fase 2B. Cada nova fase exige aprovação explícita do usuário. Onde paramos e próximo passo: `docs/STATE.md`.
 
 ## Documentação (ler só o necessário para a tarefa)
 

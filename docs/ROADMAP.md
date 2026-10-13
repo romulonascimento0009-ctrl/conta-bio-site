@@ -2,46 +2,43 @@
 
 Cada fase só começa com aprovação do usuário. Critério de conclusão = verificado na prática, não apenas escrito.
 
-## Fase 0 — Preparação ✅ (2026-10-13)
+> Revisado em 2026-10-13 após a mudança de produto para **Bio Sites** (ver `PROJECT.md`, D19–D22). Fases 0–2 mantidas como histórico; o que foi feito nelas é base reaproveitada.
 
-Ambiente investigado, skills avaliadas, documentação inicial. Concluído.
+## Fase 0 — Preparação ✅ · Fase 1 — Fundação ✅ · Fase 2 — Núcleo de sites ✅ (2026-10-13)
 
-## Fase 1 — Fundação ✅ (2026-10-13)
+Reaproveitado na nova direção: login, banco e migrações, armazenamento e mídia (WebP sem EXIF), cadastro de empresas, briefing, isolamento por cliente, documento validado por schema, temas por tokens com contraste AA, prévia, demo por script, infraestrutura de testes (Vitest, Playwright, axe, capturas, Lighthouse).
+Substituído: seções em formato "site" (abertura, sobre, serviços…) e roteamento por subdomínio.
 
-Concluída: check (lint, tipos, formatação, 20 unitários), build de produção e 14 E2E (desktop + celular) passando.
+## Fase 2B — Bio Site (substitui o renderizador da Fase 2)
 
-- Git inicializado; projeto criado; TypeScript estrito; lint/format; Vitest e Playwright configurados.
-- Banco + migrações; armazenamento de arquivos; variáveis de ambiente documentadas (`.env.example`).
-- Login do operador e proteção de `/admin`.
-- **Conclusão:** `dev`, `build`, `lint`, testes unitários e um E2E de login rodando com sucesso; comandos registrados no CLAUDE.md.
+- `BioDocument`: cabeçalho (logo, nome, frase, categorias, local), faixa em movimento, cartões de ação (WhatsApp, link, cardápio, mapa, telefone, Instagram…; ícone, título, subtítulo, destaque), redes, galeria, horários, texto; botão flutuante do WhatsApp.
+- Temas com degradê, padrão ilustrado **próprio** por segmento, borda decorativa, estilo de cartão; modelos iniciais: beleza, alimentação, saúde, serviços.
+- Endereço `dominio.com/empresa` (rota na raiz, nomes reservados); subdomínio removido.
+- Briefing genérico (campos por segmento).
+- **Conclusão:** 1 Bio Site por modelo, montado a partir de dados, revisado em celular/tablet/desktop; axe sem violações; Lighthouse celular ≥ 90; E2E atualizados.
 
-## Fase 2 — Núcleo de sites ✅ (2026-10-13)
+## Fase 3 — Editor visual e versões (operador)
 
-Concluída: 80 unitários, 33 E2E (desktop + celular, axe sem violações no site e no painel), Lighthouse celular 93 / 100 / 100 / 100 (desempenho, acessibilidade, boas práticas, SEO) no demo, 3 temas revisados visualmente em 3 larguras.
+- Prévia de celular com seleção por clique; painel lateral gerado do schema; adicionar/reordenar/ocultar/remover blocos; trocar tema, cores, ícones; desfazer/refazer.
+- Versões, restauração, aprovação, publicação/despublicação, cache invalidado ao publicar.
+- **Conclusão:** E2E cobre editar → salvar → restaurar → aprovar → publicar; editor utilizável no celular e no desktop.
 
-- Schema `SiteDocument`, registro de seções (conjunto inicial para beleza), tema por tokens.
-- Renderizador público com roteamento por subdomínio (testável localmente).
-- CRUD de clientes, briefing, upload de imagens.
-- **Conclusão:** site montado manualmente a partir de JSON renderiza corretamente em 3 larguras, passa axe sem violações graves e Lighthouse mobile ≥ 90.
+## Fase 4 — Acesso de clientes por convite
 
-## Fase 3 — Editor visual e versões
+- Papéis operador/cliente; vínculo empresa↔usuário; convite por link de uso único com validade.
+- Cliente vê e edita só o próprio Bio Site, com o mesmo editor (permissões reduzidas); regra de publicação a definir (direta ou com aprovação do operador).
+- Registro de auditoria das alterações.
+- **Conclusão:** E2E prova que um cliente não acessa dados, imagens nem rotas de outro; convite expirado/reutilizado é recusado.
 
-- Prévia com seleção por clique, painel de propriedades a partir do schema, operações determinísticas, desfazer/refazer.
-- Versões, restauração, aprovação, publicação/despublicação.
-- **Conclusão:** E2E cobre editar → salvar → restaurar → aprovar → publicar.
+## Fase 5 — IA
 
-## Fase 4 — IA
+- Briefing → Bio Site inicial; textos; direção visual; pedidos em linguagem natural com prévia; custo registrado e teto de gasto.
 
-- Briefing → documento inicial; textos; direção visual; pedidos em linguagem natural com prévia.
-- Registro de custo e teto de gasto.
-- **Conclusão:** saídas sempre validadas pelo schema; testes com IA simulada; custo médio por site medido e registrado.
+## Fase 6 — Produção
 
-## Fase 5 — Produção
-
-- Segundo fator de login (P5b), CSP (P9), driver de armazenamento R2.
-- Deploy, DNS curinga, backups testados (restauração real), monitoramento de erros.
+- Segundo fator (P5b), CSP (P9), desempenho (P10), driver R2, deploy, backups testados, monitoramento.
 - **Conclusão:** primeiro cliente real publicado.
 
 ## Futuro
 
-Domínios personalizados; novos segmentos (novas seções/presets); acesso do cliente para aprovação.
+Cadastro aberto (SaaS) e cobrança; domínios personalizados; analytics; novos segmentos e blocos.

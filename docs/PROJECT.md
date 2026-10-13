@@ -1,46 +1,56 @@
 # Projeto — visão, escopo e requisitos
 
+> Revisado em 2026-10-13: o produto passou de "sites em seções para beleza" para **plataforma de Bio Sites** (mini site estilo "link na bio") para qualquer segmento. Referência funcional indicada pelo usuário: Nourbiosite (analisada só por captura pública; design deve ser próprio — ver D19).
+
 ## Visão
 
-Ferramenta interna, operada somente pelo dono, para produzir sites de apresentação personalizados para clientes de forma rápida, com qualidade profissional e custo previsível. Começa com profissionais da beleza (cabeleireiras, manicures, esteticistas, maquiadoras, barbeiros etc.) e deve ser extensível a outros segmentos.
+Plataforma para criar e manter **Bio Sites**: uma página única, pensada para o celular, que concentra a identidade do negócio e as ações principais (pedir no WhatsApp, ver cardápio/serviços, agendar, como chegar, redes sociais). Atende qualquer segmento (beleza, alimentação, saúde, serviços…), com identidade visual própria de cada empresa.
+
+Dois tipos de usuário:
+
+- **Operador** (dono da plataforma): cadastra empresas, cria e edita qualquer Bio Site, aprova e publica.
+- **Cliente** (empresa convidada pelo operador): edita apenas o próprio Bio Site, conforme sua personalidade.
+
+## Anatomia de um Bio Site (referência funcional)
+
+1. Cabeçalho: logo redondo, nome, frase curta, categorias (ex.: PÃES • BOLOS • SALGADOS), selo de localização; fundo em degradê com padrão ilustrado do segmento e borda decorativa (ex.: onda).
+2. Faixa de texto em movimento (opcional, respeita "reduzir movimento").
+3. Cartões de ação: ícone, título, subtítulo, seta; destaques opcionais (ex.: "● Atendimento rápido"); o principal pode ter cor cheia.
+4. Outros blocos: redes sociais, galeria, horários, texto, mapa/endereço.
+5. Botão flutuante do WhatsApp.
 
 ## Fluxo principal
 
-1. Cadastrar cliente.
-2. Coletar briefing (dados do negócio, serviços, preços opcionais, contatos, redes sociais, link de agendamento, preferências visuais).
-3. Enviar imagens (logo, fotos de trabalhos, ambiente, equipe).
-4. Gerar primeira versão assistida por IA (estrutura, textos, direção visual).
-5. Editar visualmente (selecionar elemento → alterar texto, imagem, cor, fonte, link, seção).
-6. Revisar e aprovar.
-7. Publicar em subdomínio.
-8. Manter: editar, versionar, restaurar, republicar.
+1. Operador cadastra a empresa e o briefing.
+2. Envia imagens (logo, fotos).
+3. Gera o Bio Site a partir de um modelo do segmento (depois, com ajuda da IA).
+4. Edita visualmente (blocos, textos, cores, ícones, links).
+5. Revisa, aprova e publica em `dominio.com/empresa`.
+6. Convida a empresa, que passa a editar o próprio Bio Site.
 
 ## Escopo do MVP
 
-Inclui: cadastro de clientes; briefing; upload de imagens; geração de site por IA a partir de um conjunto fixo de seções; editor visual com painel de propriedades; rascunho, histórico de versões e restauração; aprovação explícita; publicação em subdomínio; tema (cores, fontes) por site; SEO básico (title, description, Open Graph); botão de WhatsApp / agendamento.
+Inclui: cadastro de empresas; briefing; imagens; biblioteca de blocos; temas por segmento; editor visual; versões, restauração, aprovação e publicação; endereço `dominio.com/empresa`; SEO e Open Graph; convite de clientes com acesso restrito ao próprio Bio Site.
 
-Fora do MVP (futuro): domínios personalizados; acesso do cliente final; múltiplos operadores; pagamentos/cobrança; blog; formulários com backend; analytics avançado; templates de outros segmentos (a arquitetura deve permitir, mas não serão construídos agora).
+Fora do MVP: cadastro aberto (SaaS); cobrança; domínios personalizados; analytics avançado; formulários com backend; loja/pedidos.
 
-## Requisitos funcionais (MVP)
+## Requisitos funcionais
 
-- RF1 CRUD de clientes, com status (briefing, em edição, aguardando aprovação, publicado).
-- RF2 Briefing estruturado, salvo por cliente.
-- RF3 Upload de imagens com redimensionamento/otimização automáticos, isolados por cliente.
-- RF4 Biblioteca de seções (ex.: hero, sobre, serviços, galeria, depoimentos, contato/localização, agendamento, redes sociais, rodapé) com variações visuais.
-- RF5 Geração assistida por IA da configuração inicial do site a partir do briefing.
-- RF6 Editor visual: pré-visualização fiel; clique seleciona seção/campo; edição por formulário gerado a partir do schema; reordenar, adicionar, ocultar e remover seções; desfazer/refazer.
-- RF7 Pedidos de alteração em linguagem natural para mudanças complexas, sempre com prévia antes de aplicar.
-- RF8 Versionamento: cada salvamento cria versão; comparar e restaurar.
-- RF9 Publicação somente de versão aprovada; despublicar.
-- RF10 Pré-visualização em larguras de celular, tablet e desktop.
+- RF1 CRUD de empresas, com situação (briefing, em edição, aguardando aprovação, publicado).
+- RF2 Briefing estruturado por empresa (genérico, com campos por segmento).
+- RF3 Upload de imagens otimizado e isolado por empresa.
+- RF4 Biblioteca de blocos (cabeçalho, faixa, cartão de ação, redes, galeria, horários, texto, endereço) com variações.
+- RF5 Temas e modelos por segmento (cores, fontes, padrão ilustrado, estilo dos cartões).
+- RF6 Editor visual na prévia do celular: clicar no bloco, editar no painel, adicionar/reordenar/ocultar/remover, desfazer/refazer.
+- RF7 Versões, restauração, aprovação explícita e publicação.
+- RF8 Convite de cliente (link com validade); cliente acessa só o próprio Bio Site.
+- RF9 Geração e ajustes assistidos por IA, sempre com prévia.
 
 ## Requisitos não funcionais
 
-- Segurança: login forte do operador; autorização em todas as rotas administrativas; validação no servidor; uploads seguros; segredos fora do código.
-- Desempenho dos sites publicados: carregamento rápido em 4G (meta: Lighthouse ≥ 90 em performance e acessibilidade no celular).
-- Acessibilidade: meta WCAG 2.2 AA nos sites gerados e no painel.
-- Responsividade: mobile first.
-- Custos previsíveis: preferir planos fixos ou com teto; registrar consumo de IA por chamada e por cliente; limite de gasto configurável.
-- Backup: banco com backup automático e restauração testada; armazenamento de arquivos com versionamento ou cópia.
-- Manutenibilidade: TypeScript estrito, schema único compartilhado entre editor, IA e renderização; testes automatizados nas partes críticas.
-- Extensibilidade: novos segmentos = novas seções/presets, sem mudar o núcleo.
+- Segurança: isolamento entre empresas em dados, arquivos e permissões; convites de uso único e com validade; validação no servidor; segredos fora do código.
+- Desempenho: Bio Site leve, sem JS desnecessário; meta Lighthouse ≥ 90 no celular.
+- Acessibilidade: WCAG 2.2 AA (contraste checado no schema; animações respeitam `prefers-reduced-motion`).
+- Editor simples o bastante para um cliente leigo.
+- Custos previsíveis; backup; TypeScript estrito; testes nas partes críticas.
+- Design **próprio**: padrões de interface comuns (cartões, faixa, chips) sim; marca, ilustrações e layout específicos de terceiros, não.
