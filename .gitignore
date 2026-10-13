@@ -20,9 +20,9 @@ playwright/.cache/
 .env.*
 !.env.example
 
-# dados locais
-.data/
-storage/
+# dados locais (ancorado na raiz para não ignorar src/lib/storage)
+/.data/
+/storage/
 
 # Claude Code (configuração pessoal)
 .claude/settings.local.json

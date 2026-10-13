@@ -1,34 +1,34 @@
 # Estado atual
 
-Atualizado: 2026-10-13 · Fase 0 concluída · **Implementação do produto não iniciada.**
+Atualizado: 2026-10-13 · **Fase 1 (fundação) concluída** · Fase 2 aguarda aprovação.
 
-## Ambiente encontrado
-- Pasta `C:\Projetos\PlataformaSites` estava vazia; não é repositório Git.
-- Windows 11 Pro, PowerShell 5.1. Node 24.21.0, npm/npx 11.19.0, VS Code 1.112, Claude Code 2.1.296, winget.
-- Ausentes: Git, Python (só o atalho da Microsoft Store, 0 bytes), bash, Docker, pnpm/yarn/bun, CLIs de nuvem.
-- Internet: disponível (npm registry respondeu 200).
-- Config do usuário (`~/.claude/settings.json`): só tema. Nenhum plugin instalado antes; marketplace oficial `anthropics/claude-plugins-official` já cadastrado.
+## Pronto e verificado
+
+- Git 2.55.0 instalado; repositório `main` com identidade local.
+- Projeto Next.js 16.3.7 na raiz; dependências com versões exatas.
+- Banco: Drizzle + PGlite local (`.data/pglite`), migração `drizzle/0000_auth.sql` aplicada (idempotente).
+- Login do operador (Better Auth), `/admin` protegido, sair, cadastro público bloqueado, rate limit de login comprovado (6ª tentativa → 429).
+- Armazenamento local com isolamento por cliente e proteção contra path traversal (testado).
+- Cabeçalhos de segurança conferidos no servidor de produção (`next start`).
+- `npm run check` ✔ · `npm run build` ✔ · `npm run test:e2e` 14/14 ✔ (desktop e celular, incluindo axe na tela de login).
+
+## Ambiente
+
+- Windows 11, PowerShell 5.1, Node 24.21.0, npm 11.19.0, Git 2.55.0 (inclui bash em `C:\Program Files\Git\bin`), Chromium do Playwright 1.63.
+- Ausentes: Python, Docker. Sessões de terminal já abertas antes da instalação do Git precisam ser reabertas para enxergá-lo no PATH.
 
 ## Skills / plugins
-**Já disponíveis na sessão (embutidas, reutilizáveis):** `code-review`, `security-review`, `simplify`, `claude-api`, `run`, `claude-in-chrome`, `init`, `update-config`, `fewer-permission-prompts`.
 
-**Instalado e verificado:** `frontend-design@claude-plugins-official` (escopo projeto, `.claude/settings.json`). Verificado com `claude plugin list` (enabled) e `claude plugin details` (1 skill, sem hooks/MCP/scripts, ~80 tokens fixos). Uso real ainda não exercitado (não há UI).
+- Instalado e verificado: `frontend-design` (escopo projeto). Ainda não usado — telas atuais são provisórias.
+- Embutidas reutilizáveis: `code-review`, `security-review`, `simplify`, `claude-api`, `run`, `claude-in-chrome`.
+- Não instalados: `security-guidance`/`claude-security` (ainda exigem Python), `typescript-lsp` (instalação global, opcional), Playwright MCP (versão não fixada), `context7` (serviço externo). Avaliação completa no histórico do Git deste arquivo (commit da Fase 0).
 
-**Avaliados e não instalados:**
-| Recurso | Motivo |
-|---|---|
-| `security-guidance` (oficial) | Hooks exigem bash + Python + Git — ausentes. Reavaliar após instalar Git/Python. |
-| `claude-security` (oficial) | Scripts Python; sem código para escanear. Reavaliar na Fase 2+. |
-| `typescript-lsp` (oficial) | Exige `npm install -g typescript-language-server typescript` (instalação global). Útil na Fase 1. |
-| `playwright` MCP (Microsoft) | Usa `@playwright/mcp@latest` (versão não fixada). Preferir `@playwright/test` no projeto; `claude-in-chrome` já cobre inspeção visual. |
-| `context7` (Upstash) | Serviço externo hospedado com login; envia consultas a terceiros. Opcional, requer sua autorização. |
-| `feature-dev`, `claude-md-management` (oficiais) | Redundantes com fluxo atual e skills embutidas; reavaliar se houver necessidade. |
-| `webapp-testing` (anthropics/skills) | Exige Python + Playwright para Python. |
+## Pendências
 
-Fontes: catálogo local `~/.claude/plugins/marketplaces/claude-plugins-official`; https://github.com/anthropics/skills ; https://raw.githubusercontent.com/anthropics/skills/main/skills/webapp-testing/SKILL.md
-
-## Pendências que dependem do usuário
-Decisões P1–P8 em `DECISIONS.md` (stack, banco, storage, hospedagem, autenticação, domínio, modelo de IA, instalar Git).
+- **Do usuário:** criar o próprio operador local com `npm run admin:create`; P6 (domínio) e P7 (conta da API da Claude) antes das Fases 4–5.
+- Técnicas: segundo fator (P5b), CSP (P9), driver R2 — todas antes do deploy.
+- `eslint@9` está marcado como “sem suporte” pelo npm; manter até o `eslint-config-next` suportar ESLint 10.
 
 ## Próximo passo
-Após aprovação das decisões: instalar Git, (opcional) `typescript-lsp`, iniciar Fase 1 do `ROADMAP.md`.
+
+Fase 2 — núcleo de sites (`ROADMAP.md`): schema `SiteDocument`, registro de seções para beleza, tema por tokens, renderizador por subdomínio (`*.localhost`), clientes, briefing e upload. Começa com o plano de design via `frontend-design`.

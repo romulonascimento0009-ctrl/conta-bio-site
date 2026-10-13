@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/* Estilo provisório do painel. A identidade visual do painel será definida na Fase 2/3. */
+:root {
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --muted: #5c5c5c;
+  --border: #d4d4d4;
+  --accent: #1d4ed8;
+  --danger: #b42318;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
