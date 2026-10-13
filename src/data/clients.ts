@@ -2,6 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { slugSchema } from "@/clients/slug";
 import { db } from "@/db";
+import { SEGMENT_IDS } from "@/clients/segments";
 import { CLIENT_STATUSES } from "@/clients/status";
 import { clients } from "@/db/schema";
 import { requireSession } from "@/lib/session";
@@ -12,6 +13,7 @@ export type Client = typeof clients.$inferSelect;
 export const clientInputSchema = z.object({
   name: z.string().trim().min(1, "informe o nome").max(80),
   slug: slugSchema,
+  segment: z.enum(SEGMENT_IDS, "escolha o segmento").default("other"),
   status: z.enum(CLIENT_STATUSES).default("briefing"),
   notes: z.string().trim().max(2000).default(""),
 });

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDraftForPreview } from "@/data/sites";
 import { requireSession } from "@/lib/session";
-import { SiteRenderer } from "@/sites/render/SiteRenderer";
+import { BioRenderer } from "@/sites/render/BioRenderer";
 
 export const metadata: Metadata = {
   title: "Prévia do rascunho",
@@ -15,5 +15,5 @@ export default async function PreviewPage({ params }: PageProps<"/preview/[clien
   const { clientId } = await params;
   const site = await getDraftForPreview(clientId);
   if (!site) notFound();
-  return <SiteRenderer doc={site.document} assets={site.assets} />;
+  return <BioRenderer doc={site.document} assets={site.assets} />;
 }

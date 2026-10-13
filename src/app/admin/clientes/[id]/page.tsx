@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getClient } from "@/data/clients";
-import { env } from "@/lib/env";
-import { siteUrl } from "@/lib/hosts";
+import { publicUrl } from "@/lib/public-url";
 import { ClientForm, DeleteClientForm } from "./client-forms";
 
 export const metadata: Metadata = { title: "Cliente · PlataformaSites" };
@@ -19,7 +18,7 @@ export default async function ClientPage({ params }: PageProps<"/admin/clientes/
           Dados do cliente
         </h2>
         <p className="mt-1 text-sm text-muted">
-          Site público: <span className="font-mono">{siteUrl(client.slug, env().ROOT_DOMAIN)}</span>
+          Endereço público: <span className="font-mono">{publicUrl(client.slug)}</span>
         </p>
         <ClientForm client={client} />
       </section>
@@ -28,7 +27,8 @@ export default async function ClientPage({ params }: PageProps<"/admin/clientes/
           Excluir cliente
         </h2>
         <p className="mt-1 text-sm text-muted">
-          Apaga o cliente, o briefing, o site, as versões e todas as imagens. Não pode ser desfeito.
+          Apaga o cliente, o briefing, o Bio Site, as versões e todas as imagens. Não pode ser
+          desfeito.
         </p>
         <DeleteClientForm id={client.id} slug={client.slug} />
       </section>

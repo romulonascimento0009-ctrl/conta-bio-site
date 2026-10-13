@@ -48,6 +48,16 @@ Formato: decisão · motivo · alternativas.
 
 **D22 — Clientes por convite, depois do editor.** Empresas entram só por convite do operador (sem cadastro aberto no MVP), na fase seguinte ao editor visual, reutilizando o mesmo editor com permissões reduzidas.
 
+**D23 — Formato `BioDocument` (schemaVersion 2).** Substitui o `SiteDocument` v1 (seções). Não houve conversor v1→v2: o banco só tinha o demo, recriado no formato novo. Estrutura: `profile` (topo), `contact` (dados centrais), `ticker` (faixa opcional), `blocks` (cartões `link` + painéis `wifi`/`hours`/`gallery`/`text`), `theme` (cores com contraste AA validado, fontes, cantos, padrão).
+
+**D24 — Publicação básica já na 2B.** A edição rápida pedida pelo usuário precisa de "Salvar e publicar"; publicar = gravar versão imutável e apontar o endereço público. Histórico, comparação e restauração continuam na Fase 3.
+
+**D25 — `experimental.inlineCss` ligado.** Elimina o CSS que bloqueava a renderização (Lighthouse celular 88 → 93 na padaria). Custo: HTML maior (~150 KB sem compressão, CSS duplicado no payload) e flag experimental. Reavaliar ao separar o CSS do painel do CSS dos Bio Sites (P10).
+
+**D26 — QR code do Wi-Fi gerado no servidor** com `qrcode@1.5.4` (MIT, sem scripts de instalação), desenhado a partir da matriz de módulos — sem HTML externo.
+
+**D27 — Endereço por caminho implementado.** Subdomínios e `proxy.ts` de reescrita removidos; `PUBLIC_URL` substitui `ROOT_DOMAIN`.
+
 ## Pendentes
 
 **P5b — Segundo fator (TOTP ou passkey).** Obrigatório antes do deploy (Fase 5). Plugins `twoFactor`/`passkey` do Better Auth.
@@ -60,6 +70,6 @@ Formato: decisão · motivo · alternativas.
 
 **P7 — Modelo de IA.** Recomendação: API da Claude com Sonnet 5.5 (`claude-sonnet-5-5`) para geração; avaliar Haiku 5.5 para textos curtos. Confirmar preços carregando a skill `claude-api` na Fase 4. Requer conta e chave de API.
 
-**P10 — Desempenho dos sites públicos.** Lighthouse celular atual 93 (LCP 3,0 s, local). Ganhos identificados: CSS próprio para os sites (hoje compartilhado com o painel e bloqueia a renderização, ~800 ms), cache da página publicada invalidado na publicação (Fase 3), reduzir JS do Next nas páginas públicas (~50 KB não usados).
+**P10 — Desempenho dos Bio Sites.** Lighthouse celular atual 92–93 (LCP ~3,1 s, local). Ganhos ainda possíveis: layout raiz separado para os Bio Sites (sem o CSS do painel), cache da página publicada invalidado na publicação, pré-carregar só a fonte usada pelo site, reduzir JS do Next nas páginas públicas (~50 KB não usados).
 
 **P9 — Content-Security-Policy.** Cabeçalhos básicos já ativos (nosniff, referrer, frame SAMEORIGIN, permissions). CSP com nonce fica para quando o editor (iframe) e os sites públicos existirem, para definir as regras uma vez só.

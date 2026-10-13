@@ -8,10 +8,10 @@ import { slugify } from "@/clients/slug";
 import { AssetInUse, deleteAsset, updateAssetAlt, uploadAsset } from "@/data/assets";
 import { saveBriefing } from "@/data/briefings";
 import { createClient, deleteClient, getClient, SlugTaken, updateClient } from "@/data/clients";
-import { createSiteFromPreset, MissingBookingTarget, saveDraft } from "@/data/sites";
-import { requireSession } from "@/lib/session";
+import { createSiteFromTemplate, publishDraft, saveDraft, saveQuickEdit } from "@/data/sites";
 import { ImageRejected } from "@/media/process";
-import { THEME_PRESETS, type ThemePresetId } from "@/sites/presets";
+import { quickEditSchema } from "@/sites/quick-edit";
+import { THEMES, type ThemeId } from "@/sites/themes";
 
 // Toda ação chama a camada de dados, que valida a sessão (requireSession) por conta própria.
 
@@ -41,7 +41,7 @@ export async function createClientAction(_prev: FormState, fd: FormData): Promis
   const slug = str(fd, "slug") || slugify(name);
   let id: string;
   try {
-    id = (await createClient({ name, slug })).id;
+    id = (await createClient({ name, slug, segment: str(fd, "segment") as never })).id;
   } catch (err) {
     if (err instanceof z.ZodError) return invalid(err, fd);
     if (err instanceof SlugTaken) {
@@ -61,6 +61,7 @@ export async function updateClientAction(
     const updated = await updateClient(id, {
       name: str(fd, "name"),
       slug: str(fd, "slug"),
+      segment: str(fd, "segment") as never,
       status: str(fd, "status") as never,
       notes: str(fd, "notes"),
     });
@@ -155,17 +156,63 @@ export async function createSiteAction(
   _prev: FormState,
   fd: FormData,
 ): Promise<FormState> {
-  await requireSession();
-  const presetId = str(fd, "preset");
-  if (!Object.hasOwn(THEME_PRESETS, presetId)) return { ok: false, message: "Escolha um tema." };
-  try {
-    await createSiteFromPreset(id, presetId as ThemePresetId);
-  } catch (err) {
-    if (err instanceof MissingBookingTarget) return { ok: false, message: err.message };
-    throw err;
-  }
+  const themeId = str(fd, "theme");
+  if (!Object.hasOwn(THEMES, themeId)) return { ok: false, message: "Escolha um tema." };
+  await createSiteFromTemplate(id, themeId as ThemeId);
   revalidatePath(`/admin/clientes/${id}`, "layout");
-  return { ok: true, message: "Site criado." };
+  return { ok: true, message: "Bio Site criado." };
+}
+
+/** Caminho de um erro do documento → campo da edição rápida (para destacar o campo certo). */
+function quickFieldFor(path: string): string | undefined {
+  if (path.startsWith("ticker.colors")) return "tickerFg";
+  if (path.startsWith("ticker.items")) return "tickerItems";
+  const contact = /^contact\.(\w+)/.exec(path)?.[1];
+  return contact;
+}
+
+export async function quickEditAction(
+  id: string,
+  _prev: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  const values = textValues(fd);
+  const parsed = quickEditSchema.safeParse({
+    ...values,
+    tickerEnabled: fd.get("tickerEnabled") === "on",
+    tickerCustomColors: fd.get("tickerCustomColors") === "on",
+  });
+  if (!parsed.success) return invalid(parsed.error, fd);
+
+  const result = await saveQuickEdit(id, parsed.data);
+  if (!result.ok) {
+    const fieldErrors: Record<string, string[]> = {};
+    for (const issue of result.issues) {
+      const field = quickFieldFor(issue.path);
+      if (field) fieldErrors[field] = [issue.message];
+    }
+    return {
+      ok: false,
+      message: `Não salvo: ${result.issues[0].message}`,
+      fieldErrors,
+      values,
+    };
+  }
+
+  const publish = fd.get("intent") === "publish";
+  if (publish) await publishDraft(id, "Edição rápida");
+  revalidatePath(`/admin/clientes/${id}`, "layout");
+  return {
+    ok: true,
+    message: publish ? "Salvo e publicado." : "Rascunho salvo. Publique quando quiser.",
+  };
+}
+
+export async function publishAction(id: string, _prev: FormState): Promise<FormState> {
+  const published = await publishDraft(id);
+  if (!published) return { ok: false, message: "Não foi possível publicar: o rascunho tem erros." };
+  revalidatePath(`/admin/clientes/${id}`, "layout");
+  return { ok: true, message: "Publicado." };
 }
 
 export async function saveDraftAction(

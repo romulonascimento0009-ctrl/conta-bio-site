@@ -1,5 +1,15 @@
 # Design
 
+> **Atual (2026-10-13): Bio Sites.** Referência visual aprovada pelo usuário: `prototipos/bio-site-mescla.html`, implementada em `src/sites/render/` (`bio.css`). Regras confirmadas pelo usuário:
+>
+> - Fundo com foto da marca desfocada + padrão ilustrado do segmento; topo com logo, nome, frase, categorias, cidade e Compartilhar.
+> - Faixa de aviso **totalmente opcional** (liga/desliga, frases e cores editáveis).
+> - Cartões no **mesmo padrão**, sem destaques exagerados; ordem: Instagram → Avaliar no Google (logo abaixo) → ações → Wi-Fi → horários → galeria → localização **por último**.
+> - Cada ícone com identidade própria: Instagram, WhatsApp e Google com cor/logo da marca; os demais com cor fixa estilo ícone de app.
+> - Público principal: quem já é cliente da loja.
+>
+> As seções abaixo descrevem o formato anterior (sites em seções, substituído por D19) e ficam como histórico; as regras de fontes continuam valendo.
+
 Plano feito com as orientações da skill `frontend-design`. Duas superfícies com objetivos diferentes.
 
 ## 1. Sites dos clientes (beleza)

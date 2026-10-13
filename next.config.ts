@@ -12,9 +12,10 @@ const nextConfig: NextConfig = {
   // PGlite carrega arquivos WASM em tempo de execução; não deve ser empacotado.
   serverExternalPackages: ["@electric-sql/pglite"],
   poweredByHeader: false,
-  // Sites de clientes em <slug>.localhost durante o desenvolvimento.
-  allowedDevOrigins: ["*.localhost"],
   experimental: {
+    // CSS embutido no HTML: Bio Sites recebem principalmente visitantes de primeira vez
+    // (vindos do Instagram, no celular); elimina o CSS que bloqueava a renderização (~780 ms).
+    inlineCss: true,
     serverActions: {
       // Upload: o navegador reduz a foto antes; o servidor aceita até 4 MB por imagem
       // (abaixo do limite de 4,5 MB da Vercel e do proxyClientMaxBodySize de 10 MB).

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { listAssets } from "@/data/assets";
-import { mediaUrl } from "@/sites/render/primitives";
+import { mediaUrl } from "@/sites/render/media";
 import { AssetCard } from "./asset-card";
 import { UploadForm } from "./upload-form";
 

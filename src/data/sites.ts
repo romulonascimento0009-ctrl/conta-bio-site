@@ -1,16 +1,18 @@
 import { eq } from "drizzle-orm";
-import type { Briefing } from "@/clients/briefing";
+import { briefingSchema } from "@/clients/briefing";
+import { isSegment } from "@/clients/segments";
 import { db } from "@/db";
 import { clients, sites, siteVersions } from "@/db/schema";
 import { requireSession } from "@/lib/session";
 import {
   collectImageRefs,
-  validateSiteDocument,
-  type Contact,
-  type SiteDocument,
+  validateBio,
+  type BioDocument,
   type ValidationResult,
-} from "@/sites/document";
-import { createBeautyDocument, type ThemePresetId } from "@/sites/presets";
+} from "@/sites/bio";
+import { applyQuickEdit, type QuickEdit } from "@/sites/quick-edit";
+import { createBioDocument } from "@/sites/templates";
+import type { ThemeId } from "@/sites/themes";
 import { assetsOfClient, type AssetInfo } from "./assets";
 import { getBriefing } from "./briefings";
 import { getClient } from "./clients";
@@ -24,35 +26,24 @@ export async function getSite(clientId: string): Promise<Site | null> {
   return row ?? null;
 }
 
-function contactFromBriefing(name: string, b: Briefing | null): Contact {
-  const contact: Contact = { businessName: b?.businessName || name };
-  if (b?.whatsapp) contact.whatsapp = b.whatsapp;
-  if (b?.instagram) contact.instagram = b.instagram;
-  if (b?.bookingUrl) contact.bookingUrl = b.bookingUrl;
-  if (b?.addressLine && b.city) contact.address = { line: b.addressLine, city: b.city };
-  return contact;
+/** Rascunho atual já validado (ou null se não houver site ou o documento for de formato antigo). */
+export async function getDraft(clientId: string): Promise<BioDocument | null> {
+  const site = await getSite(clientId);
+  if (!site) return null;
+  const parsed = validateBio(site.draft);
+  return parsed.ok ? parsed.document : null;
 }
 
-export class MissingBookingTarget extends Error {
-  constructor() {
-    super("Preencha no briefing o WhatsApp ou o link de agendamento antes de criar o site.");
-  }
-}
-
-/** Cria o rascunho inicial a partir de um tema e dos dados do briefing (sem IA). */
-export async function createSiteFromPreset(
-  clientId: string,
-  presetId: ThemePresetId,
-): Promise<Site> {
+/** Cria o rascunho inicial a partir do segmento do cliente, do tema e do briefing (sem IA). */
+export async function createSiteFromTemplate(clientId: string, themeId?: ThemeId): Promise<Site> {
   await requireSession();
   const client = await getClient(clientId);
   if (!client) throw new Error("Cliente não encontrado.");
-  const briefing = await getBriefing(client.id);
-  const contact = contactFromBriefing(client.name, briefing);
-  if (!contact.whatsapp && !contact.bookingUrl) throw new MissingBookingTarget();
+  const briefing =
+    (await getBriefing(client.id)) ?? briefingSchema.parse({ businessName: client.name });
+  const segment = isSegment(client.segment) ? client.segment : "other";
 
-  const doc = createBeautyDocument({ presetId, contact, city: briefing?.city || undefined });
-  const result = validateSiteDocument(doc);
+  const result = validateBio(createBioDocument({ segment, themeId, briefing }));
   if (!result.ok) throw new Error(`Documento inicial inválido: ${result.issues[0].message}`);
 
   const [row] = await db
@@ -60,7 +51,7 @@ export async function createSiteFromPreset(
     .values({ clientId: client.id, draft: result.document })
     .onConflictDoNothing({ target: sites.clientId })
     .returning();
-  if (!row) throw new Error("Este cliente já tem um site.");
+  if (!row) throw new Error("Este cliente já tem um Bio Site.");
   await db.update(clients).set({ status: "editing" }).where(eq(clients.id, client.id));
   return row;
 }
@@ -71,7 +62,7 @@ export async function saveDraft(clientId: string, input: unknown): Promise<Valid
   const client = await getClient(clientId);
   if (!client) return { ok: false, issues: [{ path: "", message: "Cliente não encontrado." }] };
 
-  const result = validateSiteDocument(input);
+  const result = validateBio(input);
   if (!result.ok) return result;
 
   const refs = collectImageRefs(result.document);
@@ -96,14 +87,49 @@ export async function saveDraft(clientId: string, input: unknown): Promise<Valid
     .where(eq(sites.clientId, client.id))
     .returning({ id: sites.id });
   if (updated.length === 0)
-    return { ok: false, issues: [{ path: "", message: "Crie o site primeiro." }] };
+    return { ok: false, issues: [{ path: "", message: "Crie o Bio Site primeiro." }] };
   return result;
 }
 
-export type RenderableSite = { document: SiteDocument; assets: Map<string, AssetInfo> };
+/** Edição rápida: aplica os campos ao rascunho atual e salva (validando tudo). */
+export async function saveQuickEdit(clientId: string, q: QuickEdit): Promise<ValidationResult> {
+  const draft = await getDraft(clientId);
+  if (!draft) return { ok: false, issues: [{ path: "", message: "Crie o Bio Site primeiro." }] };
+  return saveDraft(clientId, applyQuickEdit(draft, q));
+}
+
+/** Publica o rascunho atual: grava uma versão imutável e aponta o endereço público para ela. */
+export async function publishDraft(clientId: string, note = ""): Promise<{ slug: string } | null> {
+  await requireSession();
+  const client = await getClient(clientId);
+  const site = client && (await getSite(client.id));
+  if (!client || !site) return null;
+  const parsed = validateBio(site.draft);
+  if (!parsed.ok) return null;
+
+  const [version] = await db
+    .insert(siteVersions)
+    .values({ siteId: site.id, document: parsed.document, note: note.slice(0, 200) })
+    .returning({ id: siteVersions.id });
+  await db.update(sites).set({ publishedVersionId: version.id }).where(eq(sites.id, site.id));
+  await db.update(clients).set({ status: "published" }).where(eq(clients.id, client.id));
+  return { slug: client.slug };
+}
+
+/** O rascunho tem alterações ainda não publicadas? */
+export async function hasUnpublishedChanges(site: Site): Promise<boolean> {
+  if (!site.publishedVersionId) return true;
+  const [v] = await db
+    .select({ document: siteVersions.document })
+    .from(siteVersions)
+    .where(eq(siteVersions.id, site.publishedVersionId));
+  return !v || JSON.stringify(v.document) !== JSON.stringify(site.draft);
+}
+
+export type RenderableSite = { document: BioDocument; assets: Map<string, AssetInfo> };
 
 async function renderable(clientId: string, raw: unknown): Promise<RenderableSite | null> {
-  const parsed = validateSiteDocument(raw);
+  const parsed = validateBio(raw);
   if (!parsed.ok) return null;
   const refs = collectImageRefs(parsed.document);
   return {
@@ -121,7 +147,7 @@ export async function getDraftForPreview(clientId: string): Promise<RenderableSi
   return site ? renderable(site.clientId, site.draft) : null;
 }
 
-/** Site publicado para o subdomínio público (sem sessão). */
+/** Bio Site publicado para o endereço público (sem sessão). */
 export async function getPublishedSiteBySlug(slug: string): Promise<RenderableSite | null> {
   const [row] = await db
     .select({ clientId: clients.id, document: siteVersions.document })

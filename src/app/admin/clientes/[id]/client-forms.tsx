@@ -9,6 +9,7 @@ import {
   valueOf,
   type FormState,
 } from "@/app/admin/_components/form";
+import { SEGMENT_IDS, SEGMENTS } from "@/clients/segments";
 import { CLIENT_STATUSES, STATUS_LABEL } from "@/clients/status";
 import type { Client } from "@/data/clients";
 import { deleteClientAction, updateClientAction } from "../actions";
@@ -29,7 +30,7 @@ export function ClientForm({ client }: { client: Client }) {
       </Field>
       <Field
         name="slug"
-        label="Endereço do site"
+        label="Endereço do Bio Site"
         hint="Mudar o endereço quebra links já divulgados."
         state={state}
       >
@@ -40,6 +41,21 @@ export function ClientForm({ client }: { client: Client }) {
             required
             className={`${inputClass} font-mono`}
           />
+        )}
+      </Field>
+      <Field name="segment" label="Segmento" state={state}>
+        {(a) => (
+          <select
+            {...a}
+            defaultValue={valueOf(state, "segment", client.segment)}
+            className={inputClass}
+          >
+            {SEGMENT_IDS.map((s) => (
+              <option key={s} value={s}>
+                {SEGMENTS[s].label}
+              </option>
+            ))}
+          </select>
         )}
       </Field>
       <Field name="status" label="Situação" state={state}>

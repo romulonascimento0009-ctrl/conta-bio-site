@@ -21,7 +21,7 @@ const timestamps = {
 export const clients = pgTable("clients", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
-  /** Subdomínio público: <slug>.<ROOT_DOMAIN>. */
+  /** Endereço público: <PUBLIC_URL>/<slug>. */
   slug: text("slug").notNull().unique(),
   segment: text("segment").notNull().default("beauty"),
   status: text("status", { enum: CLIENT_STATUSES }).notNull().default("briefing"),

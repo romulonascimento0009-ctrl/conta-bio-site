@@ -7,7 +7,8 @@ const TABS = [
   { href: "", label: "Dados" },
   { href: "/briefing", label: "Briefing" },
   { href: "/imagens", label: "Imagens" },
-  { href: "/site", label: "Site" },
+  { href: "/site", label: "Bio Site" },
+  { href: "/rapida", label: "Edição rápida" },
 ];
 
 export function Tabs({ base }: { base: string }) {
@@ -23,7 +24,7 @@ export function Tabs({ base }: { base: string }) {
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`block border-b-2 px-3 py-2 text-sm ${active ? "border-accent font-medium text-foreground" : "border-transparent text-muted hover:text-foreground"}`}
+                className={`block border-b-2 px-3 py-2 text-sm whitespace-nowrap ${active ? "border-accent font-medium text-foreground" : "border-transparent text-muted hover:text-foreground"}`}
               >
                 {t.label}
               </Link>

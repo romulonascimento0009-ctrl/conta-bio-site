@@ -9,7 +9,9 @@ Cada fase só começa com aprovação do usuário. Critério de conclusão = ver
 Reaproveitado na nova direção: login, banco e migrações, armazenamento e mídia (WebP sem EXIF), cadastro de empresas, briefing, isolamento por cliente, documento validado por schema, temas por tokens com contraste AA, prévia, demo por script, infraestrutura de testes (Vitest, Playwright, axe, capturas, Lighthouse).
 Substituído: seções em formato "site" (abertura, sobre, serviços…) e roteamento por subdomínio.
 
-## Fase 2B — Bio Site (substitui o renderizador da Fase 2)
+## Fase 2B — Bio Site ✅ (2026-10-13)
+
+Concluída: 95 unitários, 41 E2E (desktop + celular; axe sem violações nos 3 demos e no painel), Lighthouse celular 93/92/93 de desempenho e 100 em acessibilidade, boas práticas e SEO. Inclui a edição rápida e a publicação básica (D24).
 
 - `BioDocument`: cabeçalho (logo, nome, frase, categorias, local), faixa em movimento, cartões de ação (WhatsApp, link, cardápio, mapa, telefone, Instagram…; ícone, título, subtítulo, destaque), redes, galeria, horários, texto; botão flutuante do WhatsApp.
 - Temas com degradê, padrão ilustrado **próprio** por segmento, borda decorativa, estilo de cartão; modelos iniciais: beleza, alimentação, saúde, serviços.

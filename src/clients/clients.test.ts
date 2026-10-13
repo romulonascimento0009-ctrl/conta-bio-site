@@ -35,10 +35,17 @@ describe("briefingSchema", () => {
     expect(b.notes).toBe("");
   });
 
-  it("rejeita link de agendamento inseguro", () => {
+  it.each(["mainLinkUrl", "googleReviewUrl"])("rejeita link inseguro em %s", (field) => {
     expect(
-      briefingSchema.safeParse({ businessName: "Bella", bookingUrl: "javascript:alert(1)" })
-        .success,
+      briefingSchema.safeParse({ businessName: "Bella", [field]: "javascript:alert(1)" }).success,
     ).toBe(false);
+  });
+
+  it("aceita Instagram como link completo", () => {
+    const b = briefingSchema.parse({
+      businessName: "Bella",
+      instagram: "https://www.instagram.com/studio.bella/",
+    });
+    expect(b.instagram).toBe("studio.bella");
   });
 });

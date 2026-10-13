@@ -1,258 +1,231 @@
 /**
- * Cria (ou recria) o cliente de demonstração "demo" com todas as seções, imagens geradas
- * e uma versão publicada. Uso: npm run seed:demo  →  http://demo.localhost:3000
- * Só mexe no cliente com slug "demo".
+ * (Re)cria três Bio Sites de demonstração publicados — padaria, salão e clínica — com imagens
+ * geradas. Uso: npm run seed:demo → http://localhost:3000/demo-padaria (e demo-salao, demo-clinica).
+ * Só mexe em clientes cujo endereço começa com "demo".
  */
-import { eq } from "drizzle-orm";
+import { eq, like, or } from "drizzle-orm";
 import sharp from "sharp";
+import { briefingSchema } from "@/clients/briefing";
+import type { SegmentId } from "@/clients/segments";
 import { variantKey } from "@/data/assets";
 import { closeDb, db } from "@/db";
 import { assets, clients, sites, siteVersions } from "@/db/schema";
 import { storage } from "@/lib/storage";
 import { processImage } from "@/media/process";
-import { validateSiteDocument, type SiteDocument } from "@/sites/document";
-import { THEME_PRESETS, type ThemePresetId } from "@/sites/presets";
+import { validateBio, type BioDocument, type ImageRef } from "@/sites/bio";
+import { createBioDocument } from "@/sites/templates";
+import { THEMES, type ThemeId } from "@/sites/themes";
 
-const SLUG = "demo";
-const PRESET = (process.env.DEMO_THEME as ThemePresetId) || "atelie";
+type Demo = {
+  slug: string;
+  segment: SegmentId;
+  theme: ThemeId;
+  briefing: Record<string, string>;
+  ticker: string[];
+  gallery: string;
+  extra?: (doc: BioDocument) => void;
+};
 
-/** Imagem abstrata de placeholder (gradiente) nas cores do tema. */
-async function placeholder(
-  width: number,
-  height: number,
-  from: string,
-  to: string,
-): Promise<Buffer> {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/>
-    </linearGradient></defs>
+const DEMOS: Demo[] = [
+  {
+    slug: "demo-padaria",
+    segment: "food",
+    theme: "ambar",
+    briefing: {
+      businessName: "Forno da Serra",
+      tagline: "Pão de fermentação natural, todo dia às 6h.",
+      categories: "Pães, Doces, Salgados, Café",
+      city: "Campinas/SP",
+      instagram: "fornodaserra",
+      whatsapp: "5519999998888",
+      googleReviewUrl: "https://g.page/r/demo-forno/review",
+      address: "Av. das Andorinhas, 210 — Taquaral, Campinas/SP",
+      mainLinkUrl: "https://cardapio.exemplo.com.br/forno-da-serra",
+      wifiNetwork: "FORNO-CLIENTES",
+      wifiPassword: "paoquentinho",
+      hours: "Seg a sex | 6h – 20h\nSábado | 6h – 18h\nDomingo | 7h – 12h",
+    },
+    ticker: ["Fornada das 6h", "Encomendas para festas", "Café coado na hora"],
+    gallery: "Saindo do forno",
+    extra: (d) => {
+      d.contact.googleRating = 4.9;
+      d.contact.googleReviewCount = 312;
+    },
+  },
+  {
+    slug: "demo-salao",
+    segment: "beauty",
+    theme: "ameixa",
+    briefing: {
+      businessName: "Studio Lia Andrade",
+      tagline: "Cachos, cor e cuidado sem pressa.",
+      categories: "Corte, Coloração, Cachos",
+      city: "Recife/PE",
+      instagram: "studiolia.andrade",
+      whatsapp: "5581988887777",
+      googleReviewUrl: "https://g.page/r/demo-lia/review",
+      address: "Rua da Aurora, 45 — Boa Vista, Recife/PE",
+      mainLinkUrl: "https://agenda.exemplo.com.br/studio-lia",
+      hours: "Ter a sex | 10h – 19h\nSábado | 9h – 16h",
+    },
+    ticker: ["Agenda aberta para novembro", "Consultoria de cachos"],
+    gallery: "Antes e depois",
+    extra: (d) => {
+      d.contact.googleRating = 5;
+      d.contact.googleReviewCount = 128;
+    },
+  },
+  {
+    slug: "demo-clinica",
+    segment: "health",
+    theme: "esmeralda",
+    briefing: {
+      businessName: "Vida Fisio",
+      tagline: "Fisioterapia e pilates com atendimento individual.",
+      categories: "Fisioterapia, Pilates, RPG",
+      city: "Curitiba/PR",
+      instagram: "vidafisio.cwb",
+      whatsapp: "5541977776666",
+      phone: "554133330000",
+      googleReviewUrl: "https://g.page/r/demo-vida/review",
+      address: "R. XV de Novembro, 900 — Centro, Curitiba/PR",
+      wifiNetwork: "VIDAFISIO-PACIENTES",
+      wifiPassword: "bemestar2026",
+      hours: "Seg a sex | 7h – 21h\nSábado | 8h – 12h",
+    },
+    ticker: ["Aceitamos convênios", "Avaliação inicial", "Estacionamento no local"],
+    gallery: "Nosso espaço",
+    extra: (d) => {
+      d.contact.googleRating = 4.8;
+      d.contact.googleReviewCount = 96;
+      const i = d.blocks.findIndex((b) => b.id === "telefone");
+      d.blocks.splice(i, 0, {
+        id: "convenios",
+        type: "link",
+        action: "url",
+        icon: "shield",
+        hidden: false,
+        variant: "solid",
+        title: "Convênios aceitos",
+        subtitle: "Unimed, Amil, SulAmérica",
+        url: "https://exemplo.com.br/convenios",
+      });
+    },
+  },
+];
+
+/** Imagem de placeholder (degradê com formas) nas cores do tema. */
+async function placeholder(w: number, h: number, a: string, b: string, c: string): Promise<Buffer> {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>
     <rect width="100%" height="100%" fill="url(#g)"/>
-    <circle cx="${width * 0.7}" cy="${height * 0.35}" r="${Math.min(width, height) * 0.22}" fill="${to}" opacity="0.35"/>
+    <circle cx="${w * 0.68}" cy="${h * 0.34}" r="${Math.min(w, h) * 0.22}" fill="${c}" opacity=".55"/>
+    <circle cx="${w * 0.28}" cy="${h * 0.72}" r="${Math.min(w, h) * 0.14}" fill="#ffffff" opacity=".25"/>
   </svg>`;
   return sharp(Buffer.from(svg)).jpeg({ quality: 85 }).toBuffer();
 }
 
+async function addImage(
+  clientId: string,
+  buf: Buffer,
+  name: string,
+  alt: string,
+): Promise<ImageRef> {
+  const processed = await processImage(buf);
+  const id = crypto.randomUUID();
+  for (const v of processed.variants)
+    await storage().put(variantKey(clientId, id, v.width), v.data);
+  await db.insert(assets).values({
+    id,
+    clientId,
+    originalName: name,
+    width: processed.width,
+    height: processed.height,
+    variants: processed.variants.map((v) => v.width),
+    bytes: processed.variants.reduce((n, v) => n + v.data.byteLength, 0),
+    alt,
+  });
+  return { assetId: id, alt };
+}
+
 async function main() {
-  const existing = await db.select().from(clients).where(eq(clients.slug, SLUG));
-  for (const c of existing) {
+  const old = await db
+    .select()
+    .from(clients)
+    .where(or(eq(clients.slug, "demo"), like(clients.slug, "demo-%")));
+  for (const c of old) {
     await db.delete(clients).where(eq(clients.id, c.id));
     await storage().deletePrefix(`clients/${c.id}`);
   }
 
-  const [client] = await db
-    .insert(clients)
-    .values({
-      name: "Studio Demo",
-      slug: SLUG,
-      status: "published",
-      notes: "Cliente de demonstração.",
-    })
-    .returning();
+  for (const demo of DEMOS) {
+    const briefing = briefingSchema.parse(demo.briefing);
+    const [client] = await db
+      .insert(clients)
+      .values({
+        name: briefing.businessName,
+        slug: demo.slug,
+        segment: demo.segment,
+        status: "published",
+        notes: "Demonstração.",
+      })
+      .returning();
 
-  const { colors } = THEME_PRESETS[PRESET].theme;
-  const specs = [
-    { w: 1600, h: 2000, alt: "Cliente com cabelo recém-finalizado" },
-    { w: 1200, h: 1600, alt: "Retrato da profissional no estúdio" },
-    { w: 1600, h: 1600, alt: "Coloração em tons de cobre" },
-    { w: 1200, h: 1200, alt: "Corte curto texturizado" },
-    { w: 1200, h: 1200, alt: "Penteado para festa" },
-    { w: 1200, h: 1200, alt: "Tratamento de hidratação" },
-    { w: 1200, h: 1200, alt: "Ambiente do estúdio" },
-  ];
-  const ids: string[] = [];
-  for (const [i, s] of specs.entries()) {
-    const processed = await processImage(
-      await placeholder(
-        s.w,
-        s.h,
-        i % 2 ? colors.surface : colors.primary,
-        i % 2 ? colors.primary : colors.surface,
-      ),
+    const { colors } = THEMES[demo.theme].theme;
+    const doc = createBioDocument({ segment: demo.segment, themeId: demo.theme, briefing });
+    doc.profile.logo = await addImage(
+      client.id,
+      await placeholder(600, 600, colors.logoBg, colors.glow2, colors.cardTop),
+      "logo.jpg",
+      `Logo ${briefing.businessName}`,
     );
-    const id = crypto.randomUUID();
-    for (const v of processed.variants)
-      await storage().put(variantKey(client.id, id, v.width), v.data);
-    await db.insert(assets).values({
-      id,
-      clientId: client.id,
-      originalName: `demo-${i + 1}.jpg`,
-      width: processed.width,
-      height: processed.height,
-      variants: processed.variants.map((v) => v.width),
-      bytes: processed.variants.reduce((n, v) => n + v.data.byteLength, 0),
-      alt: s.alt,
+    doc.profile.background = await addImage(
+      client.id,
+      await placeholder(1200, 1600, colors.glow1, colors.glow3, colors.glow2),
+      "fundo.jpg",
+      "",
+    );
+    const images: ImageRef[] = [];
+    for (let i = 0; i < 4; i++) {
+      images.push(
+        await addImage(
+          client.id,
+          await placeholder(
+            900,
+            900,
+            i % 2 ? colors.glow2 : colors.glow1,
+            colors.cardBottom,
+            colors.accent,
+          ),
+          `foto-${i + 1}.jpg`,
+          `${demo.gallery} — foto ${i + 1}`,
+        ),
+      );
+    }
+    const mapsIndex = doc.blocks.findIndex((b) => b.id === "como-chegar");
+    doc.blocks.splice(mapsIndex, 0, {
+      id: "galeria",
+      type: "gallery",
+      hidden: false,
+      title: demo.gallery,
+      images,
     });
-    ids.push(id);
+    doc.ticker = { enabled: true, items: demo.ticker };
+    demo.extra?.(doc);
+
+    const result = validateBio(doc);
+    if (!result.ok) throw new Error(`${demo.slug}: ${JSON.stringify(result.issues, null, 2)}`);
+    const [site] = await db
+      .insert(sites)
+      .values({ clientId: client.id, draft: result.document })
+      .returning();
+    const [version] = await db
+      .insert(siteVersions)
+      .values({ siteId: site.id, document: result.document, note: "Demonstração" })
+      .returning();
+    await db.update(sites).set({ publishedVersionId: version.id }).where(eq(sites.id, site.id));
+    console.log(`Publicado: /${demo.slug}`);
   }
-  const img = (i: number) => ({ assetId: ids[i], alt: specs[i].alt });
-
-  const doc: SiteDocument = {
-    schemaVersion: 1,
-    meta: {
-      title: "Studio Demo — cabelo e coloração",
-      description:
-        "Cortes, coloração e tratamentos com hora marcada em São Paulo. Veja preços e agende.",
-    },
-    theme: structuredClone(THEME_PRESETS[PRESET].theme),
-    contact: {
-      businessName: "Studio Demo",
-      whatsapp: "5511999998888",
-      instagram: "studio.demo",
-      email: "contato@studiodemo.com.br",
-      address: {
-        line: "Rua das Flores, 120 — Vila Madalena",
-        city: "São Paulo, SP",
-        mapUrl: "https://maps.google.com/?q=Rua+das+Flores+120",
-      },
-    },
-    sections: [
-      {
-        id: "abertura",
-        type: "hero",
-        variant: "split",
-        hidden: false,
-        props: {
-          heading: "Cabelo que conversa com quem você é",
-          subheading: "Corte, cor e cuidado sem pressa, num estúdio pequeno na Vila Madalena.",
-          image: img(0),
-          ctaLabel: "Agendar horário",
-        },
-      },
-      {
-        id: "sobre",
-        type: "about",
-        variant: "portrait",
-        hidden: false,
-        props: {
-          heading: "Sobre a Ana",
-          body: "Há 12 anos cuido de cabelos cacheados, crespos e lisos com o mesmo princípio: entender a rotina de cada pessoa antes de pegar a tesoura.\n\nAtendo uma cliente por vez, com café passado na hora e tempo para conversar sobre o que você quer.",
-          image: img(1),
-        },
-      },
-      {
-        id: "servicos",
-        type: "services",
-        variant: "price-list",
-        hidden: false,
-        props: {
-          heading: "Serviços e preços",
-          intro: "Valores para cabelo médio. Cabelos longos podem ter acréscimo, combinado antes.",
-          categories: [
-            {
-              name: "Corte",
-              items: [
-                {
-                  name: "Corte feminino",
-                  priceCents: 12000,
-                  priceFrom: false,
-                  durationMinutes: 60,
-                },
-                {
-                  name: "Corte de cachos a seco",
-                  description: "Fio a fio, respeitando a curvatura",
-                  priceCents: 16000,
-                  priceFrom: false,
-                  durationMinutes: 90,
-                },
-                { name: "Franja", priceCents: 4000, priceFrom: false },
-              ],
-            },
-            {
-              name: "Cor",
-              items: [
-                { name: "Coloração", priceCents: 18000, priceFrom: true, durationMinutes: 120 },
-                { name: "Mechas", priceCents: 35000, priceFrom: true, durationMinutes: 240 },
-                { name: "Tonalização", priceCents: 9000, priceFrom: false },
-              ],
-            },
-            {
-              name: "Tratamento",
-              items: [
-                {
-                  name: "Hidratação profunda",
-                  priceCents: 11000,
-                  priceFrom: false,
-                  durationMinutes: 50,
-                },
-                { name: "Cronograma capilar", description: "4 sessões", priceFrom: false },
-              ],
-            },
-          ],
-        },
-      },
-      {
-        id: "galeria",
-        type: "gallery",
-        variant: "mosaic",
-        hidden: false,
-        props: { heading: "Trabalhos recentes", images: [img(2), img(3), img(4), img(5), img(6)] },
-      },
-      {
-        id: "depoimentos",
-        type: "testimonials",
-        variant: "quote",
-        hidden: false,
-        props: {
-          heading: "Quem já passou por aqui",
-          items: [
-            {
-              quote: "Primeira vez que saí de um salão sabendo cuidar do meu cacho em casa.",
-              author: "Juliana R.",
-            },
-            {
-              quote: "A Ana escuta de verdade. A cor ficou exatamente como eu imaginava.",
-              author: "Marcela T.",
-            },
-            {
-              quote: "Ambiente tranquilo e pontualidade. Virei cliente fixa.",
-              author: "Beatriz S.",
-            },
-          ],
-        },
-      },
-      {
-        id: "contato",
-        type: "contact",
-        variant: "default",
-        hidden: false,
-        props: {
-          heading: "Onde estamos",
-          hours: [
-            { days: "Terça a sexta", time: "10h às 19h" },
-            { days: "Sábado", time: "9h às 16h" },
-            { days: "Domingo e segunda", time: "Fechado" },
-          ],
-        },
-      },
-      {
-        id: "chamada",
-        type: "cta",
-        variant: "band",
-        hidden: false,
-        props: {
-          heading: "Vamos marcar seu horário?",
-          text: "Respondo pelo WhatsApp em até um dia útil.",
-          ctaLabel: "Chamar no WhatsApp",
-        },
-      },
-    ],
-  };
-
-  const result = validateSiteDocument(doc);
-  if (!result.ok) throw new Error(JSON.stringify(result.issues, null, 2));
-
-  const [site] = await db
-    .insert(sites)
-    .values({ clientId: client.id, draft: result.document })
-    .returning();
-  const [version] = await db
-    .insert(siteVersions)
-    .values({ siteId: site.id, document: result.document, note: "Demonstração" })
-    .returning();
-  await db.update(sites).set({ publishedVersionId: version.id }).where(eq(sites.id, site.id));
-
-  console.log(`Demo publicado (tema ${PRESET}): cliente ${client.id}`);
 }
 
 main()

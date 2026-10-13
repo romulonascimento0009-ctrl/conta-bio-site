@@ -1,9 +1,31 @@
 import { z } from "zod";
 
-/** Subdomínios que nunca podem ser de cliente. */
+/**
+ * Endereços que nunca podem ser de cliente: rotas do próprio sistema em `dominio.com/<slug>`
+ * (atuais e previstas) e nomes que confundiriam visitantes.
+ */
 export const RESERVED_SLUGS = new Set([
-  "www",
   "admin",
+  "preview",
+  "s",
+  "convite",
+  "convites",
+  "entrar",
+  "sair",
+  "conta",
+  "configuracoes",
+  "termos",
+  "privacidade",
+  "ajuda",
+  "contato",
+  "planos",
+  "precos",
+  "sobre",
+  "robots",
+  "sitemap",
+  "manifest",
+  "favicon",
+  "www",
   "api",
   "app",
   "painel",

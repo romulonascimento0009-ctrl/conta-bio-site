@@ -14,7 +14,7 @@ const e2eEnv = {
   STORAGE_DIR: ".data/e2e/storage",
   BETTER_AUTH_SECRET: "e2e-secret-nao-usar-em-producao-0123456789",
   BETTER_AUTH_URL: baseURL,
-  ROOT_DOMAIN: `localhost:${PORT}`,
+  PUBLIC_URL: baseURL,
   ADMIN_EMAIL: E2E_ADMIN.email,
   ADMIN_PASSWORD: E2E_ADMIN.password,
 };

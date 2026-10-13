@@ -5,7 +5,7 @@ import { assets, sites, siteVersions } from "@/db/schema";
 import { requireSession } from "@/lib/session";
 import { clientKey, storage } from "@/lib/storage";
 import { processImage } from "@/media/process";
-import { collectImageRefs, validateSiteDocument } from "@/sites/document";
+import { collectImageRefs, validateBio } from "@/sites/bio";
 import { getClient } from "./clients";
 
 export type Asset = typeof assets.$inferSelect;
@@ -98,7 +98,7 @@ export async function deleteAsset(clientId: string, assetId: string): Promise<vo
       if (v) docs.push(v.document);
     }
     for (const raw of docs) {
-      const parsed = validateSiteDocument(raw);
+      const parsed = validateBio(raw);
       if (parsed.ok && collectImageRefs(parsed.document).some((r) => r.assetId === assetId)) {
         throw new AssetInUse();
       }

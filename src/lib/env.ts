@@ -8,8 +8,8 @@ export const envSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32, "BETTER_AUTH_SECRET precisa de pelo menos 32 caracteres"),
   BETTER_AUTH_URL: z.url(),
   STORAGE_DIR: z.preprocess(emptyToUndefined, z.string().default(".data/storage")),
-  /** Domínio raiz: sites em <slug>.<ROOT_DOMAIN>. Lido também no proxy.ts. */
-  ROOT_DOMAIN: z.preprocess(emptyToUndefined, z.string().default("localhost:3000")),
+  /** Endereço público da plataforma: Bio Sites em <PUBLIC_URL>/<slug>. */
+  PUBLIC_URL: z.preprocess(emptyToUndefined, z.url().default("http://localhost:3000")),
 });
 
 export type Env = z.infer<typeof envSchema>;

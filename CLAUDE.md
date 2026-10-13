@@ -6,7 +6,7 @@ Plataforma de **Bio Sites** (mini site estilo "link na bio", celular primeiro) p
 
 ## Estado
 
-Fases 0–2 concluídas; produto redefinido para Bio Sites em 2026-10-13 (D19–D22). O código ainda tem o formato antigo (seções + subdomínio) até a Fase 2B. Cada nova fase exige aprovação explícita do usuário. Onde paramos e próximo passo: `docs/STATE.md`.
+Fases 0, 1, 2 e 2B (Bio Sites) concluídas em 2026-10-13. Cada nova fase exige aprovação explícita do usuário. Onde paramos e próximo passo: `docs/STATE.md`. Visual aprovado pelo usuário: `prototipos/bio-site-mescla.html`.
 
 ## Documentação (ler só o necessário para a tarefa)
 
@@ -33,15 +33,17 @@ Next.js 16 (App Router) · React 19 · TypeScript 5 estrito · Tailwind 4 · Zod
 - `npm run db:generate` — gera migração após alterar `src/db/schema/*` (usar `-- --name <nome>`)
 - `npm run db:migrate` — aplica migrações
 - `npm run admin:create` — cria o operador ou redefine a senha
-- `npm run seed:demo` — (re)cria o cliente `demo` publicado → http://demo.localhost:3000 (`$env:DEMO_THEME` escolhe o tema)
+- `npm run seed:demo` — (re)cria 3 Bio Sites publicados → http://localhost:3000/demo-padaria, `/demo-salao`, `/demo-clinica`
+- Lighthouse (celular): ver `docs/TESTING.md`; meta ≥ 90 em todas as categorias
 - `npx tsx scripts/screenshots.mts <url> <pasta>` — capturas em celular/tablet/desktop para revisão visual
 - `npx tsx scripts/font-specimen.mts <url> <png>` — conferir acentos de todas as fontes (obrigatório ao adicionar fonte)
 - Build e scripts exigem `.env.local` (ver `.env.example`). Nunca apagar `.data/pglite` (contém a conta do operador); só `.data/e2e` é descartável.
 
 ## Regras de desenvolvimento
 
-- Sites são dados: configuração estruturada e validada por schema; nunca HTML livre gerado por IA.
-- Alterações simples (texto, cor, imagem, link, ordem de seções) são operações determinísticas. IA só para briefing, textos, direção visual e mudanças complexas, e sempre devolve dados validados pelo mesmo schema.
+- Bio Sites são dados: `BioDocument` (`src/sites/bio.ts`) validado por schema; nunca HTML livre gerado por IA.
+- Dados de contato ficam em `contact` e os cartões (Instagram, Google, WhatsApp, mapa…) os leem via `resolveLink()` — não duplicar dados nos blocos.
+- Alterações simples (texto, cor, imagem, link, ordem de blocos) são operações determinísticas (ex.: `applyQuickEdit`). IA só para briefing, textos, direção visual e mudanças complexas, e sempre devolve dados validados pelo mesmo schema.
 - Toda mudança gera rascunho/versão; publicar exige aprovação explícita; versões antigas restauráveis.
 - Isolamento por cliente em dados (`client_id` em toda tabela de conteúdo) e arquivos (`clientKey()`).
 - Arquitetura proporcional ao MVP: monólito, sem microserviços ou abstrações especulativas.
@@ -49,7 +51,9 @@ Next.js 16 (App Router) · React 19 · TypeScript 5 estrito · Tailwind 4 · Zod
 - Para código que chama a API da Claude, carregar a skill `claude-api` antes.
 - Tabelas de autenticação (`src/db/schema/auth.ts`) são geradas pela CLI do Better Auth; não editar à mão.
 - Acesso ao banco só via `src/data/` (camada de acesso a dados). Documento de site só referencia imagens do próprio cliente.
-- Mudança incompatível no schema do `SiteDocument` (remover fonte, seção, campo) invalida documentos salvos: exige migração de documentos e `schemaVersion` novo.
+- Mudança incompatível no schema do `BioDocument` (remover fonte, bloco, campo) invalida documentos salvos: exige migração de documentos e `schemaVersion` novo.
+- Endereços públicos ficam na raiz (`/[slug]`): toda nova rota de primeiro nível do sistema precisa entrar em `RESERVED_SLUGS` (`src/clients/slug.ts`).
+- Contraste AA é validado no schema (cartões, faixa, logo); novos temas/cores passam pelos testes de `bio.test.ts`.
 
 ## Segurança
 
