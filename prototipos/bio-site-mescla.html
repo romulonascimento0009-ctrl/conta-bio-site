@@ -119,6 +119,21 @@
   .card .ico.brand-wa, .social a.brand-wa { background: #25d366; color: #fff; border: 0; }
   .card .ico.brand-google, .social a.brand-google { background: #fff; border: 0; }
   .card .ico.brand-google svg { width: 24px; height: 24px; }
+
+  /* Identidade própria para cada ícone (estilo ícone de app), mesmo formato de cartão */
+  .card .ico.c-maps   { background: #fff; color: #ea4335; }
+  .card .ico.c-maps svg { width: 26px; height: 26px; }
+  .card .ico.c-phone, .social a.c-phone { background: #34c759; color: #fff; border: 0; }
+  .card .ico.c-menu   { background: #ff9500; color: #fff; }
+  .card .ico.c-gift   { background: #ff2d55; color: #fff; }
+  .card .ico.c-cal    { background: #fff; color: #e5383b; }
+  .card .ico.c-tag    { background: #af52de; color: #fff; }
+  .card .ico.c-shield { background: #5856d6; color: #fff; }
+  .panel h2 .hico { width: 30px; height: 30px; border-radius: 9px; display: inline-grid; place-items: center; color: #fff; flex: none; }
+  .panel h2 .hico svg { width: 18px; height: 18px; color: #fff; }
+  .hico.c-wifi { background: #007aff; } .hico.c-clock { background: #ff9f0a; } .hico.c-photos { background: linear-gradient(135deg, #ffcc00, #ff2d55 50%, #5856d6); }
+  .wifi h2 .hico { width: 34px; height: 34px; }
+  .wifi h2 { padding: 0 44px; }
   .links { display: contents; }
   .links .card { margin: 0 16px 12px; }
   .links .card:first-child { margin-top: 24px; }
@@ -168,6 +183,8 @@
   <symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 16a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19.5" r="1.3" fill="currentColor"/></symbol>
   <symbol id="i-qr" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm8-2h3v3h-3zm5 0h3v3h-3zm-5 5h3v3h-3zm5 0h3v3h-3zm-2.5-2.5h3v3h-3z"/></symbol>
   <symbol id="i-google" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></symbol>
+  <symbol id="i-maps" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M12 9v6M9 12h6"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
   <symbol id="i-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></symbol>
   <symbol id="i-heart" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z"/></symbol>
@@ -218,27 +235,27 @@
             <span class="txt"><strong>Avaliar no Google</strong><small>4,9 ★ · 312 avaliações</small></span><svg class="go"><use href="#i-go"/></svg></a>
           <a class="card" href="#"><span class="ico brand-wa"><svg><use href="#i-wa"/></svg></span>
             <span class="txt"><span class="badge">Responde rápido</span><strong>Fazer pedido no WhatsApp</strong><small>Retire ou receba em casa</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-menu"/></svg></span>
+          <a class="card" href="#"><span class="ico c-menu"><svg><use href="#i-menu"/></svg></span>
             <span class="txt"><strong>Cardápio do dia</strong><small>Pães, doces e salgados</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-gift"/></svg></span>
+          <a class="card" href="#"><span class="ico c-gift"><svg><use href="#i-gift"/></svg></span>
             <span class="txt"><strong>Encomendas de bolos</strong><small>Com 48h de antecedência</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card light" href="#"><span class="ico"><svg><use href="#i-pin"/></svg></span>
+          <a class="card light" href="#"><span class="ico c-maps"><svg><use href="#i-maps"/></svg></span>
             <span class="txt"><strong>Como chegar</strong><small>Av. das Andorinhas, 210 · Taquaral</small></span><svg class="go"><use href="#i-go"/></svg></a>
         </nav>
         <section class="panel wifi">
           <span class="qr" title="Mostrar QR code"><svg><use href="#i-qr"/></svg></span>
-          <h2><svg><use href="#i-wifi"/></svg> Wi-Fi</h2>
+          <h2><span class="hico c-wifi"><svg><use href="#i-wifi"/></svg></span> Wi-Fi</h2>
           <div class="net"><span>Rede</span><strong>FORNO-CLIENTES</strong></div>
           <a class="copy" href="#"><svg><use href="#i-wifi"/></svg>Copiar senha</a>
         </section>
-        <section class="panel hours"><h2><svg><use href="#i-clock"/></svg> Horários</h2>
+        <section class="panel hours"><h2><span class="hico c-clock"><svg><use href="#i-clock"/></svg></span> Horários</h2>
           <div><span>Seg a sex</span><span>6h – 20h</span></div>
           <div><span>Sábado</span><span>6h – 18h</span></div>
           <div><span>Domingo</span><span>7h – 12h</span></div>
           <div><span>Agora</span><span class="open">Aberto</span></div>
         </section>
-        <section class="panel"><h2><svg><use href="#i-img"/></svg> Saindo do forno</h2><div class="gallery"><i></i><i></i><i></i><i></i><i></i></div></section>
-        <div class="social"><a href="#" aria-label="Instagram" class="brand-ig"><svg><use href="#i-ig"/></svg></a><a href="#" aria-label="Telefone"><svg><use href="#i-phone"/></svg></a><a href="#" aria-label="Avaliar no Google" class="brand-google"><svg><use href="#i-google"/></svg></a></div>
+        <section class="panel"><h2><span class="hico c-photos"><svg><use href="#i-img"/></svg></span> Saindo do forno</h2><div class="gallery"><i></i><i></i><i></i><i></i><i></i></div></section>
+        <div class="social"><a href="#" aria-label="Instagram" class="brand-ig"><svg><use href="#i-ig"/></svg></a><a href="#" aria-label="Telefone" class="c-phone"><svg><use href="#i-phone"/></svg></a><a href="#" aria-label="Avaliar no Google" class="brand-google"><svg><use href="#i-google"/></svg></a></div>
         <p class="foot">feito com a sua plataforma</p>
       </div>
       <a class="fab" href="#" aria-label="WhatsApp"><svg><use href="#i-wa"/></svg></a>
@@ -267,21 +284,21 @@
             <span class="txt"><strong>Instagram</strong><small class="handle">@perfil</small></span><svg class="go"><use href="#i-go"/></svg></a>
           <a class="card" href="#"><span class="ico brand-google"><svg><use href="#i-google"/></svg></span>
             <span class="txt"><strong>Avaliar no Google</strong><small>4,9 ★ · 312 avaliações</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-cal"/></svg></span>
+          <a class="card" href="#"><span class="ico c-cal"><svg><use href="#i-cal"/></svg></span>
             <span class="txt"><span class="badge">Horários esta semana</span><strong>Agendar horário</strong><small>Escolha o serviço e o dia</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-tag"/></svg></span>
+          <a class="card" href="#"><span class="ico c-tag"><svg><use href="#i-tag"/></svg></span>
             <span class="txt"><strong>Serviços e preços</strong><small>Corte a partir de R$ 90</small></span><svg class="go"><use href="#i-go"/></svg></a>
           <a class="card" href="#"><span class="ico brand-wa"><svg><use href="#i-wa"/></svg></span>
             <span class="txt"><strong>Tirar dúvidas</strong><small>WhatsApp do estúdio</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card light" href="#"><span class="ico"><svg><use href="#i-pin"/></svg></span>
+          <a class="card light" href="#"><span class="ico c-maps"><svg><use href="#i-maps"/></svg></span>
             <span class="txt"><strong>Onde estamos</strong><small>Rua da Aurora, 45 · Boa Vista</small></span><svg class="go"><use href="#i-go"/></svg></a>
         </nav>
-        <section class="panel"><h2><svg><use href="#i-img"/></svg> Antes e depois</h2><div class="gallery"><i></i><i></i><i></i><i></i><i></i></div></section>
-        <section class="panel hours"><h2><svg><use href="#i-clock"/></svg> Atendimento</h2>
+        <section class="panel"><h2><span class="hico c-photos"><svg><use href="#i-img"/></svg></span> Antes e depois</h2><div class="gallery"><i></i><i></i><i></i><i></i><i></i></div></section>
+        <section class="panel hours"><h2><span class="hico c-clock"><svg><use href="#i-clock"/></svg></span> Atendimento</h2>
           <div><span>Ter a sex</span><span>10h – 19h</span></div>
           <div><span>Sábado</span><span>9h – 16h</span></div>
         </section>
-        <div class="social"><a href="#" aria-label="Instagram" class="brand-ig"><svg><use href="#i-ig"/></svg></a><a href="#" aria-label="Telefone"><svg><use href="#i-phone"/></svg></a><a href="#" aria-label="Avaliar no Google" class="brand-google"><svg><use href="#i-google"/></svg></a></div>
+        <div class="social"><a href="#" aria-label="Instagram" class="brand-ig"><svg><use href="#i-ig"/></svg></a><a href="#" aria-label="Telefone" class="c-phone"><svg><use href="#i-phone"/></svg></a><a href="#" aria-label="Avaliar no Google" class="brand-google"><svg><use href="#i-google"/></svg></a></div>
         <p class="foot">feito com a sua plataforma</p>
       </div>
       <a class="fab" href="#" aria-label="WhatsApp"><svg><use href="#i-wa"/></svg></a>
@@ -310,26 +327,26 @@
             <span class="txt"><strong>Instagram</strong><small class="handle">@perfil</small></span><svg class="go"><use href="#i-go"/></svg></a>
           <a class="card" href="#"><span class="ico brand-google"><svg><use href="#i-google"/></svg></span>
             <span class="txt"><strong>Avaliar no Google</strong><small>4,9 ★ · 312 avaliações</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-cal"/></svg></span>
+          <a class="card" href="#"><span class="ico c-cal"><svg><use href="#i-cal"/></svg></span>
             <span class="txt"><span class="badge">Vagas amanhã</span><strong>Marcar avaliação</strong><small>Presencial ou online</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-menu"/></svg></span>
+          <a class="card" href="#"><span class="ico c-shield"><svg><use href="#i-shield"/></svg></span>
             <span class="txt"><strong>Convênios aceitos</strong><small>Unimed, Amil, SulAmérica</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card" href="#"><span class="ico"><svg><use href="#i-phone"/></svg></span>
+          <a class="card" href="#"><span class="ico c-phone"><svg><use href="#i-phone"/></svg></span>
             <span class="txt"><strong>Ligar para a recepção</strong><small>(41) 3333-0000</small></span><svg class="go"><use href="#i-go"/></svg></a>
-          <a class="card light" href="#"><span class="ico"><svg><use href="#i-pin"/></svg></span>
+          <a class="card light" href="#"><span class="ico c-maps"><svg><use href="#i-maps"/></svg></span>
             <span class="txt"><strong>Como chegar</strong><small>R. XV de Novembro, 900 · Centro</small></span><svg class="go"><use href="#i-go"/></svg></a>
         </nav>
         <section class="panel wifi">
           <span class="qr" title="Mostrar QR code"><svg><use href="#i-qr"/></svg></span>
-          <h2><svg><use href="#i-wifi"/></svg> Wi-Fi da recepção</h2>
+          <h2><span class="hico c-wifi"><svg><use href="#i-wifi"/></svg></span> Wi-Fi da recepção</h2>
           <div class="net"><span>Rede</span><strong>VIDAFISIO-PACIENTES</strong></div>
           <a class="copy" href="#"><svg><use href="#i-wifi"/></svg>Copiar senha</a>
         </section>
-        <section class="panel hours"><h2><svg><use href="#i-clock"/></svg> Horários</h2>
+        <section class="panel hours"><h2><span class="hico c-clock"><svg><use href="#i-clock"/></svg></span> Horários</h2>
           <div><span>Seg a sex</span><span>7h – 21h</span></div>
           <div><span>Sábado</span><span>8h – 12h</span></div>
         </section>
-        <div class="social"><a href="#" aria-label="Instagram" class="brand-ig"><svg><use href="#i-ig"/></svg></a><a href="#" aria-label="Telefone"><svg><use href="#i-phone"/></svg></a><a href="#" aria-label="Avaliar no Google" class="brand-google"><svg><use href="#i-google"/></svg></a></div>
+        <div class="social"><a href="#" aria-label="Instagram" class="brand-ig"><svg><use href="#i-ig"/></svg></a><a href="#" aria-label="Telefone" class="c-phone"><svg><use href="#i-phone"/></svg></a><a href="#" aria-label="Avaliar no Google" class="brand-google"><svg><use href="#i-google"/></svg></a></div>
         <p class="foot">feito com a sua plataforma</p>
       </div>
       <a class="fab" href="#" aria-label="WhatsApp"><svg><use href="#i-wa"/></svg></a>
