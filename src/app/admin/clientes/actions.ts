@@ -9,6 +9,7 @@ import { AssetInUse, deleteAsset, updateAssetAlt, uploadAsset } from "@/data/ass
 import { saveBriefing } from "@/data/briefings";
 import { createClient, deleteClient, getClient, SlugTaken, updateClient } from "@/data/clients";
 import { createSiteFromTemplate, publishDraft, saveDraft, saveQuickEdit } from "@/data/sites";
+import { publishVersion, restoreVersion } from "@/data/versions";
 import { ImageRejected } from "@/media/process";
 import { quickEditSchema } from "@/sites/quick-edit";
 import { THEMES, type ThemeId } from "@/sites/themes";
@@ -208,11 +209,63 @@ export async function quickEditAction(
   };
 }
 
-export async function publishAction(id: string, _prev: FormState): Promise<FormState> {
-  const published = await publishDraft(id);
+/** Publicação exige aprovação explícita (caixa "Revisei a prévia e aprovo"). */
+export async function publishAction(
+  id: string,
+  _prev: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  if (fd.get("approve") !== "on") {
+    return { ok: false, message: "Marque “Revisei a prévia e aprovo a publicação” para publicar." };
+  }
+  const published = await publishDraft(id, str(fd, "note").trim() || "Publicação");
   if (!published) return { ok: false, message: "Não foi possível publicar: o rascunho tem erros." };
   revalidatePath(`/admin/clientes/${id}`, "layout");
   return { ok: true, message: "Publicado." };
+}
+
+export type EditorSaveResult = {
+  ok: boolean;
+  message: string;
+  issues?: { path: string; message: string }[];
+};
+
+/** Salva o rascunho vindo do editor visual (o servidor valida de novo). */
+export async function saveEditorAction(id: string, doc: unknown): Promise<EditorSaveResult> {
+  const result = await saveDraft(id, doc);
+  if (!result.ok)
+    return { ok: false, message: "Não salvo: corrija os itens indicados.", issues: result.issues };
+  revalidatePath(`/admin/clientes/${id}`, "layout");
+  return { ok: true, message: "Rascunho salvo." };
+}
+
+export async function restoreVersionAction(
+  clientId: string,
+  versionId: string,
+  _prev: FormState,
+): Promise<FormState> {
+  const ok = await restoreVersion(clientId, versionId);
+  if (!ok) return { ok: false, message: "Não foi possível restaurar esta versão." };
+  revalidatePath(`/admin/clientes/${clientId}`, "layout");
+  return {
+    ok: true,
+    message: "Versão copiada para o rascunho. O rascunho anterior foi guardado no histórico.",
+  };
+}
+
+export async function publishVersionAction(
+  clientId: string,
+  versionId: string,
+  _prev: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  if (fd.get("approve") !== "on") {
+    return { ok: false, message: "Marque a aprovação para republicar esta versão." };
+  }
+  const ok = await publishVersion(clientId, versionId);
+  if (!ok) return { ok: false, message: "Não foi possível publicar esta versão." };
+  revalidatePath(`/admin/clientes/${clientId}`, "layout");
+  return { ok: true, message: "Esta versão está publicada." };
 }
 
 export async function saveDraftAction(

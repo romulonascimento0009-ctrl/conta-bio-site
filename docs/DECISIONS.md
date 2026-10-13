@@ -58,6 +58,12 @@ Formato: decisão · motivo · alternativas.
 
 **D27 — Endereço por caminho implementado.** Subdomínios e `proxy.ts` de reescrita removidos; `PUBLIC_URL` substitui `ROOT_DOMAIN`.
 
+**D28 — Editor visual no mesmo documento (sem iframe).** A prévia usa o próprio `BioRenderer` em modo `embedded`, dentro de uma moldura com `transform` (os elementos "fixos" do Bio Site se prendem à moldura). Clique na prévia é capturado para selecionar o bloco (links e botões não disparam). Estado no navegador com histórico de desfazer/refazer (até 100 passos; digitação seguida no mesmo campo vira um passo). Validação ao vivo com o mesmo schema; o servidor valida de novo ao salvar.
+
+**D29 — Aprovação explícita.** Publicar (aba Bio Site, editor) e republicar versão exigem marcar a caixa de aprovação; a nota da versão é opcional. "Salvar e publicar" da edição rápida conta como ação explícita.
+
+**D30 — Versões.** Toda publicação cria uma versão imutável. Restaurar copia a versão para o rascunho e, antes, guarda o rascunho atual como versão — só se ele ainda não existir em nenhuma versão. Republicar só move o ponteiro público. Versões são isoladas por site (consulta sempre filtra pelo site do cliente).
+
 ## Pendentes
 
 **P5b — Segundo fator (TOTP ou passkey).** Obrigatório antes do deploy (Fase 5). Plugins `twoFactor`/`passkey` do Better Auth.

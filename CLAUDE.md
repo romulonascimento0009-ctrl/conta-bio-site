@@ -6,7 +6,7 @@ Plataforma de **Bio Sites** (mini site estilo "link na bio", celular primeiro) p
 
 ## Estado
 
-Fases 0, 1, 2 e 2B (Bio Sites) concluídas em 2026-10-13. Cada nova fase exige aprovação explícita do usuário. Onde paramos e próximo passo: `docs/STATE.md`. Visual aprovado pelo usuário: `prototipos/bio-site-mescla.html`.
+Fases 0, 1, 2, 2B (Bio Sites) e 3 (editor visual e versões) concluídas em 2026-10-13. Cada nova fase exige aprovação explícita do usuário. Onde paramos e próximo passo: `docs/STATE.md`. Visual aprovado pelo usuário: `prototipos/bio-site-mescla.html`.
 
 ## Documentação (ler só o necessário para a tarefa)
 
@@ -43,7 +43,8 @@ Next.js 16 (App Router) · React 19 · TypeScript 5 estrito · Tailwind 4 · Zod
 
 - Bio Sites são dados: `BioDocument` (`src/sites/bio.ts`) validado por schema; nunca HTML livre gerado por IA.
 - Dados de contato ficam em `contact` e os cartões (Instagram, Google, WhatsApp, mapa…) os leem via `resolveLink()` — não duplicar dados nos blocos.
-- Alterações simples (texto, cor, imagem, link, ordem de blocos) são operações determinísticas (ex.: `applyQuickEdit`). IA só para briefing, textos, direção visual e mudanças complexas, e sempre devolve dados validados pelo mesmo schema.
+- Alterações simples (texto, cor, imagem, link, ordem de blocos) são operações determinísticas: `applyOperation` (editor visual, `src/sites/operations.ts`) e `applyQuickEdit` (edição rápida). Nova capacidade de edição = nova operação + teste.
+- Publicar sempre exige ação explícita do operador (caixa de aprovação ou botão "Salvar e publicar"). IA só para briefing, textos, direção visual e mudanças complexas, e sempre devolve dados validados pelo mesmo schema.
 - Toda mudança gera rascunho/versão; publicar exige aprovação explícita; versões antigas restauráveis.
 - Isolamento por cliente em dados (`client_id` em toda tabela de conteúdo) e arquivos (`clientKey()`).
 - Arquitetura proporcional ao MVP: monólito, sem microserviços ou abstrações especulativas.

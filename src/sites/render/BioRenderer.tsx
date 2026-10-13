@@ -237,8 +237,19 @@ function initials(name: string): string {
   ).toUpperCase();
 }
 
-/** Bio Site completo a partir de um documento validado. */
-export function BioRenderer({ doc, assets }: { doc: BioDocument; assets: Map<string, AssetInfo> }) {
+/**
+ * Bio Site completo a partir de um documento validado.
+ * `embedded`: dentro do editor (prévia de celular), sem elementos presos à janela do navegador.
+ */
+export function BioRenderer({
+  doc,
+  assets,
+  embedded = false,
+}: {
+  doc: BioDocument;
+  assets: Map<string, AssetInfo>;
+  embedded?: boolean;
+}) {
   const ctx: Ctx = { doc, assets };
   const { colors, fonts, radius, pattern } = doc.theme;
   const ticker = doc.ticker.colors ?? doc.tickerTheme;
@@ -287,14 +298,17 @@ export function BioRenderer({ doc, assets }: { doc: BioDocument; assets: Map<str
   const tickerOn = doc.ticker.enabled && doc.ticker.items.length > 0;
 
   return (
-    <div className={`bio ${display.variable} ${body.variable}`} style={style}>
+    <div
+      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}`}
+      style={style}
+    >
       <div className="bio-photo" aria-hidden="true">
         <Img ctx={ctx} image={doc.profile.background} sizes="480px" alt="" />
       </div>
       <div className="bio-veil" aria-hidden="true" />
 
       <main className="bio-main">
-        <header className="bio-hero">
+        <header className="bio-hero" data-edit="profile">
           <div className="bio-logo" aria-hidden={doc.profile.logo ? undefined : "true"}>
             {doc.profile.logo && assets.has(doc.profile.logo.assetId) ? (
               <Img ctx={ctx} image={doc.profile.logo} sizes="108px" priority />
@@ -324,7 +338,7 @@ export function BioRenderer({ doc, assets }: { doc: BioDocument; assets: Map<str
         </header>
 
         {tickerOn && (
-          <section aria-label="Avisos">
+          <section aria-label="Avisos" data-edit="ticker">
             <ul className="bio-sr">
               {doc.ticker.items.map((t, i) => (
                 <li key={i}>{t}</li>
@@ -343,7 +357,7 @@ export function BioRenderer({ doc, assets }: { doc: BioDocument; assets: Map<str
         <Blocks ctx={ctx} />
 
         {social.length > 0 && (
-          <ul className="bio-social" aria-label="Redes e contatos">
+          <ul className="bio-social" aria-label="Redes e contatos" data-edit="contact">
             {social.map((s) => (
               <li key={s.icon}>
                 <a

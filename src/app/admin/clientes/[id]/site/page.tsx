@@ -6,7 +6,8 @@ import { getClient } from "@/data/clients";
 import { getSite, hasUnpublishedChanges } from "@/data/sites";
 import { publicUrl } from "@/lib/public-url";
 import { THEMES } from "@/sites/themes";
-import { CreateSiteForm, DraftEditor, PublishForm } from "./site-forms";
+import { PublishForm } from "@/app/admin/_components/publish-form";
+import { CreateSiteForm, DraftEditor } from "./site-forms";
 
 export const metadata: Metadata = { title: "Bio Site · PlataformaSites" };
 
@@ -71,20 +72,34 @@ export default async function SitePage({ params }: PageProps<"/admin/clientes/[i
             "Ainda não publicado."
           )}
         </p>
-        <div className="mt-4 flex flex-wrap items-start gap-3">
-          <Link
-            href={`/preview/${id}`}
-            target="_blank"
-            className="rounded-md border border-border bg-white px-4 py-2 font-medium"
-          >
-            Abrir prévia do rascunho
-          </Link>
-          <Link
-            href={`/admin/clientes/${id}/rapida`}
-            className="rounded-md border border-border bg-white px-4 py-2 font-medium"
-          >
-            Edição rápida
-          </Link>
+        <div className="mt-4 grid gap-4 md:grid-cols-[1fr_320px]">
+          <div className="flex flex-wrap content-start gap-3">
+            <Link
+              href={`/admin/clientes/${id}/editor`}
+              className="rounded-md bg-accent px-4 py-2 font-semibold text-white"
+            >
+              Abrir editor visual
+            </Link>
+            <Link
+              href={`/admin/clientes/${id}/rapida`}
+              className="rounded-md border border-border bg-white px-4 py-2 font-medium"
+            >
+              Edição rápida
+            </Link>
+            <Link
+              href={`/preview/${id}`}
+              target="_blank"
+              className="rounded-md border border-border bg-white px-4 py-2 font-medium"
+            >
+              Abrir prévia do rascunho
+            </Link>
+            <Link
+              href={`/admin/clientes/${id}/versoes`}
+              className="rounded-md border border-border bg-white px-4 py-2 font-medium"
+            >
+              Histórico de versões
+            </Link>
+          </div>
           <PublishForm clientId={id} pending={pending} />
         </div>
       </section>

@@ -19,7 +19,9 @@ Concluída: 95 unitários, 41 E2E (desktop + celular; axe sem violações nos 3 
 - Briefing genérico (campos por segmento).
 - **Conclusão:** 1 Bio Site por modelo, montado a partir de dados, revisado em celular/tablet/desktop; axe sem violações; Lighthouse celular ≥ 90; E2E atualizados.
 
-## Fase 3 — Editor visual e versões (operador)
+## Fase 3 — Editor visual e versões (operador) ✅ (2026-10-13)
+
+Concluída: 107 unitários, 43 E2E (inclui editar → salvar → aprovar e publicar → restaurar → republicar, em desktop e celular, com axe no editor e nas versões), Lighthouse celular sem regressão (92/100/100/100).
 
 - Prévia de celular com seleção por clique; painel lateral gerado do schema; adicionar/reordenar/ocultar/remover blocos; trocar tema, cores, ícones; desfazer/refazer.
 - Versões, restauração, aprovação, publicação/despublicação, cache invalidado ao publicar.

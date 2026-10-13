@@ -8,7 +8,9 @@ const TABS = [
   { href: "/briefing", label: "Briefing" },
   { href: "/imagens", label: "Imagens" },
   { href: "/site", label: "Bio Site" },
+  { href: "/editor", label: "Editor visual" },
   { href: "/rapida", label: "Edição rápida" },
+  { href: "/versoes", label: "Versões" },
 ];
 
 export function Tabs({ base }: { base: string }) {

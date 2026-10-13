@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { FormMessage, SubmitButton, valueOf, type FormState } from "@/app/admin/_components/form";
-import { createSiteAction, publishAction, saveDraftAction } from "../../actions";
+import { createSiteAction, saveDraftAction } from "../../actions";
 
 type ThemeOption = { id: string; label: string; colors: string[] };
 
@@ -48,27 +48,6 @@ export function CreateSiteForm({
       <div>
         <SubmitButton pendingText="Criando…">Criar Bio Site</SubmitButton>
       </div>
-    </form>
-  );
-}
-
-/** Sempre visível (para a confirmação não sumir); desativado quando não há o que publicar. */
-export function PublishForm({ clientId, pending }: { clientId: string; pending: boolean }) {
-  const [state, action] = useActionState(publishAction.bind(null, clientId), {} as FormState);
-  return (
-    <form action={action} className="flex flex-col gap-1">
-      {pending ? (
-        <SubmitButton pendingText="Publicando…">Publicar rascunho</SubmitButton>
-      ) : (
-        <button
-          type="button"
-          disabled
-          className="rounded-md bg-accent px-4 py-2 font-medium text-white opacity-60"
-        >
-          Publicar rascunho
-        </button>
-      )}
-      <FormMessage state={state} />
     </form>
   );
 }

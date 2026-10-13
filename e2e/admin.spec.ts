@@ -120,7 +120,8 @@ test("fluxo completo: cliente → briefing → Bio Site → edição rápida →
   // Publicar pela aba Bio Site
   await page.goto(`/admin/clientes/${clientId}/site`);
   await expect(page.getByText(/alterações no rascunho ainda não publicadas/)).toBeVisible();
-  await page.getByRole("button", { name: "Publicar rascunho" }).click();
+  await page.getByLabel("Revisei a prévia e aprovo a publicação").check();
+  await page.getByRole("button", { name: "Publicar", exact: true }).click();
   await expect(page.getByText("Publicado.")).toBeVisible();
   await page.goto(`/${slug}`);
   await expect(page.getByRole("region", { name: "Avisos" })).toHaveCount(0);

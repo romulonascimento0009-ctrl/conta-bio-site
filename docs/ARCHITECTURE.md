@@ -1,6 +1,6 @@
 # Arquitetura
 
-Status: **aprovada em 2026-10-13**; produto redefinido para Bio Sites (D19). Implementado: Fases 1, 2 e 2B (autenticação, banco, armazenamento, Bio Site com blocos, temas, renderizador, endereço por caminho, clientes, briefing, imagens, edição rápida, publicação básica). Ainda por fazer: editor visual e versões (Fase 3), convites de clientes (Fase 4), IA (Fase 5). Escolhas e pendências em `DECISIONS.md`.
+Status: **aprovada em 2026-10-13**; produto redefinido para Bio Sites (D19). Implementado: Fases 1, 2, 2B e 3 (autenticação, banco, armazenamento, Bio Site com blocos, temas, renderizador, endereço por caminho, clientes, briefing, imagens, edição rápida, editor visual, versões, publicação com aprovação). Ainda por fazer: convites de clientes (Fase 4), IA (Fase 5), produção (Fase 6). Escolhas e pendências em `DECISIONS.md`.
 
 ## Mapa do código
 
@@ -13,7 +13,10 @@ Status: **aprovada em 2026-10-13**; produto redefinido para Bio Sites (D19). Imp
 - `src/media/process.ts` — validação e variantes WebP com sharp (remove EXIF).
 - `src/data/` — **camada de acesso a dados**: única porta para o banco. Funções administrativas chamam `requireSession()`; públicas: `getPublishedSiteBySlug`, `findAssetVariant`.
 - `src/lib/storage/` — interface `Storage` + driver local; `clientKey()` isola por cliente.
-- `src/app/admin/clientes/...` — painel (Dados, Briefing, Imagens, Bio Site, Edição rápida; Server Actions em `actions.ts`); `src/app/preview/[clientId]` — prévia do rascunho; `src/app/[slug]` — Bio Site público; `src/app/media/[assetId]/[file]` — imagens.
+- `src/sites/operations.ts` — operações do editor (`applyOperation`), blocos novos, histórico desfazer/refazer.
+- `src/data/versions.ts` — listar, ver, restaurar e republicar versões.
+- `src/app/admin/clientes/[id]/editor/` — editor visual (`editor.tsx`: prévia + barra de ações + histórico; `panels.tsx`: Blocos, Topo, Contato, Faixa, Aparência).
+- `src/app/admin/clientes/...` — painel (Dados, Briefing, Imagens, Bio Site, Editor visual, Edição rápida, Versões; Server Actions em `actions.ts`); `src/app/preview/[clientId]` — prévia do rascunho; `src/app/[slug]` — Bio Site público; `src/app/media/[assetId]/[file]` — imagens.
 - `scripts/` — migração, operador, demos (`seed-demo.ts`), preparo do E2E, capturas (`screenshots.mts`), amostra de fontes (`font-specimen.mts`).
 - `prototipos/` — protótipos visuais aprovados (referência de design, não são código do produto).
 

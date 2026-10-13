@@ -581,6 +581,20 @@ button.bio-tag {
   border: 0;
 }
 
+/* Dentro do editor: a prévia fica numa moldura de celular (o contêiner tem `transform`,
+   então os elementos "fixos" se prendem a ele e não à janela). */
+.bio--embedded {
+  min-height: 100%;
+}
+.bio--embedded .bio-ticker {
+  width: calc(100% + 12px);
+  margin-left: -6px;
+}
+.bio--embedded .bio-fab {
+  right: 16px;
+  bottom: 18px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bio-ticker-track {
     animation: none;
