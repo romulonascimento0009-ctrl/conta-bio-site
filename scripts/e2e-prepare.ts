@@ -1,4 +1,4 @@
-/** Recria o banco de teste do zero, aplica migrações e cria o operador de teste. */
+/** Recria o banco de teste do zero, aplica migrações, cria o operador, os demos e os dados fixos. */
 import { execFileSync } from "node:child_process";
 import { rmSync } from "node:fs";
 
@@ -14,3 +14,4 @@ const run = (script: string) =>
 run("scripts/migrate.ts");
 run("scripts/create-admin.ts");
 run("scripts/seed-demo.ts");
+run("scripts/e2e-fixtures.ts");

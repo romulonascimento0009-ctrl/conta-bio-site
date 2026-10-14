@@ -1,31 +1,34 @@
 # Estado atual
 
-Atualizado: 2026-10-13 · **Fase 3 (editor visual e versões) concluída** · Fase 4 aguarda aprovação.
+Atualizado: 2026-10-13 · **Fase 4 (acesso de clientes por convite) concluída** · Fase 5 (IA) aguarda aprovação.
 
 ## Pronto e verificado
 
-- **Bio Sites** em `dominio.com/empresa` (D19–D27), visual aprovado (`prototipos/bio-site-mescla.html`): topo, faixa opcional, cartões com ícones de marca (Instagram → Google → … → localização por último), Wi-Fi com QR, horários, galeria, redes, WhatsApp flutuante. 5 temas × 5 segmentos, contraste AA no schema.
-- **Painel:** clientes, briefing, imagens, aba Bio Site, **Editor visual**, Edição rápida, **Versões**.
-- **Editor visual (Fase 3):** prévia de celular ao vivo; clicar num bloco/topo/faixa/redes na prévia abre a edição; lista de blocos com subir/descer, ocultar, remover (com confirmação) e adicionar (cartão, Wi-Fi, horários, galeria, texto); abas Topo (nome, frase, categorias, cidade, logo, foto de fundo, SEO), Contato, Faixa, Aparência (tema pronto, padrão, cantos, fontes, cores avançadas); desfazer/refazer (Ctrl+Z/Ctrl+Y), Ctrl+S, aviso ao sair sem salvar, validação ao vivo com atalho para o erro; no celular alterna Editar/Prévia.
-- **Versões:** cada publicação vira versão; ver, restaurar no rascunho (guarda o rascunho antes, sem cópias repetidas) e republicar. Publicar exige aprovação explícita (D29).
-- Verificação: `npm run check` ✔ (107 unitários) · `npm run build` ✔ · `npm run test:e2e` 43/43 ✔ · Lighthouse celular 92/100/100/100.
+- **Bio Sites** em `dominio.com/empresa` (D19–D27), visual aprovado (`prototipos/bio-site-mescla.html`): topo, faixa opcional, cartões com ícones de marca, Wi-Fi com QR, horários, galeria, redes, WhatsApp flutuante. 5 temas × 5 segmentos, contraste AA no schema.
+- **Painel do operador:** clientes, briefing, imagens, aba Bio Site, Editor visual, Edição rápida, Versões, **Acessos**, **Atividade**.
+- **Editor visual e versões (Fase 3):** ver `ROADMAP.md`. Publicar exige ação explícita (D29); versões restauráveis (D30).
+- **Acesso de clientes (Fase 4, D31–D35):** papéis operador/cliente em `memberships` (padrão negar); convite por link de uso único com validade de 1, 3 ou 7 dias (só o hash no banco; o link aparece uma vez); o aceite cria a conta e entra; área do cliente `/painel` com o mesmo editor, edição rápida, imagens e versões; **o cliente publica direto** (D31); auditoria das alterações; cancelar convite; remover acesso derruba a sessão. Isolamento conferido na camada de dados (`getClient` + `canAccessClient`).
+- Verificação: `npm run check` ✔ (118 unitários) · `npm run build` ✔ · `npm run test:e2e` 45/45 ✔ (o E2E novo também adultera o `clientId` de uma Server Action e confere que nada é gravado em outro cliente). Lighthouse não refeito: as páginas públicas não mudaram.
+- Migração `0002_access` aplicada no banco local; a conta do operador recebeu o papel `operator` (conferido).
 
 ## Ambiente
 
 - Windows 11, PowerShell 5.1, Node 24.21.0, npm 11.19.0, Git 2.55.0, Chromium do Playwright 1.63. Ausentes: Python, Docker.
 - Banco local `.data/pglite` contém a conta do operador. **Não apagar.** PGlite: um processo por vez — não rodar scripts no banco com o `npm run dev` aberto.
 - O Next só permite **um `next dev` por projeto**: parar o servidor de desenvolvimento antes de `npm run test:e2e`.
+- Em outra cópia do projeto: `npm run db:migrate` antes de entrar (sem o papel, o operador fica sem acesso).
 
 ## Skills / plugins
 
-- `frontend-design` instalada (projeto); não carregou na sessão em que foi instalada — conferir em sessão nova.
+- `frontend-design` instalada (projeto) e carregada nesta sessão.
 
 ## Pendências
 
-- **Do usuário:** P6 (domínio), P7 (conta da API da Claude), P11 (cliente publica direto ou com aprovação — decidir antes da Fase 4), P12 (nota do Google manual ou automática).
+- **Do usuário:** P6 (domínio), P7 (conta da API da Claude), P12 (nota do Google manual ou automática).
+- Acessos: recuperação de senha do cliente (P13) e envio de convite por e-mail (P14). Hoje o operador copia o link e, se a senha for esquecida, remove o acesso e convida de novo.
 - Técnicas antes do deploy: segundo fator (P5b), CSP (P9), desempenho (P10), driver R2, cache do Bio Site publicado.
 - Editor: arrastar e soltar para reordenar (hoje: botões ↑/↓); edição de texto alternativo das fotos direto na galeria (hoje: aba Imagens).
 
 ## Próximo passo
 
-Fase 4 — acesso de clientes por convite (`ROADMAP.md`): papéis operador/cliente, convite com validade e uso único, cliente edita só o próprio Bio Site com o mesmo editor, auditoria. Requer decidir P11.
+Fase 5 — IA (`ROADMAP.md`): briefing → Bio Site inicial, textos, direção visual, pedidos em linguagem natural com prévia, custo registrado e teto. Requer P7 (conta e chave da API da Claude).

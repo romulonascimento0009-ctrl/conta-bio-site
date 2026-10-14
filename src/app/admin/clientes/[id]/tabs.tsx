@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const TABS = [
+export type Tab = { href: string; label: string };
+
+export const OPERATOR_TABS: Tab[] = [
   { href: "", label: "Dados" },
   { href: "/briefing", label: "Briefing" },
   { href: "/imagens", label: "Imagens" },
@@ -11,14 +13,24 @@ const TABS = [
   { href: "/editor", label: "Editor visual" },
   { href: "/rapida", label: "Edição rápida" },
   { href: "/versoes", label: "Versões" },
+  { href: "/acessos", label: "Acessos" },
+  { href: "/atividade", label: "Atividade" },
 ];
 
-export function Tabs({ base }: { base: string }) {
+export function Tabs({
+  base,
+  tabs = OPERATOR_TABS,
+  label = "Seções do cliente",
+}: {
+  base: string;
+  tabs?: Tab[];
+  label?: string;
+}) {
   const pathname = usePathname();
   return (
-    <nav aria-label="Seções do cliente" className="mt-4 border-b border-border">
+    <nav aria-label={label} className="mt-4 border-b border-border">
       <ul className="-mb-px flex gap-1 overflow-x-auto">
-        {TABS.map((t) => {
+        {tabs.map((t) => {
           const href = base + t.href;
           const active = pathname === href;
           return (

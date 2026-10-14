@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDraftForPreview } from "@/data/sites";
 import { getVersionForPreview } from "@/data/versions";
-import { requireSession } from "@/lib/session";
+import { requireAccess } from "@/lib/session";
 import { BioRenderer } from "@/sites/render/BioRenderer";
 
 export const metadata: Metadata = {
@@ -10,12 +10,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** Prévia do rascunho (ou de uma versão, com ?versao=<id>) em página inteira. Exige sessão. */
+/** Prévia do rascunho (ou de uma versão, com ?versao=<id>) em página inteira. Exige acesso ao cliente. */
 export default async function PreviewPage({
   params,
   searchParams,
 }: PageProps<"/preview/[clientId]">) {
-  await requireSession();
+  // Operador: qualquer cliente; cliente: só o próprio (a camada de dados confere → 404).
+  await requireAccess();
   const { clientId } = await params;
   const { versao } = await searchParams;
   const site =

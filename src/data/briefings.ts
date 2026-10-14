@@ -2,7 +2,8 @@ import { eq } from "drizzle-orm";
 import { briefingSchema, type Briefing } from "@/clients/briefing";
 import { db } from "@/db";
 import { briefings } from "@/db/schema";
-import { requireSession } from "@/lib/session";
+import { requireOperator } from "@/lib/session";
+import { recordAudit } from "./audit";
 import { getClient } from "./clients";
 
 export async function getBriefing(clientId: string): Promise<Briefing | null> {
@@ -15,7 +16,7 @@ export async function getBriefing(clientId: string): Promise<Briefing | null> {
 }
 
 export async function saveBriefing(clientId: string, input: unknown): Promise<Briefing> {
-  await requireSession();
+  await requireOperator();
   const client = await getClient(clientId);
   if (!client) throw new Error("Cliente não encontrado.");
   const data = briefingSchema.parse(input);
@@ -23,5 +24,6 @@ export async function saveBriefing(clientId: string, input: unknown): Promise<Br
     .insert(briefings)
     .values({ clientId: client.id, data })
     .onConflictDoUpdate({ target: briefings.clientId, set: { data, updatedAt: new Date() } });
+  await recordAudit(client.id, "briefing.save");
   return data;
 }

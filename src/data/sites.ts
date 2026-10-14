@@ -3,17 +3,19 @@ import { briefingSchema } from "@/clients/briefing";
 import { isSegment } from "@/clients/segments";
 import { db } from "@/db";
 import { clients, sites, siteVersions } from "@/db/schema";
-import { requireSession } from "@/lib/session";
+import { requireOperator } from "@/lib/session";
 import {
   collectImageRefs,
   validateBio,
   type BioDocument,
   type ValidationResult,
 } from "@/sites/bio";
+import { changedParts } from "@/sites/changes";
 import { applyQuickEdit, type QuickEdit } from "@/sites/quick-edit";
 import { createBioDocument } from "@/sites/templates";
 import type { ThemeId } from "@/sites/themes";
 import { assetsOfClient, type AssetInfo } from "./assets";
+import { recordAudit } from "./audit";
 import { getBriefing } from "./briefings";
 import { getClient } from "./clients";
 
@@ -36,7 +38,7 @@ export async function getDraft(clientId: string): Promise<BioDocument | null> {
 
 /** Cria o rascunho inicial a partir do segmento do cliente, do tema e do briefing (sem IA). */
 export async function createSiteFromTemplate(clientId: string, themeId?: ThemeId): Promise<Site> {
-  await requireSession();
+  await requireOperator();
   const client = await getClient(clientId);
   if (!client) throw new Error("Cliente não encontrado.");
   const briefing =
@@ -53,12 +55,19 @@ export async function createSiteFromTemplate(clientId: string, themeId?: ThemeId
     .returning();
   if (!row) throw new Error("Este cliente já tem um Bio Site.");
   await db.update(clients).set({ status: "editing" }).where(eq(clients.id, client.id));
+  await recordAudit(client.id, "site.create", { theme: themeId ?? null });
   return row;
 }
 
-/** Valida o documento e a posse das imagens; salva no rascunho só se tudo estiver válido. */
-export async function saveDraft(clientId: string, input: unknown): Promise<ValidationResult> {
-  await requireSession();
+/**
+ * Valida o documento e a posse das imagens; salva no rascunho só se tudo estiver válido.
+ * `source` identifica a tela no registro de auditoria.
+ */
+export async function saveDraft(
+  clientId: string,
+  input: unknown,
+  source = "Editor visual",
+): Promise<ValidationResult> {
   const client = await getClient(clientId);
   if (!client) return { ok: false, issues: [{ path: "", message: "Cliente não encontrado." }] };
 
@@ -81,13 +90,14 @@ export async function saveDraft(clientId: string, input: unknown): Promise<Valid
     };
   }
 
-  const updated = await db
-    .update(sites)
-    .set({ draft: result.document })
-    .where(eq(sites.clientId, client.id))
-    .returning({ id: sites.id });
-  if (updated.length === 0)
-    return { ok: false, issues: [{ path: "", message: "Crie o Bio Site primeiro." }] };
+  const [current] = await db
+    .select({ draft: sites.draft })
+    .from(sites)
+    .where(eq(sites.clientId, client.id));
+  if (!current) return { ok: false, issues: [{ path: "", message: "Crie o Bio Site primeiro." }] };
+  await db.update(sites).set({ draft: result.document }).where(eq(sites.clientId, client.id));
+  const parts = changedParts(current.draft, result.document);
+  if (parts.length > 0) await recordAudit(client.id, "draft.save", { source, parts });
   return result;
 }
 
@@ -95,12 +105,11 @@ export async function saveDraft(clientId: string, input: unknown): Promise<Valid
 export async function saveQuickEdit(clientId: string, q: QuickEdit): Promise<ValidationResult> {
   const draft = await getDraft(clientId);
   if (!draft) return { ok: false, issues: [{ path: "", message: "Crie o Bio Site primeiro." }] };
-  return saveDraft(clientId, applyQuickEdit(draft, q));
+  return saveDraft(clientId, applyQuickEdit(draft, q), "Edição rápida");
 }
 
 /** Publica o rascunho atual: grava uma versão imutável e aponta o endereço público para ela. */
 export async function publishDraft(clientId: string, note = ""): Promise<{ slug: string } | null> {
-  await requireSession();
   const client = await getClient(clientId);
   const site = client && (await getSite(client.id));
   if (!client || !site) return null;
@@ -113,6 +122,7 @@ export async function publishDraft(clientId: string, note = ""): Promise<{ slug:
     .returning({ id: siteVersions.id });
   await db.update(sites).set({ publishedVersionId: version.id }).where(eq(sites.id, site.id));
   await db.update(clients).set({ status: "published" }).where(eq(clients.id, client.id));
+  await recordAudit(client.id, "site.publish", { note: note.slice(0, 200), versionId: version.id });
   return { slug: client.slug };
 }
 
@@ -141,7 +151,7 @@ async function renderable(clientId: string, raw: unknown): Promise<RenderableSit
   };
 }
 
-/** Rascunho para a prévia do painel (exige sessão). */
+/** Rascunho para a prévia (exige acesso ao cliente, via getSite → getClient). */
 export async function getDraftForPreview(clientId: string): Promise<RenderableSite | null> {
   const site = await getSite(clientId);
   return site ? renderable(site.clientId, site.draft) : null;

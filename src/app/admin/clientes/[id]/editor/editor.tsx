@@ -81,6 +81,7 @@ export function Editor({
 
   const save = useCallback(() => {
     if (!validation.ok || saving) return;
+    setSaveMessage(null);
     startSaving(async () => {
       const result = await saveEditorAction(clientId, doc);
       setSaveMessage({ ok: result.ok, text: result.message });
@@ -182,7 +183,11 @@ export function Editor({
           role="status"
           className={`text-sm ${saveMessage?.ok === false ? "text-danger" : "text-muted"}`}
         >
-          {dirty ? "Alterações não salvas" : saveMessage?.text}
+          {saveMessage?.ok === false
+            ? saveMessage.text
+            : dirty
+              ? "Alterações não salvas"
+              : saveMessage?.text}
         </span>
         <div
           className="ml-auto flex gap-1 lg:hidden"

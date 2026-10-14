@@ -27,10 +27,12 @@ Concluída: 107 unitários, 43 E2E (inclui editar → salvar → aprovar e publi
 - Versões, restauração, aprovação, publicação/despublicação, cache invalidado ao publicar.
 - **Conclusão:** E2E cobre editar → salvar → restaurar → aprovar → publicar; editor utilizável no celular e no desktop.
 
-## Fase 4 — Acesso de clientes por convite
+## Fase 4 — Acesso de clientes por convite ✅ (2026-10-13)
+
+Concluída: 118 unitários, 45 E2E (inclui convite → cliente edita e publica direto → isolamento → auditoria → cancelar convite → remover acesso, em desktop e celular, com axe no convite, no painel do cliente e nas telas Acessos e Atividade).
 
 - Papéis operador/cliente; vínculo empresa↔usuário; convite por link de uso único com validade.
-- Cliente vê e edita só o próprio Bio Site, com o mesmo editor (permissões reduzidas); regra de publicação a definir (direta ou com aprovação do operador).
+- Cliente vê e edita só o próprio Bio Site, com o mesmo editor (permissões reduzidas); publica direto, sem aprovação do operador (D31).
 - Registro de auditoria das alterações.
 - **Conclusão:** E2E prova que um cliente não acessa dados, imagens nem rotas de outro; convite expirado/reutilizado é recusado.
 

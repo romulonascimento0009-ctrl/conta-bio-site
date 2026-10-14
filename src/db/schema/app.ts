@@ -1,5 +1,6 @@
 import {
   type AnyPgColumn,
+  check,
   index,
   integer,
   jsonb,
@@ -8,7 +9,10 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { ROLES } from "../../clients/access";
 import { CLIENT_STATUSES } from "../../clients/status";
+import { user } from "./auth";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -85,4 +89,65 @@ export const assets = pgTable(
     createdAt: timestamps.createdAt,
   },
   (t) => [index("assets_client_id_idx").on(t.clientId)],
+);
+
+/**
+ * Papel de cada usuário. Sem linha aqui = sem acesso (padrão negar).
+ * Operador: todos os clientes. Cliente: só o próprio (`client_id`).
+ */
+export const memberships = pgTable(
+  "memberships",
+  {
+    userId: text("user_id")
+      .primaryKey()
+      .references(() => user.id, { onDelete: "cascade" }),
+    role: text("role", { enum: ROLES }).notNull(),
+    clientId: uuid("client_id").references(() => clients.id, { onDelete: "cascade" }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [
+    index("memberships_client_id_idx").on(t.clientId),
+    check(
+      "memberships_role_client",
+      sql`(${t.role} = 'operator' AND ${t.clientId} IS NULL) OR (${t.role} = 'client' AND ${t.clientId} IS NOT NULL)`,
+    ),
+  ],
+);
+
+/** Convites de acesso: link de uso único com validade. Guarda só o hash do token. */
+export const invites = pgTable(
+  "invites",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    tokenHash: text("token_hash").notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [index("invites_client_id_idx").on(t.clientId)],
+);
+
+/** Registro de auditoria: quem fez o quê em cada cliente. */
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    /** Cópia do e-mail e do papel no momento da ação (o usuário pode ser removido depois). */
+    actorEmail: text("actor_email").notNull(),
+    actorRole: text("actor_role").notNull(),
+    action: text("action").notNull(),
+    details: jsonb("details").$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [index("audit_log_client_created_idx").on(t.clientId, t.createdAt)],
 );

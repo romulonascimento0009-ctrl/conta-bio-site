@@ -2,11 +2,11 @@
 
 # PlataformaSites
 
-Plataforma de **Bio Sites** (mini site estilo "link na bio", celular primeiro) para empresas de qualquer segmento. O operador cria, edita, aprova e publica; empresas convidadas editam só o próprio Bio Site. Endereço: `dominio.com/empresa`.
+Plataforma de **Bio Sites** (mini site estilo "link na bio", celular primeiro) para empresas de qualquer segmento. O operador cria, edita, aprova e publica; empresas convidadas (`/painel`) editam e publicam direto só o próprio Bio Site. Endereço: `dominio.com/empresa`.
 
 ## Estado
 
-Fases 0, 1, 2, 2B (Bio Sites) e 3 (editor visual e versões) concluídas em 2026-10-13. Cada nova fase exige aprovação explícita do usuário. Onde paramos e próximo passo: `docs/STATE.md`. Visual aprovado pelo usuário: `prototipos/bio-site-mescla.html`.
+Fases 0, 1, 2, 2B (Bio Sites), 3 (editor visual e versões) e 4 (acesso de clientes por convite) concluídas em 2026-10-13. Cada nova fase exige aprovação explícita do usuário. Onde paramos e próximo passo: `docs/STATE.md`. Visual aprovado pelo usuário: `prototipos/bio-site-mescla.html`.
 
 ## Documentação (ler só o necessário para a tarefa)
 
@@ -44,7 +44,7 @@ Next.js 16 (App Router) · React 19 · TypeScript 5 estrito · Tailwind 4 · Zod
 - Bio Sites são dados: `BioDocument` (`src/sites/bio.ts`) validado por schema; nunca HTML livre gerado por IA.
 - Dados de contato ficam em `contact` e os cartões (Instagram, Google, WhatsApp, mapa…) os leem via `resolveLink()` — não duplicar dados nos blocos.
 - Alterações simples (texto, cor, imagem, link, ordem de blocos) são operações determinísticas: `applyOperation` (editor visual, `src/sites/operations.ts`) e `applyQuickEdit` (edição rápida). Nova capacidade de edição = nova operação + teste.
-- Publicar sempre exige ação explícita do operador (caixa de aprovação ou botão "Salvar e publicar"). IA só para briefing, textos, direção visual e mudanças complexas, e sempre devolve dados validados pelo mesmo schema.
+- Publicar sempre exige ação explícita (caixa de aprovação ou botão "Salvar e publicar") do operador ou do próprio cliente (D31). IA só para briefing, textos, direção visual e mudanças complexas, e sempre devolve dados validados pelo mesmo schema.
 - Toda mudança gera rascunho/versão; publicar exige aprovação explícita; versões antigas restauráveis.
 - Isolamento por cliente em dados (`client_id` em toda tabela de conteúdo) e arquivos (`clientKey()`).
 - Arquitetura proporcional ao MVP: monólito, sem microserviços ou abstrações especulativas.
@@ -58,7 +58,8 @@ Next.js 16 (App Router) · React 19 · TypeScript 5 estrito · Tailwind 4 · Zod
 
 ## Segurança
 
-- Toda página, Route Handler e Server Action administrativa chama `requireSession()`. O `proxy.ts` é só redirecionamento otimista.
+- Papéis em `memberships` (padrão negar). Exclusivo do operador → `requireOperator()`; área do cliente → `requireClientUser()`; dados por cliente sempre via `getClient()` (confere `canAccessClient`). Nunca confiar em `clientId` vindo do navegador (argumentos de Server Action). O `proxy.ts` é só redirecionamento otimista.
+- Toda alteração de conteúdo ou de acesso chama `recordAudit()`.
 - Segredos apenas em variáveis de ambiente (`.env.local` fora do Git); nunca em código, logs ou docs. Ambiente validado em `src/lib/env.ts`.
 - Validar toda entrada no servidor com Zod; uploads: checar tipo real, tamanho, reprocessar imagens.
 - Não instalar dependências, plugins ou MCPs sem avaliar origem e sem autorização. Fixar versões exatas. Scripts de instalação do npm ficam bloqueados salvo necessidade comprovada.

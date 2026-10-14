@@ -2,12 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClient } from "@/data/clients";
 import { STATUS_LABEL } from "@/clients/status";
+import { requireOperator } from "@/lib/session";
 import { Tabs } from "./tabs";
 
 export default async function ClientLayout({
   children,
   params,
 }: LayoutProps<"/admin/clientes/[id]">) {
+  await requireOperator();
   const { id } = await params;
   const client = await getClient(id);
   if (!client) notFound();

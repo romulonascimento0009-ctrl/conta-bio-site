@@ -1,12 +1,12 @@
 /**
- * Cria o operador (único usuário) ou redefine a senha dele.
+ * Cria o operador (único) ou redefine a senha dele. Contas de clientes entram só por convite.
  * Uso: npm run admin:create
  * Lê ADMIN_EMAIL / ADMIN_PASSWORD do ambiente; se ausentes, pergunta no terminal.
  */
 import { createInterface } from "node:readline/promises";
-import { count } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { closeDb, db } from "@/db";
-import { user } from "@/db/schema";
+import { memberships } from "@/db/schema";
 import { auth, MIN_PASSWORD_LENGTH } from "@/lib/auth";
 
 async function ask(question: string): Promise<string> {
@@ -33,6 +33,13 @@ async function main() {
   const existing = await ctx.internalAdapter.findUserByEmail(email, { includeAccounts: true });
 
   if (existing) {
+    const [m] = await db
+      .select({ role: memberships.role })
+      .from(memberships)
+      .where(eq(memberships.userId, existing.user.id));
+    if (m?.role !== "operator") {
+      throw new Error(`${email} não é o operador (conta de cliente). Nada foi alterado.`);
+    }
     const hasCredential = existing.accounts.some((a) => a.providerId === "credential");
     if (hasCredential) {
       await ctx.internalAdapter.updatePassword(existing.user.id, hash);
@@ -48,7 +55,10 @@ async function main() {
     return;
   }
 
-  const [{ total }] = await db.select({ total: count() }).from(user);
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(memberships)
+    .where(eq(memberships.role, "operator"));
   if (total > 0) {
     throw new Error(
       "Já existe um operador com outro e-mail. A plataforma admite um único operador.",
@@ -65,6 +75,7 @@ async function main() {
     accountId: created.id,
     password: hash,
   });
+  await db.insert(memberships).values({ userId: created.id, role: "operator" });
   console.log(`Operador criado: ${email}.`);
 }
 

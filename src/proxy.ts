@@ -2,7 +2,8 @@ import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Redirecionamento otimista: só verifica se o cookie existe.
-// A validação real da sessão acontece em requireSession() no servidor.
+// A validação real (sessão e papel) acontece no servidor: requireOperator(), requireClientUser()
+// e a camada de dados.
 export function proxy(request: NextRequest) {
   if (!getSessionCookie(request)) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -11,5 +12,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/preview/:path*"],
+  matcher: ["/admin/:path*", "/painel/:path*", "/preview/:path*"],
 };

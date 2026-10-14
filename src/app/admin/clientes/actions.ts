@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { FormState } from "@/app/admin/_components/form";
 import { slugify } from "@/clients/slug";
+import { createInvite, EmailTaken, removeMember, revokeInvite } from "@/data/access";
 import { AssetInUse, deleteAsset, updateAssetAlt, uploadAsset } from "@/data/assets";
 import { saveBriefing } from "@/data/briefings";
 import { createClient, deleteClient, getClient, SlugTaken, updateClient } from "@/data/clients";
@@ -14,7 +15,16 @@ import { ImageRejected } from "@/media/process";
 import { quickEditSchema } from "@/sites/quick-edit";
 import { THEMES, type ThemeId } from "@/sites/themes";
 
-// Toda ação chama a camada de dados, que valida a sessão (requireSession) por conta própria.
+// Toda ação chama a camada de dados, que confere o acesso por conta própria: o operador acessa
+// qualquer cliente; o usuário cliente, só o próprio (getClient). As exclusivas do operador
+// chamam requireOperator() lá dentro. O editor, a edição rápida, as imagens e as versões são
+// usados pelas duas áreas (/admin e /painel).
+
+/** Atualiza as telas do cliente nas duas áreas. */
+function refresh(clientId: string) {
+  revalidatePath(`/admin/clientes/${clientId}`, "layout");
+  revalidatePath("/painel", "layout");
+}
 
 const str = (fd: FormData, key: string) => String(fd.get(key) ?? "");
 
@@ -74,7 +84,7 @@ export async function updateClientAction(
     }
     throw err;
   }
-  revalidatePath(`/admin/clientes/${id}`, "layout");
+  refresh(id);
   return { ok: true, message: "Dados salvos." };
 }
 
@@ -107,7 +117,7 @@ export async function saveBriefingAction(
     if (err instanceof z.ZodError) return invalid(err, fd);
     throw err;
   }
-  revalidatePath(`/admin/clientes/${id}`, "layout");
+  refresh(id);
   return { ok: true, message: "Briefing salvo." };
 }
 
@@ -122,7 +132,7 @@ export async function uploadAssetAction(clientId: string, fd: FormData): Promise
     if (err instanceof ImageRejected) return { ok: false, message: `${file.name}: ${err.message}` };
     throw err;
   }
-  revalidatePath(`/admin/clientes/${clientId}/imagens`);
+  refresh(clientId);
   return { ok: true, message: `${file.name} enviada.` };
 }
 
@@ -133,7 +143,7 @@ export async function updateAltAction(
   fd: FormData,
 ): Promise<FormState> {
   await updateAssetAlt(clientId, assetId, str(fd, "alt"));
-  revalidatePath(`/admin/clientes/${clientId}/imagens`);
+  refresh(clientId);
   return { ok: true, message: "Descrição salva." };
 }
 
@@ -148,7 +158,7 @@ export async function deleteAssetAction(
     if (err instanceof AssetInUse) return { ok: false, message: err.message };
     throw err;
   }
-  revalidatePath(`/admin/clientes/${clientId}/imagens`);
+  refresh(clientId);
   return { ok: true, message: "Imagem excluída." };
 }
 
@@ -160,7 +170,7 @@ export async function createSiteAction(
   const themeId = str(fd, "theme");
   if (!Object.hasOwn(THEMES, themeId)) return { ok: false, message: "Escolha um tema." };
   await createSiteFromTemplate(id, themeId as ThemeId);
-  revalidatePath(`/admin/clientes/${id}`, "layout");
+  refresh(id);
   return { ok: true, message: "Bio Site criado." };
 }
 
@@ -202,7 +212,7 @@ export async function quickEditAction(
 
   const publish = fd.get("intent") === "publish";
   if (publish) await publishDraft(id, "Edição rápida");
-  revalidatePath(`/admin/clientes/${id}`, "layout");
+  refresh(id);
   return {
     ok: true,
     message: publish ? "Salvo e publicado." : "Rascunho salvo. Publique quando quiser.",
@@ -220,7 +230,7 @@ export async function publishAction(
   }
   const published = await publishDraft(id, str(fd, "note").trim() || "Publicação");
   if (!published) return { ok: false, message: "Não foi possível publicar: o rascunho tem erros." };
-  revalidatePath(`/admin/clientes/${id}`, "layout");
+  refresh(id);
   return { ok: true, message: "Publicado." };
 }
 
@@ -235,7 +245,7 @@ export async function saveEditorAction(id: string, doc: unknown): Promise<Editor
   const result = await saveDraft(id, doc);
   if (!result.ok)
     return { ok: false, message: "Não salvo: corrija os itens indicados.", issues: result.issues };
-  revalidatePath(`/admin/clientes/${id}`, "layout");
+  refresh(id);
   return { ok: true, message: "Rascunho salvo." };
 }
 
@@ -246,7 +256,7 @@ export async function restoreVersionAction(
 ): Promise<FormState> {
   const ok = await restoreVersion(clientId, versionId);
   if (!ok) return { ok: false, message: "Não foi possível restaurar esta versão." };
-  revalidatePath(`/admin/clientes/${clientId}`, "layout");
+  refresh(clientId);
   return {
     ok: true,
     message: "Versão copiada para o rascunho. O rascunho anterior foi guardado no histórico.",
@@ -264,7 +274,7 @@ export async function publishVersionAction(
   }
   const ok = await publishVersion(clientId, versionId);
   if (!ok) return { ok: false, message: "Não foi possível publicar esta versão." };
-  revalidatePath(`/admin/clientes/${clientId}`, "layout");
+  refresh(clientId);
   return { ok: true, message: "Esta versão está publicada." };
 }
 
@@ -285,6 +295,62 @@ export async function saveDraftAction(
     const list = result.issues.slice(0, 8).map((i) => `• ${i.path || "(documento)"}: ${i.message}`);
     return { ok: false, message: `Não salvo. Corrija:\n${list.join("\n")}`, values };
   }
-  revalidatePath(`/admin/clientes/${id}`, "layout");
+  refresh(id);
   return { ok: true, message: "Rascunho salvo." };
+}
+
+// ── Acessos (só operador; a camada de dados confere) ─────────────────────────
+
+export type InviteFormState = FormState & { link?: string; expiresAt?: string };
+
+export async function createInviteAction(
+  clientId: string,
+  _prev: InviteFormState,
+  fd: FormData,
+): Promise<InviteFormState> {
+  let created: { link: string; expiresAt: Date };
+  try {
+    created = await createInvite(clientId, { email: str(fd, "email"), days: str(fd, "days") });
+  } catch (err) {
+    if (err instanceof z.ZodError) return invalid(err, fd);
+    if (err instanceof EmailTaken) {
+      return { ok: false, fieldErrors: { email: [err.message] }, values: textValues(fd) };
+    }
+    throw err;
+  }
+  refresh(clientId);
+  return {
+    ok: true,
+    message: "Convite criado. Copie o link e envie ao cliente.",
+    link: created.link,
+    expiresAt: created.expiresAt.toISOString(),
+  };
+}
+
+export async function revokeInviteAction(
+  clientId: string,
+  inviteId: string,
+  _prev: FormState,
+): Promise<FormState> {
+  const ok = await revokeInvite(clientId, inviteId);
+  refresh(clientId);
+  return ok
+    ? { ok: true, message: "Convite cancelado." }
+    : { ok: false, message: "Este convite não pode mais ser cancelado." };
+}
+
+export async function removeMemberAction(
+  clientId: string,
+  userId: string,
+  _prev: FormState,
+  fd: FormData,
+): Promise<FormState> {
+  if (fd.get("confirm") !== "on") {
+    return { ok: false, message: "Marque a confirmação para remover o acesso." };
+  }
+  const ok = await removeMember(clientId, userId);
+  refresh(clientId);
+  return ok
+    ? { ok: true, message: "Acesso removido." }
+    : { ok: false, message: "Não foi possível remover este acesso." };
 }

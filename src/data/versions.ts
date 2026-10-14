@@ -2,9 +2,9 @@ import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { clients, sites, siteVersions } from "@/db/schema";
-import { requireSession } from "@/lib/session";
 import { collectImageRefs, validateBio } from "@/sites/bio";
 import { assetsOfClient } from "./assets";
+import { recordAudit } from "./audit";
 import { getSite, type RenderableSite } from "./sites";
 
 export type VersionSummary = { id: string; note: string; createdAt: Date; published: boolean };
@@ -57,7 +57,6 @@ export async function getVersionForPreview(
  * ("Rascunho guardado antes de restaurar") para que nada se perca.
  */
 export async function restoreVersion(clientId: string, versionId: string): Promise<boolean> {
-  await requireSession();
   const found = await versionOf(clientId, versionId);
   if (!found) return false;
   const parsed = validateBio(found.version.document);
@@ -78,12 +77,12 @@ export async function restoreVersion(clientId: string, versionId: string): Promi
     });
   }
   await db.update(sites).set({ draft: parsed.document }).where(eq(sites.id, site.id));
+  await recordAudit(site.clientId, "version.restore", { versionId, note: found.version.note });
   return true;
 }
 
 /** Republica uma versão existente (voltar o endereço público para ela). Não mexe no rascunho. */
 export async function publishVersion(clientId: string, versionId: string): Promise<boolean> {
-  await requireSession();
   const found = await versionOf(clientId, versionId);
   if (!found || !validateBio(found.version.document).ok) return false;
   await db
@@ -91,5 +90,9 @@ export async function publishVersion(clientId: string, versionId: string): Promi
     .set({ publishedVersionId: found.version.id })
     .where(eq(sites.id, found.site.id));
   await db.update(clients).set({ status: "published" }).where(eq(clients.id, found.site.clientId));
+  await recordAudit(found.site.clientId, "version.publish", {
+    versionId,
+    note: found.version.note,
+  });
   return true;
 }

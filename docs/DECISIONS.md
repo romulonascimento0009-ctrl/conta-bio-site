@@ -64,6 +64,16 @@ Formato: decisão · motivo · alternativas.
 
 **D30 — Versões.** Toda publicação cria uma versão imutável. Restaurar copia a versão para o rascunho e, antes, guarda o rascunho atual como versão — só se ele ainda não existir em nenhuma versão. Republicar só move o ponteiro público. Versões são isoladas por site (consulta sempre filtra pelo site do cliente).
 
+**D31 — Cliente publica direto (P11, decidida pelo usuário em 2026-10-13).** O cliente convidado edita e publica o próprio Bio Site sem aprovação prévia do operador. Continua sendo ação explícita (a própria pessoa marca "Revisei a prévia e aprovo a publicação"); toda publicação vira versão e fica na auditoria; o operador pode restaurar ou republicar versões antigas a qualquer momento. Alternativa rejeitada: fila de aprovação do operador.
+
+**D32 — Papéis em tabela própria (`memberships`).** `user_id` → `operator` (sem cliente) ou `client` + `client_id` (restrição CHECK). Sem linha = sem acesso (padrão negar). Não usamos `additionalFields` nem o plugin `admin` do Better Auth, para não editar as tabelas geradas pela CLI. A migração 0002 deu o papel de operador às contas existentes. Um usuário pertence a um cliente; um cliente pode ter várias pessoas.
+
+**D33 — Convites.** Link `/convite/<token>` com 32 bytes aleatórios; o banco guarda só o SHA-256 (o link aparece uma vez para o operador copiar e enviar por WhatsApp ou e-mail — não há envio de e-mail no MVP). Validade de 1, 3 ou 7 dias. Uso único garantido por um `UPDATE … WHERE used_at IS NULL AND revoked_at IS NULL AND expires_at > now()`; se a criação da conta falhar, o convite é liberado e a conta parcial removida. O e-mail é fixado pelo operador; e-mail já usado por outra conta é recusado. Aceitar cria a conta (senha ≥ 12) e já entra. Remover acesso apaga a conta (as sessões caem em cascata); excluir o cliente apaga as contas dele.
+
+**D34 — Isolamento na camada de dados.** `getClient()` só devolve o cliente se `canAccessClient()` permitir (operador: todos; cliente: só o próprio) e é a porta de todas as funções por cliente; as exclusivas do operador chamam `requireOperator()`. Argumentos ligados a Server Actions (`.bind(null, clientId)`) vêm do navegador e não são confiáveis — o E2E troca o `clientId` na requisição e confere que nada é gravado. Cliente que tenta outro cliente recebe 404 (não revela se existe). Editor, edição rápida, imagens e versões são as mesmas telas nas duas áreas (`view.tsx`).
+
+**D35 — Auditoria (`audit_log`).** Registra quem (e-mail e papel copiados no momento) fez o quê: dados, briefing, criação do site, rascunho salvo (só se mudou, com as partes alteradas: Topo, Contato, Blocos…), publicação (com a nota), restauração e republicação de versão, imagens, convites e acessos. Visível ao operador na aba Atividade.
+
 ## Pendentes
 
 **P5b — Segundo fator (TOTP ou passkey).** Obrigatório antes do deploy (Fase 5). Plugins `twoFactor`/`passkey` do Better Auth.
@@ -72,7 +82,9 @@ Formato: decisão · motivo · alternativas.
 
 **P12 — Nota do Google automática.** Exibir nota e número de avaliações exige a API do Google Places (chave, custo por consulta, regras de exibição) ou digitação manual. MVP: manual. Decidir antes da Fase 6 se vale automatizar (com cache diário).
 
-**P11 — Publicação por clientes.** Na Fase 4: o cliente publica direto ou o operador aprova? Decidir antes da Fase 4.
+**P13 — Recuperação de senha do cliente.** Hoje o operador remove o acesso e envia novo convite. Automatizar exige envio de e-mail (provedor e domínio verificado).
+
+**P14 — Envio de convites por e-mail.** Hoje o operador copia o link. Mesmo requisito de P13.
 
 **P7 — Modelo de IA.** Recomendação: API da Claude com Sonnet 5.5 (`claude-sonnet-5-5`) para geração; avaliar Haiku 5.5 para textos curtos. Confirmar preços carregando a skill `claude-api` na Fase 4. Requer conta e chave de API.
 

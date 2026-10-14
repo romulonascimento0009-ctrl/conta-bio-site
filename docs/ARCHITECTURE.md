@@ -1,22 +1,24 @@
 # Arquitetura
 
-Status: **aprovada em 2026-10-13**; produto redefinido para Bio Sites (D19). Implementado: Fases 1, 2, 2B e 3 (autenticação, banco, armazenamento, Bio Site com blocos, temas, renderizador, endereço por caminho, clientes, briefing, imagens, edição rápida, editor visual, versões, publicação com aprovação). Ainda por fazer: convites de clientes (Fase 4), IA (Fase 5), produção (Fase 6). Escolhas e pendências em `DECISIONS.md`.
+Status: **aprovada em 2026-10-13**; produto redefinido para Bio Sites (D19). Implementado: Fases 1, 2, 2B, 3 e 4 (convites, papéis, área do cliente, auditoria; autenticação, banco, armazenamento, Bio Site com blocos, temas, renderizador, endereço por caminho, clientes, briefing, imagens, edição rápida, editor visual, versões, publicação com aprovação). Ainda por fazer: IA (Fase 5), produção (Fase 6). Escolhas e pendências em `DECISIONS.md`.
 
 ## Mapa do código
 
 - `src/lib/env.ts` — variáveis de ambiente validadas (Zod), lidas sob demanda. `src/lib/public-url.ts` — `<PUBLIC_URL>/<slug>`.
 - `src/db/` — conexão Drizzle (Postgres via `DATABASE_URL`, senão PGlite em `PGLITE_DIR`) e schema (`auth.ts` gerado; `app.ts`: clients, briefings, sites, site_versions, assets). Migrações SQL em `drizzle/`.
-- `src/lib/auth.ts`, `src/lib/session.ts` — Better Auth e `requireSession()`. `src/proxy.ts` — redirecionamento otimista de `/admin` e `/preview`.
+- `src/lib/auth.ts`, `src/lib/session.ts` — Better Auth; `getAccess()` (sessão + papel), `requireOperator()`, `requireClientUser()`, `requireAccess()`. `src/proxy.ts` — redirecionamento otimista de `/admin`, `/painel` e `/preview`.
+- `src/clients/access.ts` — papéis e regra de isolamento `canAccessClient()`; `src/clients/invites.ts` — token, hash, situação e schemas do convite.
+- `src/data/access.ts` — convites (criar, listar, cancelar, consultar, aceitar) e pessoas com acesso; `src/data/audit.ts` — `recordAudit()` e `listAudit()`; `src/sites/changes.ts` — partes alteradas entre dois documentos.
 - `src/sites/` — núcleo puro (sem banco/Next): `bio.ts` (schema `BioDocument`, contraste, `resolveLink`, QR do Wi-Fi), `themes.ts`, `templates.ts` (Bio Site inicial por segmento a partir do briefing), `quick-edit.ts` (edição rápida determinística), `icons.ts`, `patterns.ts`, `fonts.ts`, `links.ts`, `color.ts`.
 - `src/sites/render/` — `BioRenderer` (componente de servidor), `bio.css`, `Icon.tsx`, `client-buttons.tsx` (Compartilhar, Copiar senha — únicos trechos com JS no navegador), `fonts.ts`, `media.ts`.
 - `src/clients/` — slug (com `RESERVED_SLUGS`), segmentos, briefing (campos reutilizados pela edição rápida), situações.
 - `src/media/process.ts` — validação e variantes WebP com sharp (remove EXIF).
-- `src/data/` — **camada de acesso a dados**: única porta para o banco. Funções administrativas chamam `requireSession()`; públicas: `getPublishedSiteBySlug`, `findAssetVariant`.
+- `src/data/` — **camada de acesso a dados**: única porta para o banco. Funções por cliente passam por `getClient()` (confere o acesso); exclusivas do operador chamam `requireOperator()`; públicas: `getPublishedSiteBySlug`, `findAssetVariant`, `lookupInvite`, `acceptInvite`.
 - `src/lib/storage/` — interface `Storage` + driver local; `clientKey()` isola por cliente.
 - `src/sites/operations.ts` — operações do editor (`applyOperation`), blocos novos, histórico desfazer/refazer.
 - `src/data/versions.ts` — listar, ver, restaurar e republicar versões.
 - `src/app/admin/clientes/[id]/editor/` — editor visual (`editor.tsx`: prévia + barra de ações + histórico; `panels.tsx`: Blocos, Topo, Contato, Faixa, Aparência).
-- `src/app/admin/clientes/...` — painel (Dados, Briefing, Imagens, Bio Site, Editor visual, Edição rápida, Versões; Server Actions em `actions.ts`); `src/app/preview/[clientId]` — prévia do rascunho; `src/app/[slug]` — Bio Site público; `src/app/media/[assetId]/[file]` — imagens.
+- `src/app/admin/clientes/...` — painel do operador (Dados, Briefing, Imagens, Bio Site, Editor visual, Edição rápida, Versões, Acessos, Atividade; Server Actions em `actions.ts`); os `view.tsx` de editor, rápida, imagens e versões são reaproveitados em `src/app/painel` (área do cliente); `src/app/convite/[token]` — aceite do convite; `src/app/preview/[clientId]` — prévia do rascunho; `src/app/[slug]` — Bio Site público; `src/app/media/[assetId]/[file]` — imagens.
 - `scripts/` — migração, operador, demos (`seed-demo.ts`), preparo do E2E, capturas (`screenshots.mts`), amostra de fontes (`font-specimen.mts`).
 - `prototipos/` — protótipos visuais aprovados (referência de design, não são código do produto).
 
@@ -78,7 +80,7 @@ Cartões de serviço não guardam o link: `resolveLink(bloco, contact)` monta de
 
 **Domínios.** MVP: DNS curinga `*.dominio` → app, que resolve o cliente pelo host. Futuro: domínios personalizados via tabela `domains` + emissão automática de TLS (depende da hospedagem escolhida).
 
-**Autenticação.** Um operador. Login forte (senha longa + segundo fator, ou passkey), sessão segura, rotas `/admin` e API protegidas no servidor. Biblioteca consolidada, sem implementação caseira de criptografia.
+**Autenticação.** Um operador e contas de clientes por convite (D31–D35); papel em `memberships`, padrão negar. Login forte (senha longa + segundo fator, ou passkey), sessão segura, rotas `/admin` e API protegidas no servidor. Biblioteca consolidada, sem implementação caseira de criptografia.
 
 ## Qualidade
 
