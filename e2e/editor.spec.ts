@@ -56,6 +56,18 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   await preview.locator('[data-edit="profile"]').click();
   await expect(page.getByRole("tab", { name: "Topo" })).toHaveAttribute("aria-selected", "true");
   await page.getByLabel("Nome", { exact: true }).fill("Studio Editado");
+
+  // Cores do topo: texto ilegível é apontado; o escurecimento muda a prévia ao vivo
+  await page.getByLabel("Nome e frase (código)").fill("#1a1a1a");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Corrija antes de salvar" }),
+  ).toContainText("texto do topo");
+  await page.getByLabel("Nome e frase (código)").fill("#ffffff");
+  await page.getByLabel("Intensidade do escurecimento").fill("80");
+  await expect(preview.locator(".bio")).toHaveAttribute(
+    "style",
+    /--veil-bottom:\s*rgb\(0 0 0 \/ 0\.95\)/,
+  );
   if (isMobile) await page.getByRole("button", { name: "Prévia", exact: true }).click();
   await expect(preview.locator("h1")).toHaveText("Studio Editado");
 
@@ -64,6 +76,14 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   await expect(page.getByRole("tab", { name: "Blocos" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByLabel("Tipo")).toHaveValue("instagram");
   await page.getByLabel("Título", { exact: true }).fill("Siga no Instagram");
+
+  // Cor própria do cartão (código digitado) aparece na prévia
+  await page.getByLabel("Cor do cartão").selectOption("custom");
+  await page.getByLabel("Topo do degradê (código)").fill("#7b2cbf");
+  await expect(preview.locator('a[data-block-id="instagram"]')).toHaveAttribute(
+    "style",
+    /--card-top:\s*#7b2cbf/,
+  );
   await page.getByRole("button", { name: /Mover Avaliar no Google para cima/ }).click();
   const order = () =>
     page.getByRole("list", { name: "Blocos na ordem exibida" }).getByRole("listitem").first();
@@ -78,8 +98,8 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   // Cores sem contraste bloqueiam o salvamento, com atalho para o problema
   await page.getByRole("tab", { name: "Faixa" }).click();
   await page.getByLabel("Usar cores próprias").check();
-  await page.getByLabel("Fundo").fill("#ffffff");
-  await page.getByLabel("Letra").fill("#eeeeee");
+  await page.getByLabel("Fundo", { exact: true }).fill("#ffffff");
+  await page.getByLabel("Letra", { exact: true }).fill("#eeeeee");
   await expect(
     page.getByRole("alert").filter({ hasText: "Corrija antes de salvar" }),
   ).toContainText("contraste da faixa");

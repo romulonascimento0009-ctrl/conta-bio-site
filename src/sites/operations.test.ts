@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { briefingSchema } from "@/clients/briefing";
-import { validateBio, type BioDocument } from "./bio";
+import { HERO_DEFAULTS, validateBio, type BioDocument } from "./bio";
+import { THEME_IDS } from "./themes";
 import {
   applyOperation,
   historyApply,
@@ -68,10 +69,99 @@ describe("applyOperation", () => {
   });
 
   it("tema pronto troca cores e fontes mas mantém o padrão ilustrado", () => {
-    const d = applyOperation(doc(), { type: "theme-preset", themeId: "oceano" });
+    const withPattern = applyOperation(doc(), { type: "pattern", pattern: "food" });
+    const d = applyOperation(withPattern, { type: "theme-preset", themeId: "oceano" });
     expect(d.theme.colors.cardTop).toBe("#1b56a0");
     expect(d.theme.pattern).toBe("food");
     expect(validateBio(d).ok).toBe(true);
+  });
+
+  it("Bio Site novo nasce sem padrão ilustrado", () => {
+    expect(doc().theme.pattern).toBe("none");
+  });
+
+  it("cor própria do cartão: aplica, valida contraste e volta ao tema", () => {
+    let d = applyOperation(doc(), {
+      type: "block-update",
+      id: "instagram",
+      patch: { colors: { top: "#7b2cbf", bottom: "#3c096c" } },
+    });
+    expect(d.blocks.find((b) => b.id === "instagram")).toMatchObject({
+      colors: { top: "#7b2cbf", bottom: "#3c096c" },
+    });
+    expect(validateBio(d).ok).toBe(true);
+
+    const pale = applyOperation(d, {
+      type: "block-update",
+      id: "instagram",
+      patch: { colors: { top: "#ffe4f0", bottom: "#3c096c" } },
+    });
+    const r = validateBio(pale);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.issues[0].path).toMatch(/^blocks\.\d+\.colors\.top$/);
+
+    d = applyOperation(d, { type: "block-update", id: "instagram", patch: { colors: undefined } });
+    expect(d.blocks.find((b) => b.id === "instagram")).not.toHaveProperty("colors");
+  });
+
+  it("cor do botão do WhatsApp e da faixa padrão", () => {
+    let d = applyOperation(doc(), { type: "floating-whatsapp-color", color: "#0b6e4f" });
+    expect(d.floatingWhatsappColor).toBe("#0b6e4f");
+    expect(validateBio(d).ok).toBe(true);
+    // Ícone branco sobre amarelo claro: abaixo de 3:1 (elemento gráfico).
+    expect(
+      validateBio(applyOperation(d, { type: "floating-whatsapp-color", color: "#ffe066" })).ok,
+    ).toBe(false);
+    d = applyOperation(d, { type: "floating-whatsapp-color" });
+    expect(d).not.toHaveProperty("floatingWhatsappColor");
+
+    d = applyOperation(d, { type: "ticker-theme", patch: { bg: "#111827", fg: "#fde68a" } });
+    expect(d.tickerTheme).toEqual({ bg: "#111827", fg: "#fde68a" });
+    expect(validateBio(d).ok).toBe(true);
+  });
+
+  it("topo: ajustes aplicados por cima do padrão, mantidos na troca de tema e reiniciáveis", () => {
+    let d = applyOperation(doc(), { type: "hero", patch: { veilOpacity: 70 } });
+    expect(d.theme.hero).toEqual({ ...HERO_DEFAULTS, veilOpacity: 70 });
+    d = applyOperation(d, { type: "hero", patch: { blur: 5, logoBorder: "#ffd60a" } });
+    expect(d.theme.hero).toMatchObject({ veilOpacity: 70, blur: 5, logoBorder: "#ffd60a" });
+    expect(validateBio(d).ok).toBe(true);
+    d = applyOperation(d, { type: "theme-preset", themeId: "oceano" });
+    expect(d.theme.hero?.veilOpacity).toBe(70);
+    d = applyOperation(d, { type: "hero-reset" });
+    expect(d.theme).not.toHaveProperty("hero");
+  });
+
+  it("topo: texto escuro sobre fundo escuro é recusado; sobre fundo claro, aceito", () => {
+    const dark = applyOperation(doc(), { type: "hero", patch: { text: "#1a1a1a" } });
+    const r = validateBio(dark);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.issues[0].path).toBe("theme.hero.text");
+
+    const light = applyOperation(
+      applyOperation(dark, {
+        type: "theme",
+        patch: {
+          colors: {
+            base: "#fdf6ec",
+            glow1: "#fdf6ec",
+            glow2: "#fdf6ec",
+            glow3: "#fdf6ec",
+            accent: "#7a3b00",
+          },
+        },
+      }),
+      { type: "hero", patch: { veil: "#ffffff", veilOpacity: 20 } },
+    );
+    expect(validateBio(light).ok).toBe(true);
+  });
+
+  it("topo: todos os temas prontos passam com os ajustes padrão", () => {
+    for (const id of THEME_IDS) {
+      let d = applyOperation(doc(), { type: "theme-preset", themeId: id });
+      d = applyOperation(d, { type: "hero", patch: {} });
+      expect(validateBio(d).ok, id).toBe(true);
+    }
   });
 
   it("cor sem contraste é aplicada mas reprovada na validação", () => {

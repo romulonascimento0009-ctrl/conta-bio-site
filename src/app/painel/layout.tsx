@@ -11,6 +11,7 @@ const CLIENT_TABS: Tab[] = [
   { href: "/rapida", label: "Edição rápida" },
   { href: "/imagens", label: "Imagens" },
   { href: "/versoes", label: "Versões" },
+  { href: "/metricas", label: "Métricas" },
 ];
 
 /** Área do cliente: só o próprio Bio Site (operador que abrir /painel vai para /admin). */

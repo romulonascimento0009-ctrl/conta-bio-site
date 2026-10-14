@@ -151,3 +151,27 @@ export const auditLog = pgTable(
   },
   (t) => [index("audit_log_client_created_idx").on(t.clientId, t.createdAt)],
 );
+
+/**
+ * Métricas do Bio Site público: visitas e cliques. Sem cookies e sem IP: `visitor` é um hash
+ * diário (muda todo dia), usado só para contar visitantes únicos.
+ */
+export const siteEvents = pgTable(
+  "site_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    type: text("type", { enum: ["visit", "click"] }).notNull(),
+    /** Origem da visita: qr, nfc, instagram, google, facebook, whatsapp, tiktok, outro, direto. */
+    source: text("source").notNull(),
+    /** Só em cliques: o que foi tocado (instagram, google_review, whatsapp, social:tiktok…). */
+    target: text("target"),
+    /** Só em cliques: título do cartão no momento do clique. */
+    label: text("label"),
+    visitor: text("visitor").notNull(),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [index("site_events_client_created_idx").on(t.clientId, t.createdAt)],
+);

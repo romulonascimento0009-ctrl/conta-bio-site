@@ -2,7 +2,9 @@ import QRCode from "qrcode";
 import type { CSSProperties } from "react";
 import type { AssetInfo } from "@/data/assets";
 import {
+  HERO_DEFAULTS,
   resolveLink,
+  veilAlphas,
   wifiQrPayload,
   type BioDocument,
   type Block,
@@ -11,9 +13,10 @@ import {
 } from "@/sites/bio";
 import { ICONS, type IconId } from "@/sites/icons";
 import { whatsappHref } from "@/sites/links";
+import { rgbaCss } from "@/sites/color";
 import { PATTERNS } from "@/sites/patterns";
 import "./bio.css";
-import { CopyButton, ShareButton } from "./client-buttons";
+import { CopyButton, ShareButton, Tracker } from "./client-buttons";
 import { loadedFont } from "./fonts";
 import { Icon } from "./Icon";
 import { mediaUrl } from "./media";
@@ -69,7 +72,16 @@ function LinkCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"link"> }) {
     <li>
       <a
         className={`bio-card${block.variant === "light" ? " light" : ""}`}
+        style={
+          block.colors && block.variant === "solid"
+            ? ({
+                "--card-top": block.colors.top,
+                "--card-bottom": block.colors.bottom,
+              } as CSSProperties)
+            : undefined
+        }
         href={resolved.href}
+        data-track={`b:${block.id}`}
         {...(resolved.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         data-block-id={block.id}
       >
@@ -245,14 +257,19 @@ export function BioRenderer({
   doc,
   assets,
   embedded = false,
+  trackSlug,
 }: {
   doc: BioDocument;
   assets: Map<string, AssetInfo>;
   embedded?: boolean;
+  /** Só no endereço público: registra visitas e cliques (métricas). */
+  trackSlug?: string;
 }) {
   const ctx: Ctx = { doc, assets };
   const { colors, fonts, radius, pattern } = doc.theme;
   const ticker = doc.ticker.colors ?? doc.tickerTheme;
+  const hero = doc.theme.hero ?? HERO_DEFAULTS;
+  const [veilTop, veilBottom] = veilAlphas(hero);
   const display = loadedFont(fonts.display);
   const body = loadedFont(fonts.body);
   const c = doc.contact;
@@ -272,6 +289,11 @@ export function BioRenderer({
     "--ticker-bg": ticker.bg,
     "--ticker-fg": ticker.fg,
     "--pattern": PATTERNS[pattern].css,
+    "--hero-text": hero.text,
+    "--veil-top": rgbaCss(hero.veil, veilTop),
+    "--veil-bottom": rgbaCss(hero.veil, veilBottom),
+    "--blur": `${hero.blur}px`,
+    "--logo-border": hero.logoBorder,
     "--radius": RADIUS[radius].card,
     "--radius-ico": RADIUS[radius].ico,
     "--radius-panel": RADIUS[radius].panel,
@@ -362,6 +384,7 @@ export function BioRenderer({
               <li key={s.icon}>
                 <a
                   href={s.href}
+                  data-track={`s:${s.icon}`}
                   className={ICONS[s.icon].tile}
                   aria-label={s.label}
                   {...(s.href.startsWith("http")
@@ -379,6 +402,8 @@ export function BioRenderer({
       {doc.floatingWhatsapp && c.whatsapp && (
         <a
           className="bio-fab"
+          data-track="fab"
+          style={doc.floatingWhatsappColor ? { background: doc.floatingWhatsappColor } : undefined}
           href={whatsappHref(c.whatsapp, c.whatsappMessage)}
           target="_blank"
           rel="noopener noreferrer"
@@ -387,6 +412,7 @@ export function BioRenderer({
           <Icon name="whatsapp" />
         </a>
       )}
+      {trackSlug && <Tracker slug={trackSlug} />}
     </div>
   );
 }

@@ -13,6 +13,7 @@ export const OPERATOR_TABS: Tab[] = [
   { href: "/editor", label: "Editor visual" },
   { href: "/rapida", label: "Edição rápida" },
   { href: "/versoes", label: "Versões" },
+  { href: "/metricas", label: "Métricas" },
   { href: "/acessos", label: "Acessos" },
   { href: "/atividade", label: "Atividade" },
 ];

@@ -47,4 +47,4 @@ Concluída: 118 unitários, 45 E2E (inclui convite → cliente edita e publica d
 
 ## Futuro
 
-Cadastro aberto (SaaS) e cobrança; domínios personalizados; analytics; novos segmentos e blocos.
+Métricas básicas feitas antes do previsto (D37). Cadastro aberto (SaaS) e cobrança; domínios personalizados; analytics avançado; novos segmentos e blocos.

@@ -1,4 +1,12 @@
-import type { BioDocument, Block, BlockOf, Contact, Theme } from "./bio";
+import {
+  HERO_DEFAULTS,
+  type BioDocument,
+  type Block,
+  type BlockOf,
+  type Contact,
+  type Hero,
+  type Theme,
+} from "./bio";
 import type { PatternId } from "./patterns";
 import { THEMES, type ThemeId } from "./themes";
 
@@ -19,6 +27,12 @@ export type Operation =
   | { type: "block-move"; id: string; delta: -1 | 1 }
   | { type: "block-toggle"; id: string }
   | { type: "floating-whatsapp"; enabled: boolean }
+  /** `color` vazio volta ao verde do WhatsApp. */
+  | { type: "floating-whatsapp-color"; color?: string }
+  | { type: "ticker-theme"; patch: Partial<BioDocument["tickerTheme"]> }
+  /** Ajustes do topo; `reset` volta ao visual padrão. */
+  | { type: "hero"; patch: Partial<Hero> }
+  | { type: "hero-reset" }
   | { type: "meta"; patch: Partial<BioDocument["meta"]> };
 
 /** Remove chaves com `undefined` ou string vazia (campos opcionais "apagados" no editor). */
@@ -42,7 +56,9 @@ export function applyOperation(doc: BioDocument, op: Operation): BioDocument {
       break;
     case "theme-preset": {
       const preset = THEMES[op.themeId];
+      // Padrão ilustrado e ajustes do topo são escolhas do usuário: sobrevivem à troca de tema.
       next.theme = { ...structuredClone(preset.theme), pattern: next.theme.pattern };
+      if (doc.theme.hero) next.theme.hero = structuredClone(doc.theme.hero);
       next.tickerTheme = { ...preset.ticker };
       break;
     }
@@ -86,6 +102,19 @@ export function applyOperation(doc: BioDocument, op: Operation): BioDocument {
     }
     case "floating-whatsapp":
       next.floatingWhatsapp = op.enabled;
+      break;
+    case "floating-whatsapp-color":
+      if (op.color) next.floatingWhatsappColor = op.color;
+      else delete next.floatingWhatsappColor;
+      break;
+    case "hero":
+      next.theme.hero = { ...HERO_DEFAULTS, ...next.theme.hero, ...op.patch };
+      break;
+    case "hero-reset":
+      delete next.theme.hero;
+      break;
+    case "ticker-theme":
+      next.tickerTheme = { ...next.tickerTheme, ...op.patch };
       break;
     case "meta":
       next.meta = { ...next.meta, ...op.patch };

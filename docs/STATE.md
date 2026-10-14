@@ -9,6 +9,8 @@ Atualizado: 2026-10-13 · **Fase 4 (acesso de clientes por convite) concluída**
 - **Editor visual e versões (Fase 3):** ver `ROADMAP.md`. Publicar exige ação explícita (D29); versões restauráveis (D30).
 - **Acesso de clientes (Fase 4, D31–D35):** papéis operador/cliente em `memberships` (padrão negar); convite por link de uso único com validade de 1, 3 ou 7 dias (só o hash no banco; o link aparece uma vez); o aceite cria a conta e entra; área do cliente `/painel` com o mesmo editor, edição rápida, imagens e versões; **o cliente publica direto** (D31); auditoria das alterações; cancelar convite; remover acesso derruba a sessão. Isolamento conferido na camada de dados (`getClient` + `canAccessClient`).
 - Verificação: `npm run check` ✔ (118 unitários) · `npm run build` ✔ · `npm run test:e2e` 45/45 ✔ (o E2E novo também adultera o `clientId` de uma Server Action e confere que nada é gravado em outro cliente). Lighthouse não refeito: as páginas públicas não mudaram.
+- **Aparência (D36):** topo sem desenhos por padrão; seção Cores visível; cor própria por cartão; cor da faixa e do botão do WhatsApp; aba Topo com cores do fundo, escurecimento, desfoque, cor do texto e borda do logo. 124 unitários e 45 E2E ✔.
+- **Métricas (D37):** aba Métricas (operador e `/painel`): visitas por dia e por origem (QR, NFC, Instagram, Google…), toques por cartão, links e QR para impressão/NFC. Sem cookies, sem IP guardado. 133 unitários e 47 E2E ✔. Migração `0003_metrics` aplicada no banco local.
 - Migração `0002_access` aplicada no banco local; a conta do operador recebeu o papel `operator` (conferido).
 
 ## Ambiente

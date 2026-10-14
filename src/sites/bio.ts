@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { contrastRatio, HEX_COLOR } from "./color";
+import { averageHex, contrastRatio, HEX_COLOR, mixHex } from "./color";
 import { FONT_IDS } from "./fonts";
 import { ICON_IDS, type IconId } from "./icons";
 import { INSTAGRAM_HANDLE, isSafeHref, WHATSAPP_DIGITS, whatsappHref } from "./links";
@@ -11,6 +11,8 @@ import { PATTERN_IDS } from "./patterns";
  */
 export const BIO_SCHEMA_VERSION = 2;
 export const MIN_CONTRAST = 4.5;
+/** Elementos gráficos sem texto (ícone do botão flutuante): WCAG 1.4.11. */
+export const MIN_GRAPHIC_CONTRAST = 3;
 
 const hex = z.string().regex(HEX_COLOR, "cor no formato #rrggbb");
 const safeUrl = z.string().trim().max(500).refine(isSafeHref, "link inválido ou inseguro");
@@ -26,18 +28,43 @@ function checkContrast(
   fg: string,
   bg: string,
   label: string,
+  min = MIN_CONTRAST,
 ) {
   const ratio = contrastRatio(fg, bg);
-  if (ratio < MIN_CONTRAST) {
+  if (ratio < min) {
     ctx.addIssue({
       code: "custom",
       path,
-      message: `contraste ${label} é ${ratio.toFixed(2)}; mínimo ${MIN_CONTRAST}`,
+      message: `contraste ${label} é ${ratio.toFixed(2)}; mínimo ${min}`,
     });
   }
 }
 
 const WHITE = "#ffffff";
+
+/**
+ * Ajustes do topo (texto, escurecimento, desfoque, borda do logo). Ausente = visual padrão.
+ * O escurecimento é um degradê: começa em 65% da opacidade escolhida e termina em 130%.
+ */
+export const heroSchema = z.object({
+  text: hex,
+  veil: hex,
+  veilOpacity: z.int().min(0).max(90),
+  blur: z.int().min(0).max(40),
+  logoBorder: hex,
+});
+export type Hero = z.infer<typeof heroSchema>;
+export const HERO_DEFAULTS: Hero = {
+  text: WHITE,
+  veil: "#000000",
+  veilOpacity: 48,
+  blur: 22,
+  logoBorder: WHITE,
+};
+export const veilAlphas = (h: Hero) => [
+  (h.veilOpacity / 100) * 0.65,
+  Math.min(0.95, (h.veilOpacity / 100) * 1.3),
+];
 
 export const themeSchema = z
   .object({
@@ -63,9 +90,19 @@ export const themeSchema = z
     fonts: z.object({ display: z.enum(FONT_IDS), body: z.enum(FONT_IDS) }),
     radius: z.enum(["square", "soft", "pill"]),
     pattern: z.enum(PATTERN_IDS),
+    hero: heroSchema.optional(),
   })
   .superRefine((t, ctx) => {
     const c = t.colors;
+    if (t.hero) {
+      // Fundo sem foto: média das cores desfocadas sob o escurecimento (parte mais clara, no alto).
+      const bg = mixHex(
+        averageHex([c.base, c.glow1, c.glow2, c.glow3]),
+        t.hero.veil,
+        veilAlphas(t.hero)[0],
+      );
+      checkContrast(ctx, ["hero", "text"], t.hero.text, bg, "do texto do topo sobre o fundo");
+    }
     checkContrast(ctx, ["colors", "cardTop"], WHITE, c.cardTop, "branco/cardTop");
     checkContrast(ctx, ["colors", "cardBottom"], WHITE, c.cardBottom, "branco/cardBottom");
     checkContrast(ctx, ["colors", "accent"], c.accent, c.base, "accent/base");
@@ -129,8 +166,20 @@ export const linkBlock = z
     /** Só para action "url" (os demais usam o ícone do serviço). */
     icon: z.enum(ICON_IDS).optional(),
     variant: z.enum(["solid", "light"]).default("solid"),
+    /** Degradê próprio do cartão (só no estilo "solid"); ausente = cores do tema. */
+    colors: z.object({ top: hex, bottom: hex }).optional(),
   })
   .superRefine((b, ctx) => {
+    if (b.colors && b.variant === "solid") {
+      checkContrast(ctx, ["colors", "top"], WHITE, b.colors.top, "branco/cor do cartão (topo)");
+      checkContrast(
+        ctx,
+        ["colors", "bottom"],
+        WHITE,
+        b.colors.bottom,
+        "branco/cor do cartão (base)",
+      );
+    }
     if (b.action === "url" && !b.url) {
       ctx.addIssue({ code: "custom", path: ["url"], message: "informe o link do cartão" });
     }
@@ -219,6 +268,8 @@ export const bioDocumentSchema = z
     ticker: tickerSchema,
     blocks: z.array(anyBlock).max(30),
     floatingWhatsapp: z.boolean().default(true),
+    /** Cor do botão flutuante; ausente = verde do WhatsApp. */
+    floatingWhatsappColor: hex.optional(),
   })
   .superRefine((doc, ctx) => {
     checkContrast(
@@ -228,6 +279,16 @@ export const bioDocumentSchema = z
       doc.tickerTheme.bg,
       "da faixa padrão",
     );
+    if (doc.floatingWhatsappColor) {
+      checkContrast(
+        ctx,
+        ["floatingWhatsappColor"],
+        WHITE,
+        doc.floatingWhatsappColor,
+        "do ícone do botão do WhatsApp",
+        MIN_GRAPHIC_CONTRAST,
+      );
+    }
     const seen = new Set<string>();
     doc.blocks.forEach((b, i) => {
       if (seen.has(b.id)) {

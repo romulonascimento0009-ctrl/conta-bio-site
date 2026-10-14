@@ -4,10 +4,12 @@ import { useId, useState, type ReactNode } from "react";
 import { inputClass } from "@/app/admin/_components/form";
 import { instagramField, parseHours, phoneField, whatsappField } from "@/clients/briefing";
 import {
+  HERO_DEFAULTS,
   resolveLink,
   type BioDocument,
   type Block,
   type BlockOf,
+  type Hero,
   type LinkAction,
 } from "@/sites/bio";
 import { FONT_IDS, FONTS } from "@/sites/fonts";
@@ -184,6 +186,8 @@ function ColorField({
   onChange: (v: string) => void;
 }) {
   const id = useId();
+  // Texto digitado (ex.: "#1b56") só vira cor quando completa; o seletor aplica na hora.
+  const [draft, setDraft] = useState<string | null>(null);
   return (
     <div className="flex items-center gap-2">
       <input
@@ -191,11 +195,63 @@ function ColorField({
         type="color"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 w-12 rounded border border-border"
+        className="h-9 w-12 shrink-0 rounded border border-border"
+      />
+      <input
+        type="text"
+        aria-label={`${label} (código)`}
+        value={draft ?? value}
+        maxLength={7}
+        spellCheck={false}
+        onChange={(e) => {
+          const v = e.target.value.trim().toLowerCase();
+          setDraft(v);
+          if (/^#[0-9a-f]{6}$/.test(v)) onChange(v);
+        }}
+        onBlur={() => setDraft(null)}
+        className="w-20 shrink-0 rounded border border-border bg-white px-2 py-1.5 font-mono text-xs"
       />
       <label htmlFor={id} className="text-sm">
         {label}
       </label>
+    </div>
+  );
+}
+
+function Range({
+  label,
+  value,
+  min,
+  max,
+  unit,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  unit: string;
+  onChange: (v: number) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="grid gap-1">
+      <label htmlFor={id} className="flex justify-between text-sm">
+        <span>{label}</span>
+        <span className="text-muted tabular-nums">
+          {value}
+          {unit}
+        </span>
+      </label>
+      <input
+        id={id}
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full accent-[var(--color-accent)]"
+      />
     </div>
   );
 }
@@ -624,14 +680,45 @@ function LinkEditor({
         </>
       )}
       <Select
-        label="Estilo"
-        value={block.variant}
+        label="Cor do cartão"
+        value={block.colors && block.variant === "solid" ? "custom" : block.variant}
         options={[
           { value: "solid", label: "Cor do tema" },
+          { value: "custom", label: "Cor própria" },
           { value: "light", label: "Claro" },
         ]}
-        onChange={(variant) => set({ variant }, "variant")}
+        onChange={(v) =>
+          set(
+            v === "custom"
+              ? {
+                  variant: "solid",
+                  colors: block.colors ?? {
+                    top: doc.theme.colors.cardTop,
+                    bottom: doc.theme.colors.cardBottom,
+                  },
+                }
+              : { variant: v, colors: undefined },
+            "variant",
+          )
+        }
       />
+      {block.colors && block.variant === "solid" && (
+        <div className="grid gap-2">
+          <ColorField
+            label="Topo do degradê"
+            value={block.colors.top}
+            onChange={(top) => set({ colors: { ...block.colors!, top } }, "colors.top")}
+          />
+          <ColorField
+            label="Base do degradê"
+            value={block.colors.bottom}
+            onChange={(bottom) => set({ colors: { ...block.colors!, bottom } }, "colors.bottom")}
+          />
+          <p className="text-xs text-muted">
+            O texto do cartão é branco: cores muito claras são recusadas ao salvar.
+          </p>
+        </div>
+      )}
     </Section>
   );
 }
@@ -710,6 +797,7 @@ export function ProfilePanel({
           onChange={(id) => set({ background: ref(id) }, "background")}
         />
       </Section>
+      <HeroColors doc={doc} dispatch={dispatch} />
       <Section title="Busca e compartilhamento">
         <TextField
           label="Título da página"
@@ -905,21 +993,142 @@ export function TickerPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Dis
   );
 }
 
+/** Cores e efeitos do topo: fundo, escurecimento, desfoque, texto e logo. */
+function HeroColors({ doc, dispatch }: { doc: BioDocument; dispatch: Dispatch }) {
+  const c = doc.theme.colors;
+  const hero = doc.theme.hero ?? HERO_DEFAULTS;
+  const color = (k: ThemeColor) => (v: string) =>
+    dispatch({ type: "theme", patch: { colors: { [k]: v } } }, `theme.${k}`);
+  const setHero = (patch: Partial<Hero>, key: string) =>
+    dispatch({ type: "hero", patch }, `hero.${key}`);
+
+  return (
+    <Section title="Cores do topo">
+      <div className="grid gap-2">
+        <h3 className="text-sm font-semibold">Fundo</h3>
+        {doc.profile.background ? (
+          <p className="text-xs text-muted">
+            Com foto de fundo, estas cores ficam por trás da foto. Use o escurecimento abaixo para o
+            texto ficar fácil de ler.
+          </p>
+        ) : (
+          <p className="text-xs text-muted">
+            Sem foto, o fundo é a mistura desfocada destas cores.
+          </p>
+        )}
+        <div className="grid gap-2 xl:grid-cols-2">
+          <ColorField label="Cor 1" value={c.glow1} onChange={color("glow1")} />
+          <ColorField label="Cor 2" value={c.glow2} onChange={color("glow2")} />
+          <ColorField label="Cor 3" value={c.glow3} onChange={color("glow3")} />
+          <ColorField label="Cor de base" value={c.base} onChange={color("base")} />
+        </div>
+        <button
+          type="button"
+          onClick={() =>
+            dispatch({
+              type: "theme",
+              patch: { colors: { glow1: c.base, glow2: c.base, glow3: c.base } },
+            })
+          }
+          className="justify-self-start rounded-md border border-border bg-white px-3 py-1.5 text-sm"
+        >
+          Usar só a cor de base no fundo
+        </button>
+      </div>
+      <div className="grid gap-3">
+        <h3 className="text-sm font-semibold">Escurecimento e desfoque</h3>
+        <ColorField
+          label="Cor do escurecimento"
+          value={hero.veil}
+          onChange={(veil) => setHero({ veil }, "veil")}
+        />
+        <Range
+          label="Intensidade do escurecimento"
+          value={hero.veilOpacity}
+          min={0}
+          max={90}
+          unit="%"
+          onChange={(veilOpacity) => setHero({ veilOpacity }, "veilOpacity")}
+        />
+        <Range
+          label="Desfoque do fundo"
+          value={hero.blur}
+          min={0}
+          max={40}
+          unit=" px"
+          onChange={(blur) => setHero({ blur }, "blur")}
+        />
+      </div>
+      <div className="grid gap-2">
+        <h3 className="text-sm font-semibold">Texto e logo</h3>
+        <div className="grid gap-2 xl:grid-cols-2">
+          <ColorField
+            label="Nome e frase"
+            value={hero.text}
+            onChange={(text) => setHero({ text }, "text")}
+          />
+          <ColorField label="Categorias" value={c.accent} onChange={color("accent")} />
+          <ColorField
+            label="Borda do logo"
+            value={hero.logoBorder}
+            onChange={(logoBorder) => setHero({ logoBorder }, "logoBorder")}
+          />
+          {!doc.profile.logo && (
+            <>
+              <ColorField label="Fundo do monograma" value={c.logoBg} onChange={color("logoBg")} />
+              <ColorField label="Letras do monograma" value={c.logoFg} onChange={color("logoFg")} />
+            </>
+          )}
+        </div>
+      </div>
+      {doc.theme.hero && (
+        <button
+          type="button"
+          onClick={() => dispatch({ type: "hero-reset" })}
+          className="justify-self-start rounded-md border border-border bg-white px-3 py-1.5 text-sm"
+        >
+          Voltar escurecimento, desfoque, texto e borda ao padrão
+        </button>
+      )}
+    </Section>
+  );
+}
+
 /* ---------- Aparência ---------- */
 
-const COLOR_LABELS: Record<keyof BioDocument["theme"]["colors"], string> = {
-  cardTop: "Cartões (topo do degradê)",
-  cardBottom: "Cartões (base do degradê)",
-  accent: "Categorias",
-  base: "Fundo da página",
-  ink: "Texto dos painéis",
-  inkMuted: "Texto secundário dos painéis",
-  logoBg: "Fundo do monograma",
-  logoFg: "Letras do monograma",
-  glow1: "Fundo sem foto — cor 1",
-  glow2: "Fundo sem foto — cor 2",
-  glow3: "Fundo sem foto — cor 3",
-};
+type ThemeColor = keyof BioDocument["theme"]["colors"];
+
+/** Cores do tema agrupadas pela parte do Bio Site onde aparecem. */
+const COLOR_GROUPS: { title: string; colors: [ThemeColor, string][] }[] = [
+  {
+    title: "Cartões",
+    colors: [
+      ["cardTop", "Topo do degradê"],
+      ["cardBottom", "Base do degradê"],
+    ],
+  },
+  {
+    title: "Topo",
+    colors: [
+      ["glow1", "Fundo desfocado: cor 1"],
+      ["glow2", "Fundo desfocado: cor 2"],
+      ["glow3", "Fundo desfocado: cor 3"],
+      ["accent", "Categorias"],
+      ["logoBg", "Fundo do monograma"],
+      ["logoFg", "Letras do monograma"],
+    ],
+  },
+  {
+    title: "Página e painéis",
+    colors: [
+      ["base", "Fundo da página"],
+      ["ink", "Texto dos painéis"],
+      ["inkMuted", "Texto secundário"],
+    ],
+  },
+];
+
+const WHATSAPP_GREEN = "#25d366";
 
 export function LookPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Dispatch }) {
   const th = doc.theme;
@@ -988,24 +1197,70 @@ export function LookPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Dispa
           onChange={(body) => dispatch({ type: "theme", patch: { fonts: { ...th.fonts, body } } })}
         />
       </Section>
-      <details className="rounded-md border border-border p-4">
-        <summary className="cursor-pointer font-semibold">Cores avançadas</summary>
-        <p className="mt-2 text-xs text-muted">
-          Combinações sem contraste suficiente para leitura são recusadas ao salvar.
+      <Section title="Cores">
+        <p className="text-sm text-muted">
+          Comece por um tema pronto e ajuste o que quiser. Cada cartão também pode ter cor própria
+          (aba Blocos). Combinações difíceis de ler são recusadas ao salvar.
         </p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {(Object.keys(COLOR_LABELS) as (keyof typeof COLOR_LABELS)[]).map((k) => (
+        {COLOR_GROUPS.map((g) => (
+          <div key={g.title} className="grid gap-2">
+            <h3 className="text-sm font-semibold">{g.title}</h3>
+            <div className="grid gap-2 xl:grid-cols-2">
+              {g.colors.map(([k, label]) => (
+                <ColorField
+                  key={k}
+                  label={label}
+                  value={th.colors[k]}
+                  onChange={(v) =>
+                    dispatch({ type: "theme", patch: { colors: { [k]: v } } }, `theme.${k}`)
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+        <div className="grid gap-2">
+          <h3 className="text-sm font-semibold">Faixa de avisos</h3>
+          <div className="grid gap-2 xl:grid-cols-2">
             <ColorField
-              key={k}
-              label={COLOR_LABELS[k]}
-              value={th.colors[k]}
-              onChange={(v) =>
-                dispatch({ type: "theme", patch: { colors: { [k]: v } } }, `theme.${k}`)
+              label="Fundo da faixa"
+              value={doc.tickerTheme.bg}
+              onChange={(bg) => dispatch({ type: "ticker-theme", patch: { bg } }, "tickerTheme.bg")}
+            />
+            <ColorField
+              label="Letra da faixa"
+              value={doc.tickerTheme.fg}
+              onChange={(fg) => dispatch({ type: "ticker-theme", patch: { fg } }, "tickerTheme.fg")}
+            />
+          </div>
+          {doc.ticker.colors && (
+            <p className="text-xs text-muted">
+              A faixa está com cores próprias (aba Faixa), que têm prioridade sobre estas.
+            </p>
+          )}
+        </div>
+        <div className="grid gap-2">
+          <h3 className="text-sm font-semibold">Botão flutuante do WhatsApp</h3>
+          <div className="flex flex-wrap items-center gap-3">
+            <ColorField
+              label="Cor do botão"
+              value={doc.floatingWhatsappColor ?? WHATSAPP_GREEN}
+              onChange={(color) =>
+                dispatch({ type: "floating-whatsapp-color", color }, "floatingWhatsappColor")
               }
             />
-          ))}
+            {doc.floatingWhatsappColor && (
+              <button
+                type="button"
+                onClick={() => dispatch({ type: "floating-whatsapp-color" })}
+                className="rounded-md border border-border bg-white px-3 py-1.5 text-sm"
+              >
+                Voltar ao verde do WhatsApp
+              </button>
+            )}
+          </div>
         </div>
-      </details>
+      </Section>
     </div>
   );
 }

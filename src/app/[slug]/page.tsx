@@ -46,5 +46,5 @@ export default async function PublicBioPage({ params }: PageProps<"/[slug]">) {
   const { slug } = await params;
   const site = await load(slug);
   if (!site) notFound();
-  return <BioRenderer doc={site.document} assets={site.assets} />;
+  return <BioRenderer doc={site.document} assets={site.assets} trackSlug={slug} />;
 }
