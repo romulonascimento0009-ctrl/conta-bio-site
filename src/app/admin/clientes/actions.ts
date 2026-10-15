@@ -118,7 +118,7 @@ export async function saveBriefingAction(
     throw err;
   }
   refresh(id);
-  return { ok: true, message: "Briefing salvo." };
+  return { ok: true, message: "Cadastro salvo." };
 }
 
 /** Recebe uma imagem por chamada (o navegador já a reduziu). */

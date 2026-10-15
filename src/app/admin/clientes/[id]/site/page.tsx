@@ -36,7 +36,7 @@ export default async function SitePage({ params }: PageProps<"/admin/clientes/[i
         </h2>
         <p className="mt-1 text-sm text-muted">
           Modelo do segmento <strong>{SEGMENTS[segment].label}</strong>, preenchido com os dados do
-          briefing. Tudo pode ser alterado depois.
+          cadastro do cliente. Tudo pode ser alterado depois.
         </p>
         <CreateSiteForm clientId={id} themes={themes} defaultTheme={SEGMENTS[segment].theme} />
       </section>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { briefingSchema } from "./briefing";
+import { briefingInputSchema, briefingSchema } from "./briefing";
 import { slugify, slugSchema } from "./slug";
 
 describe("slugify", () => {
@@ -47,5 +47,33 @@ describe("briefingSchema", () => {
       instagram: "https://www.instagram.com/studio.bella/",
     });
     expect(b.instagram).toBe("studio.bella");
+  });
+});
+
+describe("briefingInputSchema (ao salvar)", () => {
+  const issues = (categories: string) => {
+    const r = briefingInputSchema.safeParse({ businessName: "Park Vision", categories });
+    return r.success ? [] : r.error.issues.map((i) => i.path.join("."));
+  };
+
+  it("aceita até 6 categorias com até 24 letras", () => {
+    expect(issues("Manutenção, Reformas, Laudos, Peças, Pintura, Montagem")).toEqual([]);
+  });
+
+  it("recusa categoria longa, apontando o campo", () => {
+    expect(issues("Manutenção de brinquedos de parque")).toEqual(["categories"]);
+  });
+
+  it("recusa mais de 6 categorias", () => {
+    expect(issues("A, B, C, D, E, F, G")).toEqual(["categories"]);
+  });
+
+  it("cadastro salvo antes da regra continua legível", () => {
+    expect(
+      briefingSchema.safeParse({
+        businessName: "X",
+        categories: "Manutenção de brinquedos de parque",
+      }).success,
+    ).toBe(true);
   });
 });

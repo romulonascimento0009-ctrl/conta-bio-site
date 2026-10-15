@@ -27,7 +27,7 @@ export default async function ClientPage({ params }: PageProps<"/admin/clientes/
           Excluir cliente
         </h2>
         <p className="mt-1 text-sm text-muted">
-          Apaga o cliente, o briefing, o Bio Site, as versões e todas as imagens. Não pode ser
+          Apaga o cliente, o cadastro, o Bio Site, as versões e todas as imagens. Não pode ser
           desfeito.
         </p>
         <DeleteClientForm id={client.id} slug={client.slug} />

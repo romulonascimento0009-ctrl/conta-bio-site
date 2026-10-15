@@ -47,7 +47,7 @@ export function BriefingForm({
       <div className="flex flex-col gap-3 md:col-span-2">
         <FormMessage state={state} />
         <div>
-          <SubmitButton>Salvar briefing</SubmitButton>
+          <SubmitButton>Salvar cadastro</SubmitButton>
         </div>
       </div>
     </form>

@@ -4,7 +4,7 @@ import { getClient } from "@/data/clients";
 import { notFound } from "next/navigation";
 import { BriefingForm } from "./briefing-form";
 
-export const metadata: Metadata = { title: "Briefing · PlataformaSites" };
+export const metadata: Metadata = { title: "Cadastro do cliente · PlataformaSites" };
 
 export default async function BriefingPage({ params }: PageProps<"/admin/clientes/[id]/briefing">) {
   const { id } = await params;
@@ -14,7 +14,7 @@ export default async function BriefingPage({ params }: PageProps<"/admin/cliente
   return (
     <section aria-labelledby="briefing">
       <h2 id="briefing" className="text-lg font-semibold">
-        Briefing
+        Cadastro do cliente
       </h2>
       <p className="mt-1 text-sm text-muted">
         Informações coletadas com o cliente. WhatsApp ou link de agendamento são necessários para

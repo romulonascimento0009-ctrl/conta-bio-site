@@ -1,4 +1,10 @@
-import { parseHours, type Briefing } from "@/clients/briefing";
+import {
+  MAX_CATEGORIES,
+  MAX_CATEGORY_LENGTH,
+  parseCategories,
+  parseHours,
+  type Briefing,
+} from "@/clients/briefing";
 import { SEGMENTS, type SegmentId } from "@/clients/segments";
 import { BIO_SCHEMA_VERSION, type BioDocument, type Block, type Contact } from "./bio";
 import { THEMES, type ThemeId } from "./themes";
@@ -104,11 +110,10 @@ export function createBioDocument(input: {
 }): BioDocument {
   const { segment, briefing: b } = input;
   const preset = THEMES[input.themeId ?? SEGMENTS[segment].theme];
-  const categories = (b.categories ?? "")
-    .split(",")
-    .map((s) => s.trim().toUpperCase())
-    .filter(Boolean)
-    .slice(0, 6);
+  // Cadastros salvos antes do limite por categoria podem ter etiquetas longas: corta, não falha.
+  const categories = parseCategories(b.categories)
+    .slice(0, MAX_CATEGORIES)
+    .map((c) => c.slice(0, MAX_CATEGORY_LENGTH).trim());
   const where = b.city ? ` em ${b.city}` : "";
 
   return {

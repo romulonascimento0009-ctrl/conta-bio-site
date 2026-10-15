@@ -13,6 +13,7 @@ Atualizado: 2026-10-14 · **Fase 4 (acesso de clientes por convite) concluída**
 - **Métricas (D37):** aba Métricas (operador e `/painel`): visitas por dia e por origem (QR, NFC, Instagram, Google…), toques por cartão, links e QR para impressão/NFC. Sem cookies, sem IP guardado. 133 unitários e 47 E2E ✔. Migração `0003_metrics` aplicada no banco local.
 - Migração `0002_access` aplicada no banco local; a conta do operador recebeu o papel `operator` (conferido).
 - **Next 16.3.8 (2026-10-14):** `next` e `eslint-config-next` atualizados de 16.3.7 (correções de segurança; publicados em 30/09, regra D12). `npm run check` ✔ (133) · `npm run build` ✔ · `npm run test:e2e` 47/47 ✔. Alertas restantes do `npm audit` (`braces`/`micromatch` via eslint-config-next; `esbuild` antigo via drizzle-kit) são só de ferramentas locais: risco aceito, acompanhar correções.
+- **Teste manual da Fase 4 pelo usuário (2026-10-14), correções:** criar o Bio Site travava quando uma categoria do cadastro passava de 24 letras (limite da etiqueta). Agora o cadastro recusa ao salvar (até 6 categorias, 24 letras cada) e a criação corta em vez de travar; cadastros antigos continuam legíveis. "Briefing" virou **"Cadastro do cliente"** nas telas (endereço `/briefing` e nomes no código mantidos); "Frase curta" virou **"Slogan"**. 138 unitários e 47 E2E ✔.
 - **E2E sob carga:** os 4 fluxos longos (admin, convite, editor, métricas) levam 9–22 s no `next dev` e estouravam o limite de 30 s com a máquina ocupada; agora usam `test.slow()` (limite de 90 s). Se voltar a falhar, alternativa: rodar o E2E sobre `next build` + `next start`.
 
 ## Ambiente
@@ -31,6 +32,7 @@ Atualizado: 2026-10-14 · **Fase 4 (acesso de clientes por convite) concluída**
 - **Do usuário:** P6 (domínio), P7 (conta da API da Claude), P12 (nota do Google manual ou automática).
 - Acessos: recuperação de senha do cliente (P13) e envio de convite por e-mail (P14). Hoje o operador copia o link e, se a senha for esquecida, remove o acesso e convida de novo.
 - Técnicas antes do deploy: segundo fator (P5b), CSP (P9), desempenho (P10), driver R2, cache do Bio Site publicado.
+- **Pedidos do usuário no teste da Fase 4 (2026-10-14), a encaixar no roadmap:** (1) **vídeo curto** (~10 s) mostrando o trabalho do cliente; (2) **portfólio de serviços no botão de orçamento** (tocar → lista de serviços com foto/descrição/preço opcional → WhatsApp com mensagem pronta citando o serviço); (3) achou o Bio Site inicial **"robotizado, sem vida"** e trabalhoso: quer que, ao salvar o cadastro, a IA já monte algo próximo do ramo (ex.: Park Vision, manutenção de brinquedos) → é a Fase 5. Falta saber se "sem vida" inclui o visual, além dos textos.
 - Editor: arrastar e soltar para reordenar (hoje: botões ↑/↓); edição de texto alternativo das fotos direto na galeria (hoje: aba Imagens).
 
 ## Próximo passo

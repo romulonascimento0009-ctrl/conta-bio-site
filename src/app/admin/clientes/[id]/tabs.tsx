@@ -7,7 +7,7 @@ export type Tab = { href: string; label: string };
 
 export const OPERATOR_TABS: Tab[] = [
   { href: "", label: "Dados" },
-  { href: "/briefing", label: "Briefing" },
+  { href: "/briefing", label: "Cadastro do cliente" },
   { href: "/imagens", label: "Imagens" },
   { href: "/site", label: "Bio Site" },
   { href: "/editor", label: "Editor visual" },

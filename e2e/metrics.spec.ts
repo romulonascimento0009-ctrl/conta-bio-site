@@ -25,8 +25,8 @@ test("métricas: visita pelo QR e toque no Instagram aparecem; visita do operado
   await expect(page).toHaveURL(/\/briefing$/);
   const clientId = /clientes\/([0-9a-f-]{36})/.exec(page.url())![1];
   await page.getByLabel("Instagram").fill("cafemedido");
-  await page.getByRole("button", { name: "Salvar briefing" }).click();
-  await expect(page.getByText("Briefing salvo.")).toBeVisible();
+  await page.getByRole("button", { name: "Salvar cadastro" }).click();
+  await expect(page.getByText("Cadastro salvo.")).toBeVisible();
   await page.goto(`/admin/clientes/${clientId}/site`);
   await page.getByRole("button", { name: "Criar Bio Site" }).click();
   await page.getByLabel("Revisei a prévia e aprovo a publicação").check();

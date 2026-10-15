@@ -50,12 +50,15 @@ test("fluxo completo: cliente → briefing → Bio Site → edição rápida →
   await expect(page).toHaveURL(/\/admin\/clientes\/[0-9a-f-]{36}\/briefing$/);
   const clientId = /clientes\/([0-9a-f-]{36})/.exec(page.url())![1];
 
-  // Briefing
+  // Cadastro do cliente (categoria longa demais para a etiqueta é recusada com aviso)
   await page.getByLabel("Instagram").fill("@doceacao");
   await page.getByLabel("WhatsApp").fill("+55 11 98888-7777");
+  await page.getByLabel("Categorias").fill("Bolos e doces artesanais para festas");
+  await page.getByRole("button", { name: "Salvar cadastro" }).click();
+  await expect(page.getByText(/cada categoria pode ter até 24 letras/)).toBeVisible();
   await page.getByLabel("Categorias").fill("Bolos, Doces");
-  await page.getByRole("button", { name: "Salvar briefing" }).click();
-  await expect(page.getByText("Briefing salvo.")).toBeVisible();
+  await page.getByRole("button", { name: "Salvar cadastro" }).click();
+  await expect(page.getByText("Cadastro salvo.")).toBeVisible();
 
   // Imagem própria (para o teste de isolamento depois)
   await page.getByRole("link", { name: "Imagens" }).click();

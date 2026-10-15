@@ -751,7 +751,7 @@ export function ProfilePanel({
           maxLength={60}
         />
         <TextField
-          label="Frase curta"
+          label="Slogan"
           value={p.tagline ?? ""}
           onChange={(v) => set({ tagline: v }, "tagline")}
           maxLength={120}
@@ -759,7 +759,7 @@ export function ProfilePanel({
         <ListField
           label="Categorias"
           multiline={false}
-          hint="Separadas por vírgula (até 6)."
+          hint="Separadas por vírgula (até 6, com até 24 letras cada)."
           value={p.categories}
           format={(c) => c.join(", ")}
           parse={(s) =>

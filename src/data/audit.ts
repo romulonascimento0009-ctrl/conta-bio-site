@@ -6,7 +6,7 @@ import { getClient } from "./clients";
 
 export const AUDIT_ACTIONS = {
   "client.update": "Dados do cliente alterados",
-  "briefing.save": "Briefing salvo",
+  "briefing.save": "Cadastro do cliente salvo",
   "site.create": "Bio Site criado",
   "draft.save": "Rascunho salvo",
   "site.publish": "Publicado",

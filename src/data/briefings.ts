@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { briefingSchema, type Briefing } from "@/clients/briefing";
+import { briefingInputSchema, briefingSchema, type Briefing } from "@/clients/briefing";
 import { db } from "@/db";
 import { briefings } from "@/db/schema";
 import { requireOperator } from "@/lib/session";
@@ -19,7 +19,7 @@ export async function saveBriefing(clientId: string, input: unknown): Promise<Br
   await requireOperator();
   const client = await getClient(clientId);
   if (!client) throw new Error("Cliente não encontrado.");
-  const data = briefingSchema.parse(input);
+  const data = briefingInputSchema.parse(input);
   await db
     .insert(briefings)
     .values({ clientId: client.id, data })

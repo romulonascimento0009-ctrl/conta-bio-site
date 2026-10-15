@@ -3,7 +3,7 @@ import { INSTAGRAM_HANDLE, isSafeHref, normalizeInstagram, WHATSAPP_DIGITS } fro
 
 const optional = (max: number) => z.string().trim().max(max).default("");
 
-/* Campos reutilizados pelo briefing e pela edição rápida. Vazio = não informado. */
+/* Campos reutilizados pelo cadastro do cliente (briefing) e pela edição rápida. Vazio = não informado. */
 
 export const whatsappField = z
   .string()
@@ -81,6 +81,39 @@ export const briefingSchema = z.object({
 
 export type Briefing = z.infer<typeof briefingSchema>;
 
+/** Etiquetas do topo do Bio Site: separadas por vírgula, em maiúsculas. */
+export function parseCategories(value: string | undefined): string[] {
+  return (value ?? "")
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+}
+
+export const MAX_CATEGORIES = 6;
+export const MAX_CATEGORY_LENGTH = 24;
+
+/**
+ * Regras extras só ao salvar: cadastros antigos que as violam continuam legíveis
+ * (`briefingSchema`) e são corrigidos na próxima edição.
+ */
+export const briefingInputSchema = briefingSchema.superRefine((b, ctx) => {
+  const categories = parseCategories(b.categories);
+  if (categories.length > MAX_CATEGORIES) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["categories"],
+      message: `use até ${MAX_CATEGORIES} categorias`,
+    });
+  }
+  if (categories.some((c) => c.length > MAX_CATEGORY_LENGTH)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["categories"],
+      message: `cada categoria pode ter até ${MAX_CATEGORY_LENGTH} letras; separe-as por vírgula`,
+    });
+  }
+});
+
 export const BRIEFING_FIELDS: {
   name: keyof Briefing;
   label: string;
@@ -90,13 +123,13 @@ export const BRIEFING_FIELDS: {
   { name: "businessName", label: "Nome do negócio" },
   {
     name: "tagline",
-    label: "Frase curta",
-    hint: "Aparece abaixo do nome. Ex.: Pão quentinho todo dia às 6h",
+    label: "Slogan",
+    hint: "Frase que aparece logo abaixo do nome da empresa. Ex.: Brinquedos seguros e revisados para o seu parque",
   },
   {
     name: "categories",
     label: "Categorias",
-    hint: "Separadas por vírgula. Ex.: Pães, Bolos, Salgados",
+    hint: "Etiquetas curtas abaixo do nome: até 6, separadas por vírgula, com até 24 letras cada. Ex.: Manutenção, Reformas, Laudos",
   },
   { name: "city", label: "Cidade", hint: "Ex.: Campinas/SP" },
   { name: "instagram", label: "Instagram", hint: "@perfil" },

@@ -37,8 +37,8 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   await page.getByLabel("Instagram").fill("studio.original");
   await page.getByLabel("WhatsApp").fill("5511977776666");
   await page.getByLabel("Link de avaliação no Google").fill("https://g.page/r/original/review");
-  await page.getByRole("button", { name: "Salvar briefing" }).click();
-  await expect(page.getByText("Briefing salvo.")).toBeVisible();
+  await page.getByRole("button", { name: "Salvar cadastro" }).click();
+  await expect(page.getByText("Cadastro salvo.")).toBeVisible();
   await page.goto(`/admin/clientes/${clientId}/site`);
   await page.getByRole("button", { name: "Criar Bio Site" }).click();
   await expect(page.getByText("Ainda não publicado.")).toBeVisible();

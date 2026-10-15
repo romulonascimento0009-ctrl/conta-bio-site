@@ -56,6 +56,18 @@ describe("modelos e temas", () => {
     expect(result.ok ? [] : result.issues).toEqual([]);
   });
 
+  it("cadastro antigo com categoria longa ou demais não trava a criação: corta", () => {
+    const d = createBioDocument({
+      segment: "other",
+      briefing: {
+        businessName: "Park Vision",
+        categories: "Manutenção de brinquedos de parque infantil, A, B, C, D, E, F",
+      },
+    });
+    expect(validateBio(d).ok).toBe(true);
+    expect(d.profile.categories).toEqual(["MANUTENÇÃO DE BRINQUEDOS", "A", "B", "C", "D", "E"]);
+  });
+
   it("ordem: Instagram, Google, ações, Wi-Fi, horários e localização por último", () => {
     expect(doc().blocks.map((b) => b.id)).toEqual([
       "instagram",

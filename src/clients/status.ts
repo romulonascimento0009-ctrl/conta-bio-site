@@ -2,7 +2,7 @@ export const CLIENT_STATUSES = ["briefing", "editing", "awaiting_approval", "pub
 export type ClientStatus = (typeof CLIENT_STATUSES)[number];
 
 export const STATUS_LABEL: Record<ClientStatus, string> = {
-  briefing: "Briefing",
+  briefing: "Cadastro",
   editing: "Em edição",
   awaiting_approval: "Aguardando aprovação",
   published: "Publicado",
