@@ -22,6 +22,8 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   page,
   isMobile,
 }, testInfo) => {
+  // Fluxo longo no `next dev`: com a máquina ocupada passa dos 30 s padrão.
+  test.slow();
   const slug = `editor-${testInfo.project.name}`;
 
   // Cliente com Bio Site publicado (versão 1)

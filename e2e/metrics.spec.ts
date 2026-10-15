@@ -12,6 +12,8 @@ test("métricas: visita pelo QR e toque no Instagram aparecem; visita do operado
   browser,
   baseURL,
 }, testInfo) => {
+  // Fluxo longo no `next dev`: com a máquina ocupada passa dos 30 s padrão.
+  test.slow();
   const slug = `metricas-${testInfo.project.name}`;
 
   // Cliente publicado com Instagram

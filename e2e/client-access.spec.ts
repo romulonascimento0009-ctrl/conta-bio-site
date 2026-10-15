@@ -38,6 +38,8 @@ test("convite → cliente edita e publica só o próprio Bio Site; isolamento e 
   browser,
   baseURL,
 }, testInfo) => {
+  // Fluxo longo no `next dev`: com a máquina ocupada passa dos 30 s padrão.
+  test.slow();
   const project = testInfo.project.name;
   const slug = `acesso-${project}`;
   const email = `cliente-${project}@teste.local`;

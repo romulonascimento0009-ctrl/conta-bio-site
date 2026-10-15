@@ -26,6 +26,8 @@ async function editJson(page: Page, mutate: (doc: DraftDoc) => void) {
 test("fluxo completo: cliente → briefing → Bio Site → edição rápida → publicar → exclusão", async ({
   page,
 }, testInfo) => {
+  // Fluxo longo no `next dev`: com a máquina ocupada passa dos 30 s padrão.
+  test.slow();
   const slug = `e2e-${testInfo.project.name}`;
 
   // ID de uma imagem de OUTRO cliente (demo), para testar o isolamento.
