@@ -1,6 +1,6 @@
 # Estado atual
 
-Atualizado: 2026-10-13 · **Fase 4 (acesso de clientes por convite) concluída** · Fase 5 (IA) aguarda aprovação.
+Atualizado: 2026-10-14 · **Fase 4 (acesso de clientes por convite) concluída** · Fase 5 (IA) aguarda aprovação.
 
 ## Pronto e verificado
 
@@ -12,6 +12,7 @@ Atualizado: 2026-10-13 · **Fase 4 (acesso de clientes por convite) concluída**
 - **Aparência (D36):** topo sem desenhos por padrão; seção Cores visível; cor própria por cartão; cor da faixa e do botão do WhatsApp; aba Topo com cores do fundo, escurecimento, desfoque, cor do texto e borda do logo. 124 unitários e 45 E2E ✔.
 - **Métricas (D37):** aba Métricas (operador e `/painel`): visitas por dia e por origem (QR, NFC, Instagram, Google…), toques por cartão, links e QR para impressão/NFC. Sem cookies, sem IP guardado. 133 unitários e 47 E2E ✔. Migração `0003_metrics` aplicada no banco local.
 - Migração `0002_access` aplicada no banco local; a conta do operador recebeu o papel `operator` (conferido).
+- **Next 16.3.8 (2026-10-14):** `next` e `eslint-config-next` atualizados de 16.3.7 (correções de segurança; publicados em 30/09, regra D12). `npm run check` ✔ (133) · `npm run build` ✔ · `npm run test:e2e` 47/47 ✔. Alertas restantes do `npm audit` (`braces`/`micromatch` via eslint-config-next; `esbuild` antigo via drizzle-kit) são só de ferramentas locais: risco aceito, acompanhar correções.
 
 ## Ambiente
 
@@ -29,6 +30,7 @@ Atualizado: 2026-10-13 · **Fase 4 (acesso de clientes por convite) concluída**
 - **Do usuário:** P6 (domínio), P7 (conta da API da Claude), P12 (nota do Google manual ou automática).
 - Acessos: recuperação de senha do cliente (P13) e envio de convite por e-mail (P14). Hoje o operador copia o link e, se a senha for esquecida, remove o acesso e convida de novo.
 - Técnicas antes do deploy: segundo fator (P5b), CSP (P9), desempenho (P10), driver R2, cache do Bio Site publicado.
+- E2E instável sob carga: os 4 fluxos longos (admin, convite, editor, métricas) levam 9–22 s no `next dev` e estouram o limite de 30 s quando a máquina está ocupada (visto 2× em 14/10; com a máquina ociosa, 47/47). Opções: `test.slow()` nesses fluxos ou rodar o E2E sobre `next build` + `next start`.
 - Editor: arrastar e soltar para reordenar (hoje: botões ↑/↓); edição de texto alternativo das fotos direto na galeria (hoje: aba Imagens).
 
 ## Próximo passo
