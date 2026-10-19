@@ -66,6 +66,11 @@ export const veilAlphas = (h: Hero) => [
   Math.min(0.95, (h.veilOpacity / 100) * 1.3),
 ];
 
+export const CARD_STYLES = ["theme", "light", "glass"] as const;
+export type CardStyle = (typeof CARD_STYLES)[number];
+/** Quanto o vidro clareia o fundo (aproximação para conferir o contraste). */
+export const GLASS_TINT = 0.12;
+
 export const themeSchema = z
   .object({
     colors: z.object({
@@ -91,6 +96,8 @@ export const themeSchema = z
     radius: z.enum(["square", "soft", "pill"]),
     pattern: z.enum(PATTERN_IDS),
     hero: heroSchema.optional(),
+    /** Estilo dos cartões: cor do tema (ausente), claros ou vidro escuro. */
+    cardStyle: z.enum(CARD_STYLES).optional(),
   })
   .superRefine((t, ctx) => {
     const c = t.colors;
@@ -109,6 +116,16 @@ export const themeSchema = z
     checkContrast(ctx, ["colors", "ink"], c.ink, WHITE, "ink/branco");
     checkContrast(ctx, ["colors", "inkMuted"], c.inkMuted, WHITE, "inkMuted/branco");
     checkContrast(ctx, ["colors", "logoFg"], c.logoFg, c.logoBg, "logoFg/logoBg");
+    if (t.cardStyle === "glass") {
+      // Vidro: texto branco sobre a cor de fundo levemente clareada pelo vidro.
+      checkContrast(
+        ctx,
+        ["colors", "base"],
+        WHITE,
+        mixHex(c.base, WHITE, GLASS_TINT),
+        "do texto branco sobre os cartões de vidro (cor de base)",
+      );
+    }
   });
 export type Theme = z.infer<typeof themeSchema>;
 
@@ -176,6 +193,14 @@ export const linkBlock = z
     /** Vazio = texto automático (ex.: nota do Google, endereço). */
     subtitle: optText(90),
     badge: optText(30),
+    /** Cartão em destaque: cor viva com halo de luz (no máximo um por Bio Site, sugerido). */
+    featured: z.boolean().optional(),
+    /** Visual do destaque: cheio na cor do ícone (ausente) ou neon (vidro escuro, luz na cor). */
+    featureStyle: z.enum(["color", "neon"]).optional(),
+    /** Etiqueta no canto do cartão (ex.: "Novo"). */
+    tag: optText(14),
+    /** Valor à direita, no lugar da seta (ex.: "12 mil", "4,9 ★"). */
+    value: optText(12),
     /** Só para action "url". */
     url: safeUrl.optional(),
     /** Só para action "url" (os demais usam o ícone do serviço). */
@@ -289,6 +314,8 @@ export const bioDocumentSchema = z
       city: optText(40),
       showShare: z.boolean().default(true),
       background: imageRef.optional(),
+      /** Como mostrar a foto de fundo: desfocada atrás de tudo (ausente) ou nítida no alto. */
+      backgroundMode: z.enum(["blur", "cover"]).optional(),
     }),
     contact: contactSchema,
     ticker: tickerSchema,

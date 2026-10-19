@@ -56,9 +56,11 @@ export function applyOperation(doc: BioDocument, op: Operation): BioDocument {
       break;
     case "theme-preset": {
       const preset = THEMES[op.themeId];
-      // Padrão ilustrado e ajustes do topo são escolhas do usuário: sobrevivem à troca de tema.
+      // Padrão ilustrado, ajustes do topo e estilo dos cartões são escolhas do usuário:
+      // sobrevivem à troca de tema.
       next.theme = { ...structuredClone(preset.theme), pattern: next.theme.pattern };
       if (doc.theme.hero) next.theme.hero = structuredClone(doc.theme.hero);
+      if (doc.theme.cardStyle) next.theme.cardStyle = doc.theme.cardStyle;
       next.tickerTheme = { ...preset.ticker };
       break;
     }

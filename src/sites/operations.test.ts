@@ -104,6 +104,58 @@ describe("applyOperation", () => {
     expect(d.blocks.find((b) => b.id === "instagram")).not.toHaveProperty("colors");
   });
 
+  it("estilo dos cartões: aplica, sobrevive à troca de tema e volta ao padrão", () => {
+    let d = applyOperation(doc(), { type: "theme", patch: { cardStyle: "glass" } });
+    expect(validateBio(d).ok).toBe(true);
+    d = applyOperation(d, { type: "theme-preset", themeId: "oceano" });
+    expect(d.theme.cardStyle).toBe("glass");
+    d = applyOperation(d, { type: "theme", patch: { cardStyle: undefined } });
+    expect(JSON.parse(JSON.stringify(d)).theme).not.toHaveProperty("cardStyle");
+  });
+
+  it("vidro escuro exige fundo escuro (texto branco)", () => {
+    const d = applyOperation(doc(), {
+      type: "theme",
+      patch: { cardStyle: "glass", colors: { base: "#f2efe9", accent: "#5a3a1a" } },
+    });
+    const r = validateBio(d);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.issues.map((i) => i.path)).toContain("theme.colors.base");
+  });
+
+  it("destaque, etiqueta, valor e foto da fachada", () => {
+    let d = applyOperation(doc(), {
+      type: "block-update",
+      id: "instagram",
+      patch: { featured: true, tag: "Novo", value: "12 mil" },
+    });
+    d = applyOperation(d, { type: "profile", patch: { backgroundMode: "cover" } });
+    expect(validateBio(d).ok).toBe(true);
+    expect(d.blocks.find((b) => b.id === "instagram")).toMatchObject({
+      featured: true,
+      tag: "Novo",
+      value: "12 mil",
+    });
+    d = applyOperation(d, {
+      type: "block-update",
+      id: "instagram",
+      patch: { featured: undefined, tag: "", value: "" },
+    });
+    const b = d.blocks.find((x) => x.id === "instagram");
+    expect(b).not.toHaveProperty("featured");
+    expect(b).not.toHaveProperty("tag");
+    expect(b).not.toHaveProperty("value");
+    expect(
+      validateBio(
+        applyOperation(d, {
+          type: "block-update",
+          id: "instagram",
+          patch: { value: "1234567890123" },
+        }),
+      ).ok,
+    ).toBe(false);
+  });
+
   it("cor própria do ícone: aplica e volta à cor padrão", () => {
     let d = applyOperation(doc(), {
       type: "block-update",
@@ -158,6 +210,8 @@ describe("applyOperation", () => {
       applyOperation(dark, {
         type: "theme",
         patch: {
+          // Fundo claro só com cartões coloridos (o futurista exige fundo escuro).
+          cardStyle: undefined,
           colors: {
             base: "#fdf6ec",
             glow1: "#fdf6ec",

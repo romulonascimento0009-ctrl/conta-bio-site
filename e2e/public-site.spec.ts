@@ -16,7 +16,13 @@ test.describe("Bio Site público", () => {
     await expect(cards.first()).toHaveText("Instagram");
     await expect(cards.nth(1)).toHaveText("Avaliar no Google");
     await expect(cards.last()).toHaveText("Como chegar");
-    await expect(page.getByText("4,9 ★ · 312 avaliações")).toBeVisible();
+    // Demonstração: nota à direita, WhatsApp em destaque, cartões claros e foto da fachada
+    const google = page.locator('a[data-block-id="google"]');
+    await expect(google.locator(".bio-value")).toHaveText("4,9 ★");
+    await expect(google).toContainText("312 avaliações");
+    await expect(google).toHaveClass(/\blight\b/);
+    await expect(page.locator('a[data-block-id="whatsapp"]')).toHaveClass(/\bfeatured\b/);
+    await expect(page.getByRole("img", { name: "Fachada da Forno da Serra" })).toBeVisible();
 
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,

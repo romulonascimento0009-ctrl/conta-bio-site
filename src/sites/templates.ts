@@ -124,7 +124,12 @@ export function createBioDocument(input: {
         b.tagline || `${b.businessName}${where}. Siga, avalie e fale com a gente.`
       ).slice(0, 160),
     },
-    theme: { ...structuredClone(preset.theme), pattern: SEGMENTS[segment].pattern },
+    // Bio Sites novos nascem no estilo futurista (pedido do usuário, D38).
+    theme: {
+      ...structuredClone(preset.theme),
+      pattern: SEGMENTS[segment].pattern,
+      cardStyle: "glass",
+    },
     tickerTheme: { ...preset.ticker },
     profile: {
       name: b.businessName,

@@ -25,6 +25,10 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   // Fluxo longo no `next dev`: com a máquina ocupada passa dos 30 s padrão.
   test.slow();
   const slug = `editor-${testInfo.project.name}`;
+  const consoleErrors: string[] = [];
+  page.on("console", (m) => {
+    if (m.type() === "error") consoleErrors.push(m.text());
+  });
 
   // Cliente com Bio Site publicado (versão 1)
   await page.goto("/admin/clientes/novo");
@@ -77,6 +81,13 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   await preview.locator('[data-block-id="instagram"]').click();
   await expect(page.getByRole("tab", { name: "Blocos" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByLabel("Tipo")).toHaveValue("instagram");
+  // Apagar um campo obrigatório vira pendência, sem quebrar o campo (bug de 2026-10-19:
+  // "A component is changing a controlled input to be uncontrolled").
+  await page.getByLabel("Título", { exact: true }).fill("");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Corrija antes de salvar" }),
+  ).toBeVisible();
+  expect(consoleErrors.filter((e) => /controlled/.test(e))).toEqual([]);
   await page.getByLabel("Título", { exact: true }).fill("Siga no Instagram");
 
   // Cor própria do cartão (código digitado) aparece na prévia
@@ -97,6 +108,17 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   const icon = preview.locator('a[data-block-id="instagram"] .bio-ico');
   await expect(icon).toHaveClass(/\bmono\b/);
   await expect(icon).toHaveAttribute("style", /--ico-bottom:\s*#/);
+
+  // Destaque, etiqueta e valor à direita aparecem na prévia
+  await page.getByLabel("Destaque", { exact: true }).selectOption("neon");
+  await page.getByLabel("Etiqueta no canto (opcional)").fill("Novo");
+  await page.getByLabel("Valor à direita (opcional)").fill("12 mil");
+  const card = preview.locator('a[data-block-id="instagram"]');
+  await expect(card).toHaveClass(/\bfeatured\b/);
+  await expect(card).toHaveClass(/\bneon\b/);
+  await expect(card.locator(".bio-corner")).toHaveText("Novo");
+  await expect(card.locator(".bio-value")).toHaveText("12 mil");
+  await page.getByLabel("Destaque", { exact: true }).selectOption("none");
   await page.getByRole("button", { name: /Mover Avaliar no Google para cima/ }).click();
   const order = () =>
     page.getByRole("list", { name: "Blocos na ordem exibida" }).getByRole("listitem").first();
@@ -118,6 +140,13 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   ).toContainText("contraste da faixa");
   await expect(page.getByRole("button", { name: "Salvar rascunho" })).toBeDisabled();
   await page.getByLabel("Usar cores próprias").uncheck();
+
+  // Estilo dos cartões: vidro escuro nos cartões sem cor própria
+  await page.getByRole("tab", { name: "Aparência" }).click();
+  await page.getByLabel("Estilo dos cartões").selectOption("glass");
+  if (isMobile) await page.getByRole("button", { name: "Prévia", exact: true }).click();
+  await expect(preview.locator('a[data-block-id="google"]')).toHaveClass(/\bglass\b/);
+  if (isMobile) await page.getByRole("button", { name: "Editar", exact: true }).click();
 
   // Salvar e publicar (publicar fica bloqueado enquanto há alterações não salvas)
   await expect(page.getByText("Salve o rascunho antes de publicar.")).toBeVisible();

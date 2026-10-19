@@ -1,6 +1,6 @@
 # Estado atual
 
-Atualizado: 2026-10-19 · **Fase 4 concluída** · ajustes visuais D38 (parte 1 de 2 entregue) · Fase 5 (IA) aguarda aprovação.
+Atualizado: 2026-10-19 · **Fase 4 concluída** · ajustes visuais D38 entregues (partes 1 e 2) · Fase 5 (IA) aguarda aprovação.
 
 ## Pronto e verificado
 
@@ -15,7 +15,9 @@ Atualizado: 2026-10-19 · **Fase 4 concluída** · ajustes visuais D38 (parte 1 
 - **Next 16.3.8 (2026-10-14):** `next` e `eslint-config-next` atualizados de 16.3.7 (correções de segurança; publicados em 30/09, regra D12). `npm run check` ✔ (133) · `npm run build` ✔ · `npm run test:e2e` 47/47 ✔. Alertas restantes do `npm audit` (`braces`/`micromatch` via eslint-config-next; `esbuild` antigo via drizzle-kit) são só de ferramentas locais: risco aceito, acompanhar correções.
 - **Teste manual da Fase 4 pelo usuário (2026-10-14), correções:** criar o Bio Site travava quando uma categoria do cadastro passava de 24 letras (limite da etiqueta). Agora o cadastro recusa ao salvar (até 6 categorias, 24 letras cada) e a criação corta em vez de travar; cadastros antigos continuam legíveis. "Briefing" virou **"Cadastro do cliente"** nas telas (endereço `/briefing` e nomes no código mantidos); "Frase curta" virou **"Slogan"**. 138 unitários e 47 E2E ✔.
 - **E2E sob carga:** os 4 fluxos longos (admin, convite, editor, métricas) levam 9–22 s no `next dev` e estouravam o limite de 30 s com a máquina ocupada; agora usam `test.slow()` (limite de 90 s). Se voltar a falhar, alternativa: rodar o E2E sobre `next build` + `next start`.
-- **Ícones com vida e links colados (D38, parte 1, 2026-10-19):** ícones com brilho e cor própria em todos os Bio Sites; "Cor própria do ícone" por cartão, Wi-Fi, horários e galeria (contraste ≥ 3:1 validado); Instagram, TikTok, WhatsApp e links aceitam o link copiado. Subtítulo do Instagram: "Siga no Instagram". 145 unitários e 47 E2E ✔ · `npm run build` ✔. Ainda não commitado.
+- **Ícones com vida e links colados (D38, parte 1, 2026-10-19):** ícones com brilho e cor própria em todos os Bio Sites; "Cor própria do ícone" por cartão, Wi-Fi, horários e galeria (contraste ≥ 3:1 validado); Instagram, TikTok, WhatsApp e links aceitam o link copiado. Subtítulo do Instagram: "Siga no Instagram". Commit `f99760a`.
+- **Estilos de cartão, destaque e fachada (D38, parte 2, 2026-10-19):** Aparência → "Estilo dos cartões" (Cor do tema, Claros, Vidro escuro); por cartão: destaque com halo, etiqueta no canto, valor à direita; Topo → "Como mostrar a foto" (desfocada ou nítida no alto). Demos atualizadas (`npm run seed:demo`). 149 unitários e 47 E2E ✔ · build ✔ · Lighthouse celular padaria e salão: 93/100/100/100.
+- **Futurista e correção (2026-10-19):** estilo Futurista (padrão dos novos), destaque Neon ou Cheio. Corrigido o aviso "A component is changing a controlled input to be uncontrolled" ao apagar um campo obrigatório no editor (E2E cobre). 149 unitários e 47 E2E ✔. Commitado.
 
 ## Ambiente
 
@@ -37,9 +39,5 @@ Atualizado: 2026-10-19 · **Fase 4 concluída** · ajustes visuais D38 (parte 1 
 - Editor: arrastar e soltar para reordenar (hoje: botões ↑/↓); edição de texto alternativo das fotos direto na galeria (hoje: aba Imagens).
 
 ## Próximo passo
-
-**D38 parte 2** (aprovada pelo usuário em 2026-10-19, protótipo `prototipos/bio-site-vida.html`): estilo dos cartões na Aparência (Claros, Vidro escuro com ícone redondo, Cor do tema — os três como no protótipo), cartão em destaque com halo, selo "Novo", valor à direita (seguidores, nota do Google, digitados) e opção de topo "Foto da fachada (nítida, com onda)" além do fundo desfocado.
-
-Depois:
 
 Fase 5 — IA (`ROADMAP.md`): briefing → Bio Site inicial, textos, direção visual, pedidos em linguagem natural com prévia, custo registrado e teto. Requer P7 (conta e chave da API da Claude).

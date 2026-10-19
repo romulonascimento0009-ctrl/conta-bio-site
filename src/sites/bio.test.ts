@@ -17,7 +17,14 @@ import {
   type BioDocument,
   type BlockOf,
 } from "./bio";
-import { BRAND_COLOR_EXCEPTIONS, glossTop, ICON_IDS, ICONS, SECTION_ICONS } from "./icons";
+import {
+  BRAND_COLOR_EXCEPTIONS,
+  featureColors,
+  glossTop,
+  ICON_IDS,
+  ICONS,
+  SECTION_ICONS,
+} from "./icons";
 import { isSafeHref } from "./links";
 import { applyQuickEdit, quickEditSchema, quickValuesFrom } from "./quick-edit";
 import { createBioDocument } from "./templates";
@@ -289,6 +296,11 @@ describe("cores dos ícones", () => {
     }
     for (const [id, i] of Object.entries(SECTION_ICONS))
       expect(contrastRatio("#ffffff", glossTop(i.color)), id).toBeGreaterThanOrEqual(3);
+  });
+
+  it("cartão em destaque: texto branco legível (≥ 4,5:1) com qualquer cor de ícone", () => {
+    for (const color of [...ICON_IDS.map((id) => ICONS[id].color), "#ffffff", "#ffe08a", "#000000"])
+      expect(contrastRatio("#ffffff", featureColors(color).top), color).toBeGreaterThanOrEqual(4.5);
   });
 
   it("cor própria do ícone: aceita cor escura, recusa cor clara (cartão e painéis)", () => {

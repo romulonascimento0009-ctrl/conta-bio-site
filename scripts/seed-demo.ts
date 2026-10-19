@@ -23,6 +23,8 @@ type Demo = {
   briefing: Record<string, string>;
   ticker: string[];
   gallery: string;
+  /** Topo com "foto da fachada" (desenho gerado) em vez do fundo desfocado. */
+  facade?: boolean;
   extra?: (doc: BioDocument) => void;
 };
 
@@ -47,9 +49,15 @@ const DEMOS: Demo[] = [
     },
     ticker: ["Fornada das 6h", "Encomendas para festas", "Café coado na hora"],
     gallery: "Saindo do forno",
+    facade: true,
     extra: (d) => {
       d.contact.googleRating = 4.9;
       d.contact.googleReviewCount = 312;
+      d.theme.cardStyle = "light";
+      setLink(d, "whatsapp", { featured: true });
+      setLink(d, "instagram", { value: "12 mil" });
+      setLink(d, "google", { value: "4,9 ★", subtitle: "312 avaliações" });
+      setLink(d, "cardapio", { tag: "Novo" });
     },
   },
   {
@@ -73,6 +81,9 @@ const DEMOS: Demo[] = [
     extra: (d) => {
       d.contact.googleRating = 5;
       d.contact.googleReviewCount = 128;
+      d.theme.cardStyle = "glass";
+      setLink(d, "agendar", { featured: true, featureStyle: "neon" });
+      setLink(d, "instagram", { value: "8,4 mil" });
     },
   },
   {
@@ -98,6 +109,7 @@ const DEMOS: Demo[] = [
     extra: (d) => {
       d.contact.googleRating = 4.8;
       d.contact.googleReviewCount = 96;
+      delete d.theme.cardStyle; // mostra o estilo "Cor do tema"
       const i = d.blocks.findIndex((b) => b.id === "telefone");
       d.blocks.splice(i, 0, {
         id: "convenios",
@@ -113,6 +125,32 @@ const DEMOS: Demo[] = [
     },
   },
 ];
+
+/** Ajusta um cartão da demonstração, se existir. */
+function setLink(d: BioDocument, id: string, patch: Record<string, unknown>) {
+  const b = d.blocks.find((x) => x.id === id);
+  if (b?.type === "link") Object.assign(b, patch);
+}
+
+/** "Foto" de fachada desenhada (toldo listrado, vitrines, porta) nas cores do tema. */
+async function facade(awning: string, wall: string, glass: string): Promise<Buffer> {
+  const stripes = Array.from(
+    { length: 16 },
+    (_, i) => `<rect x="${i * 80}" y="0" width="40" height="150" fill="#f4ead8"/>`,
+  ).join("");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900">
+    <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ec5e8"/><stop offset="1" stop-color="#f3d7b0"/></linearGradient>
+    <linearGradient id="v" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe6a8"/><stop offset="1" stop-color="${glass}"/></linearGradient></defs>
+    <rect width="1200" height="900" fill="url(#s)"/>
+    <rect y="120" width="1200" height="780" fill="${wall}"/>
+    <rect x="200" y="190" width="800" height="100" rx="12" fill="#3a2010"/>
+    <g transform="translate(60 330)"><rect width="1080" height="150" fill="${awning}"/>${stripes}</g>
+    <rect x="100" y="520" width="400" height="330" fill="url(#v)" stroke="#3a2010" stroke-width="16"/>
+    <rect x="700" y="520" width="400" height="330" fill="url(#v)" stroke="#3a2010" stroke-width="16"/>
+    <rect x="530" y="500" width="140" height="400" fill="#4a2a12"/>
+  </svg>`;
+  return sharp(Buffer.from(svg)).jpeg({ quality: 85 }).toBuffer();
+}
 
 /** Imagem de placeholder (degradê com formas) nas cores do tema. */
 async function placeholder(w: number, h: number, a: string, b: string, c: string): Promise<Buffer> {
@@ -179,12 +217,20 @@ async function main() {
       "logo.jpg",
       `Logo ${briefing.businessName}`,
     );
-    doc.profile.background = await addImage(
-      client.id,
-      await placeholder(1200, 1600, colors.glow1, colors.glow3, colors.glow2),
-      "fundo.jpg",
-      "",
-    );
+    doc.profile.background = demo.facade
+      ? await addImage(
+          client.id,
+          await facade("#b8321f", "#d9b48a", colors.cardTop),
+          "fachada.jpg",
+          `Fachada da ${briefing.businessName}`,
+        )
+      : await addImage(
+          client.id,
+          await placeholder(1200, 1600, colors.glow1, colors.glow3, colors.glow2),
+          "fundo.jpg",
+          "",
+        );
+    if (demo.facade) doc.profile.backgroundMode = "cover";
     const images: ImageRef[] = [];
     for (let i = 0; i < 4; i++) {
       images.push(

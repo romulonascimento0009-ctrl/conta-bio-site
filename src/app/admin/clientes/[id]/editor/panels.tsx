@@ -41,7 +41,7 @@ function TextField({
   onBlur,
 }: {
   label: string;
-  value: string;
+  value: string | undefined;
   onChange: (v: string) => void;
   onBlur?: () => void;
   hint?: string;
@@ -51,6 +51,8 @@ function TextField({
   maxLength?: number;
 }) {
   const id = useId();
+  // Campo obrigatório apagado sai do documento (vira pendência de validação); a caixa continua
+  // controlada com texto vazio.
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="text-sm font-medium">
@@ -59,7 +61,7 @@ function TextField({
       {multiline ? (
         <textarea
           id={id}
-          value={value}
+          value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
           rows={4}
           placeholder={placeholder}
@@ -71,7 +73,7 @@ function TextField({
         <input
           id={id}
           type={type}
-          value={value}
+          value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           placeholder={placeholder}
@@ -719,6 +721,38 @@ function LinkEditor({
         onChange={(v) => set({ badge: v }, "badge")}
         maxLength={30}
       />
+      <Select
+        label="Destaque"
+        value={!block.featured ? "none" : (block.featureStyle ?? "color")}
+        options={[
+          { value: "none", label: "Sem destaque" },
+          { value: "neon", label: "Neon (vidro preto com luz na cor do ícone)" },
+          { value: "color", label: "Cheio na cor do ícone" },
+        ]}
+        onChange={(v) =>
+          set(
+            v === "none"
+              ? { featured: undefined, featureStyle: undefined }
+              : { featured: true, featureStyle: v === "neon" ? "neon" : undefined },
+            "featured",
+          )
+        }
+      />
+      <TextField
+        label="Etiqueta no canto (opcional)"
+        value={block.tag ?? ""}
+        placeholder="Ex.: Novo"
+        onChange={(v) => set({ tag: v }, "tag")}
+        maxLength={14}
+      />
+      <TextField
+        label="Valor à direita (opcional)"
+        value={block.value ?? ""}
+        placeholder="Ex.: 12 mil, 4,9 ★"
+        hint="Aparece no lugar da seta. Ex.: seguidores do Instagram ou a nota do Google."
+        onChange={(v) => set({ value: v }, "value")}
+        maxLength={12}
+      />
       {block.action === "url" && (
         <>
           <TextField
@@ -853,11 +887,24 @@ export function ProfilePanel({
           onChange={(id) => set({ logo: ref(id) }, "logo")}
         />
         <ImagePicker
-          label="Foto de fundo (fica desfocada)"
+          label="Foto de fundo ou da fachada"
           assets={assets}
           value={p.background?.assetId}
           onChange={(id) => set({ background: ref(id) }, "background")}
         />
+        {p.background && (
+          <Select
+            label="Como mostrar a foto"
+            value={p.backgroundMode ?? "blur"}
+            options={[
+              { value: "blur", label: "Desfocada, atrás de tudo" },
+              { value: "cover", label: "Nítida no alto (fachada)" },
+            ]}
+            onChange={(v) =>
+              set({ backgroundMode: v === "blur" ? undefined : v }, "backgroundMode")
+            }
+          />
+        )}
       </Section>
       <HeroColors doc={doc} dispatch={dispatch} />
       <Section title="Busca e compartilhamento">
@@ -1234,6 +1281,18 @@ export function LookPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Dispa
         </div>
       </Section>
       <Section title="Estilo">
+        <Select
+          label="Estilo dos cartões"
+          value={th.cardStyle ?? "theme"}
+          options={[
+            { value: "theme", label: "Cor do tema" },
+            { value: "light", label: "Claros" },
+            { value: "glass", label: "Futurista (vidro escuro)" },
+          ]}
+          onChange={(v) =>
+            dispatch({ type: "theme", patch: { cardStyle: v === "theme" ? undefined : v } })
+          }
+        />
         <Select
           label="Padrão ilustrado"
           value={th.pattern}

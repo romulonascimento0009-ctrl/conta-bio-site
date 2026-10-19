@@ -1,4 +1,4 @@
-import { mixHex, rgbaCss } from "./color";
+import { contrastRatio, mixHex, rgbaCss } from "./color";
 
 /**
  * Ícones disponíveis nos cartões. Cada um tem cor própria (estilo ícone de app, com brilho):
@@ -59,4 +59,19 @@ export function glossVars(color: string): Record<string, string> {
 export function customIconStart(icon: IconId | SectionIconId): string {
   if (icon in SECTION_ICONS) return SECTION_ICONS[icon as SectionIconId].color;
   return BRAND_COLOR_EXCEPTIONS.includes(icon as IconId) ? "#128c4a" : ICONS[icon as IconId].color;
+}
+
+/**
+ * Cores do cartão em destaque a partir da cor do ícone: escurece só o necessário para o texto
+ * branco ter contraste ≥ 4,5:1; o halo usa a cor viva original.
+ */
+export function featureColors(color: string): { top: string; bottom: string; glow: string } {
+  let alpha = 0.15;
+  while (alpha < 0.8 && contrastRatio("#ffffff", mixHex(color, "#000000", alpha)) < 4.5)
+    alpha += 0.05;
+  return {
+    top: mixHex(color, "#000000", alpha),
+    bottom: mixHex(color, "#000000", Math.min(alpha + 0.18, 0.9)),
+    glow: color,
+  };
 }

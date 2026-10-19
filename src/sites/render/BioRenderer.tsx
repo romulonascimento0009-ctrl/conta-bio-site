@@ -11,7 +11,14 @@ import {
   type BlockOf,
   type ImageRef,
 } from "@/sites/bio";
-import { glossVars, ICONS, SECTION_ICONS, type IconId, type SectionIconId } from "@/sites/icons";
+import {
+  featureColors,
+  glossVars,
+  ICONS,
+  SECTION_ICONS,
+  type IconId,
+  type SectionIconId,
+} from "@/sites/icons";
 import { whatsappHref } from "@/sites/links";
 import { rgbaCss } from "@/sites/color";
 import { PATTERNS } from "@/sites/patterns";
@@ -87,16 +94,44 @@ function LinkCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"link"> }) {
   const resolved = resolveLink(block, ctx.doc.contact);
   if (!resolved) return null;
   const subtitle = block.subtitle || resolved.subtitle;
+  // Cor própria do cartão ou destaque mantêm o degradê em qualquer estilo; os demais seguem o
+  // estilo escolhido na Aparência (cor do tema, claros, vidro).
+  const own = block.variant === "solid" ? block.colors : undefined;
+  const iconColor = block.iconColor ?? ICONS[resolved.icon].color;
+  const neon = block.featured && block.featureStyle === "neon";
+  const feature = block.featured
+    ? own && !neon
+      ? { ...own, glow: own.top }
+      : featureColors(iconColor)
+    : undefined;
+  // Neon: vidro escuro com contorno e luz na cor viva do ícone (sem degradê de fundo).
+  const colors = neon ? undefined : (feature ?? own);
+  const style = ctx.doc.theme.cardStyle ?? "theme";
+  // No estilo futurista todo cartão vira pílula de vidro (inclusive os marcados como "Claro",
+  // para a página ficar uniforme); cartões com cor própria ou em destaque mantêm a cor.
+  const look = neon
+    ? " glass neon"
+    : style === "glass"
+      ? colors
+        ? " glass own"
+        : " glass"
+      : block.variant === "light"
+        ? " light"
+        : colors
+          ? ""
+          : style === "light"
+            ? " light"
+            : "";
   return (
-    <li>
+    <li
+      className={feature ? "bio-featured" : undefined}
+      style={feature ? ({ "--halo": feature.glow } as CSSProperties) : undefined}
+    >
       <a
-        className={`bio-card${block.variant === "light" ? " light" : ""}`}
+        className={`bio-card${look}${feature ? " featured" : ""}`}
         style={
-          block.colors && block.variant === "solid"
-            ? ({
-                "--card-top": block.colors.top,
-                "--card-bottom": block.colors.bottom,
-              } as CSSProperties)
+          colors
+            ? ({ "--card-top": colors.top, "--card-bottom": colors.bottom } as CSSProperties)
             : undefined
         }
         href={resolved.href}
@@ -104,6 +139,7 @@ function LinkCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"link"> }) {
         {...(resolved.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         data-block-id={block.id}
       >
+        {block.tag && <span className="bio-corner">{block.tag}</span>}
         <span {...tileProps(resolved.icon, "bio-ico", block.iconColor)}>
           <Icon name={resolved.icon} />
         </span>
@@ -112,7 +148,11 @@ function LinkCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"link"> }) {
           <strong>{block.title}</strong>
           {subtitle && <small>{subtitle}</small>}
         </span>
-        <Icon name="chevron" className="bio-go" />
+        {block.value ? (
+          <span className="bio-value">{block.value}</span>
+        ) : (
+          <Icon name="chevron" className="bio-go" />
+        )}
       </a>
     </li>
   );
@@ -331,18 +371,30 @@ export function BioRenderer({
   if (c.email) social.push({ icon: "email", href: `mailto:${c.email}`, label: "E-mail" });
 
   const tickerOn = doc.ticker.enabled && doc.ticker.items.length > 0;
+  // Foto da fachada: nítida no alto (com onda); o fundo da página fica só com as cores do tema.
+  const cover =
+    doc.profile.backgroundMode === "cover" &&
+    doc.profile.background &&
+    assets.has(doc.profile.background.assetId)
+      ? doc.profile.background
+      : undefined;
 
   return (
     <div
-      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}`}
+      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}`}
       style={style}
     >
       <div className="bio-photo" aria-hidden="true">
-        <Img ctx={ctx} image={doc.profile.background} sizes="480px" alt="" />
+        {!cover && <Img ctx={ctx} image={doc.profile.background} sizes="480px" alt="" />}
       </div>
       <div className="bio-veil" aria-hidden="true" />
 
       <main className="bio-main">
+        {cover && (
+          <div className="bio-cover">
+            <Img ctx={ctx} image={cover} sizes="480px" priority />
+          </div>
+        )}
         <header className="bio-hero" data-edit="profile">
           <div className="bio-logo" aria-hidden={doc.profile.logo ? undefined : "true"}>
             {doc.profile.logo && assets.has(doc.profile.logo.assetId) ? (
