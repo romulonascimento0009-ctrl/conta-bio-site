@@ -11,6 +11,7 @@ import { SEGMENT_IDS } from "@/clients/segments";
 import { contrastRatio } from "./color";
 import {
   formatPhone,
+  glassTop,
   resolveLink,
   validateBio,
   wifiQrPayload,
@@ -27,7 +28,7 @@ import {
 } from "./icons";
 import { isSafeHref } from "./links";
 import { applyQuickEdit, quickEditSchema, quickValuesFrom } from "./quick-edit";
-import { createBioDocument } from "./templates";
+import { applyStandardLook, createBioDocument } from "./templates";
 import { THEME_IDS } from "./themes";
 
 const FULL = briefingSchema.parse({
@@ -298,6 +299,11 @@ describe("cores dos ícones", () => {
       expect(contrastRatio("#ffffff", glossTop(i.color)), id).toBeGreaterThanOrEqual(3);
   });
 
+  it("vidro na cor de cada ícone: texto branco legível (≥ 4,5:1)", () => {
+    for (const id of ICON_IDS)
+      expect(contrastRatio("#ffffff", glassTop(ICONS[id].color)), id).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("cartão em destaque: texto branco legível (≥ 4,5:1) com qualquer cor de ícone", () => {
     for (const color of [...ICON_IDS.map((id) => ICONS[id].color), "#ffffff", "#ffe08a", "#000000"])
       expect(contrastRatio("#ffffff", featureColors(color).top), color).toBeGreaterThanOrEqual(4.5);
@@ -317,5 +323,38 @@ describe("cores dos ícones", () => {
     const wifi = d2.blocks.find((b) => b.type === "wifi")!;
     Object.assign(wifi, { iconColor: "#f5f5f5" });
     expect(validateBio(d2).ok).toBe(false);
+  });
+});
+
+describe("visual padrão (Studio Lia Andrade)", () => {
+  it("todo Bio Site novo nasce futurista com o cartão principal em neon", () => {
+    for (const segment of SEGMENT_IDS) {
+      const d = createBioDocument({ segment, briefing: FULL });
+      expect(d.theme.cardStyle, segment).toBe("glass");
+      const featured = d.blocks.filter((b) => b.type === "link" && b.featured);
+      expect(featured, segment).toHaveLength(1);
+      expect(featured[0], segment).toMatchObject({ featureStyle: "neon" });
+      expect(["whatsapp", "url"], segment).toContain((featured[0] as BlockOf<"link">).action);
+      expect(validateBio(d).ok, segment).toBe(true);
+    }
+  });
+
+  it("migração: aplica em documento antigo, respeita destaque já escolhido e repetir não muda nada", () => {
+    const old = doc();
+    delete old.theme.cardStyle;
+    for (const b of old.blocks) if (b.type === "link") delete b.featured;
+    const once = applyStandardLook(old);
+    expect(once.theme.cardStyle).toBe("glass");
+    expect(once.blocks.filter((b) => b.type === "link" && b.featured)).toHaveLength(1);
+    expect(applyStandardLook(once)).toEqual(once);
+    expect(old.theme.cardStyle).toBeUndefined(); // original intacto
+
+    const chosen = doc();
+    for (const b of chosen.blocks) if (b.type === "link") delete b.featured;
+    link(chosen, "instagram").featured = true;
+    const kept = applyStandardLook(chosen);
+    expect(kept.blocks.filter((b) => b.type === "link" && b.featured).map((b) => b.id)).toEqual([
+      "instagram",
+    ]);
   });
 });

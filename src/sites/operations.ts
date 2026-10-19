@@ -60,7 +60,10 @@ export function applyOperation(doc: BioDocument, op: Operation): BioDocument {
       // sobrevivem à troca de tema.
       next.theme = { ...structuredClone(preset.theme), pattern: next.theme.pattern };
       if (doc.theme.hero) next.theme.hero = structuredClone(doc.theme.hero);
-      if (doc.theme.cardStyle) next.theme.cardStyle = doc.theme.cardStyle;
+      for (const k of ["cardStyle", "cardTint", "cardTintColor", "motion"] as const) {
+        if (doc.theme[k] !== undefined)
+          Object.assign(next.theme, { [k]: structuredClone(doc.theme[k]) });
+      }
       next.tickerTheme = { ...preset.ticker };
       break;
     }

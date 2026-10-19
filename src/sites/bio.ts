@@ -70,6 +70,10 @@ export const CARD_STYLES = ["theme", "light", "glass"] as const;
 export type CardStyle = (typeof CARD_STYLES)[number];
 /** Quanto o vidro clareia o fundo (aproximação para conferir o contraste). */
 export const GLASS_TINT = 0.12;
+/** Vidro colorido do futurista: a cor misturada ao grafite (texto branco por cima). */
+export const GLASS_DARK = "#262a38";
+export const GLASS_COLOR_MIX = 0.42;
+export const glassTop = (color: string) => mixHex(GLASS_DARK, color, GLASS_COLOR_MIX);
 
 export const themeSchema = z
   .object({
@@ -98,6 +102,11 @@ export const themeSchema = z
     hero: heroSchema.optional(),
     /** Estilo dos cartões: cor do tema (ausente), claros ou vidro escuro. */
     cardStyle: z.enum(CARD_STYLES).optional(),
+    /** Futurista: vidro na cor de cada ícone (ausente), preto transparente ou uma cor só. */
+    cardTint: z.enum(["icon", "black", "custom"]).optional(),
+    cardTintColor: hex.optional(),
+    /** Futurista: fundo em movimento nas cores do topo (ausente = ligado). */
+    motion: z.boolean().optional(),
   })
   .superRefine((t, ctx) => {
     const c = t.colors;
@@ -116,6 +125,15 @@ export const themeSchema = z
     checkContrast(ctx, ["colors", "ink"], c.ink, WHITE, "ink/branco");
     checkContrast(ctx, ["colors", "inkMuted"], c.inkMuted, WHITE, "inkMuted/branco");
     checkContrast(ctx, ["colors", "logoFg"], c.logoFg, c.logoBg, "logoFg/logoBg");
+    if (t.cardTint === "custom" && t.cardTintColor) {
+      checkContrast(
+        ctx,
+        ["cardTintColor"],
+        WHITE,
+        glassTop(t.cardTintColor),
+        "do texto branco sobre a cor dos cartões",
+      );
+    }
     if (t.cardStyle === "glass") {
       // Vidro: texto branco sobre a cor de fundo levemente clareada pelo vidro.
       checkContrast(

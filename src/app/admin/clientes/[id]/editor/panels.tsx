@@ -1293,6 +1293,48 @@ export function LookPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Dispa
             dispatch({ type: "theme", patch: { cardStyle: v === "theme" ? undefined : v } })
           }
         />
+        {th.cardStyle === "glass" && (
+          <>
+            <Select
+              label="Cor dos cartões"
+              value={th.cardTint ?? "icon"}
+              options={[
+                { value: "icon", label: "Cor de cada ícone" },
+                { value: "black", label: "Preto transparente" },
+                { value: "custom", label: "Uma cor para todos" },
+              ]}
+              onChange={(v) =>
+                dispatch({
+                  type: "theme",
+                  patch: {
+                    cardTint: v === "icon" ? undefined : v,
+                    cardTintColor: v === "custom" ? (th.cardTintColor ?? "#2f8cff") : undefined,
+                  },
+                })
+              }
+            />
+            {th.cardTint === "custom" && th.cardTintColor && (
+              <ColorField
+                label="Cor dos cartões"
+                value={th.cardTintColor}
+                onChange={(v) =>
+                  dispatch({ type: "theme", patch: { cardTintColor: v } }, "theme.cardTintColor")
+                }
+              />
+            )}
+            <Check
+              label="Fundo em movimento"
+              checked={th.motion !== false}
+              onChange={(on) =>
+                dispatch({ type: "theme", patch: { motion: on ? undefined : false } })
+              }
+            />
+            <p className="text-xs text-muted">
+              Luzes nas cores do topo (Cor 1, 2 e 3, na aba Topo) se movendo devagar. Ficam paradas
+              para quem desligou as animações no celular ou no computador.
+            </p>
+          </>
+        )}
         <Select
           label="Padrão ilustrado"
           value={th.pattern}

@@ -2,6 +2,7 @@ import QRCode from "qrcode";
 import type { CSSProperties } from "react";
 import type { AssetInfo } from "@/data/assets";
 import {
+  glassTop,
   HERO_DEFAULTS,
   resolveLink,
   veilAlphas,
@@ -20,7 +21,7 @@ import {
   type SectionIconId,
 } from "@/sites/icons";
 import { whatsappHref } from "@/sites/links";
-import { rgbaCss } from "@/sites/color";
+import { mixHex, rgbaCss } from "@/sites/color";
 import { PATTERNS } from "@/sites/patterns";
 import "./bio.css";
 import { CopyButton, ShareButton, Tracker } from "./client-buttons";
@@ -122,6 +123,23 @@ function LinkCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"link"> }) {
           : style === "light"
             ? " light"
             : "";
+  // Vidro do futurista: na cor do ícone (padrão), numa cor só ou preto transparente.
+  const tint =
+    look === " glass" && ctx.doc.theme.cardTint !== "black"
+      ? ctx.doc.theme.cardTint === "custom" && ctx.doc.theme.cardTintColor
+        ? ctx.doc.theme.cardTintColor
+        : iconColor
+      : undefined;
+  const cardStyle = colors
+    ? { "--card-top": colors.top, "--card-bottom": colors.bottom }
+    : tint
+      ? {
+          "--glass-top": rgbaCss(glassTop(tint), 0.84),
+          "--glass-bottom": rgbaCss(mixHex("#12141c", tint, 0.2), 0.9),
+          "--glass-edge": rgbaCss(tint, 0.5),
+          "--glass-glow": rgbaCss(tint, 0.45),
+        }
+      : undefined;
   return (
     <li
       className={feature ? "bio-featured" : undefined}
@@ -129,11 +147,7 @@ function LinkCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"link"> }) {
     >
       <a
         className={`bio-card${look}${feature ? " featured" : ""}`}
-        style={
-          colors
-            ? ({ "--card-top": colors.top, "--card-bottom": colors.bottom } as CSSProperties)
-            : undefined
-        }
+        style={cardStyle as CSSProperties | undefined}
         href={resolved.href}
         data-track={`b:${block.id}`}
         {...(resolved.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
@@ -292,6 +306,20 @@ function Blocks({ ctx }: { ctx: Ctx }) {
   );
 }
 
+/**
+ * Fundo em movimento do futurista: manchas de luz nas cores do topo (Cor 1, 2 e 3) que se
+ * deslocam devagar. Só deslocamento e transparência (leve no celular).
+ */
+function Aurora() {
+  return (
+    <div className="bio-aurora" aria-hidden="true">
+      <span />
+      <span />
+      <span />
+    </div>
+  );
+}
+
 function initials(name: string): string {
   const words = name.split(/\s+/).filter((w) => w.length > 2 || /^[A-ZÀ-Ú]/.test(w));
   return (
@@ -371,6 +399,7 @@ export function BioRenderer({
   if (c.email) social.push({ icon: "email", href: `mailto:${c.email}`, label: "E-mail" });
 
   const tickerOn = doc.ticker.enabled && doc.ticker.items.length > 0;
+  const motion = doc.theme.cardStyle === "glass" && doc.theme.motion !== false;
   // Foto da fachada: nítida no alto (com onda); o fundo da página fica só com as cores do tema.
   const cover =
     doc.profile.backgroundMode === "cover" &&
@@ -388,6 +417,7 @@ export function BioRenderer({
         {!cover && <Img ctx={ctx} image={doc.profile.background} sizes="480px" alt="" />}
       </div>
       <div className="bio-veil" aria-hidden="true" />
+      {motion && <Aurora />}
 
       <main className="bio-main">
         {cover && (

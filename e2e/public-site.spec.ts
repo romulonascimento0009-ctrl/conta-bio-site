@@ -16,12 +16,12 @@ test.describe("Bio Site público", () => {
     await expect(cards.first()).toHaveText("Instagram");
     await expect(cards.nth(1)).toHaveText("Avaliar no Google");
     await expect(cards.last()).toHaveText("Como chegar");
-    // Demonstração: nota à direita, WhatsApp em destaque, cartões claros e foto da fachada
+    // Visual padrão: futurista, WhatsApp (cartão principal) em neon; nota à direita e fachada
     const google = page.locator('a[data-block-id="google"]');
     await expect(google.locator(".bio-value")).toHaveText("4,9 ★");
     await expect(google).toContainText("312 avaliações");
-    await expect(google).toHaveClass(/\blight\b/);
-    await expect(page.locator('a[data-block-id="whatsapp"]')).toHaveClass(/\bfeatured\b/);
+    await expect(google).toHaveClass(/\bglass\b/);
+    await expect(page.locator('a[data-block-id="whatsapp"]')).toHaveClass(/\bneon\b/);
     await expect(page.getByRole("img", { name: "Fachada da Forno da Serra" })).toBeVisible();
 
     const overflow = await page.evaluate(

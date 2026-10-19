@@ -145,8 +145,16 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   await page.getByRole("tab", { name: "Aparência" }).click();
   await page.getByLabel("Estilo dos cartões").selectOption("glass");
   if (isMobile) await page.getByRole("button", { name: "Prévia", exact: true }).click();
-  await expect(preview.locator('a[data-block-id="google"]')).toHaveClass(/\bglass\b/);
+  const google = preview.locator('a[data-block-id="google"]');
+  await expect(google).toHaveClass(/\bglass\b/);
+  // Padrão: vidro na cor do ícone; "Preto transparente" tira a cor; fundo animado ligado
+  await expect(google).toHaveAttribute("style", /--glass-top/);
+  await expect(preview.locator(".bio-aurora")).toHaveCount(1);
   if (isMobile) await page.getByRole("button", { name: "Editar", exact: true }).click();
+  await page.getByLabel("Cor dos cartões").selectOption("black");
+  await expect(google).not.toHaveAttribute("style", /--glass-top/);
+  await page.getByLabel("Fundo em movimento").uncheck();
+  await expect(preview.locator(".bio-aurora")).toHaveCount(0);
 
   // Salvar e publicar (publicar fica bloqueado enquanto há alterações não salvas)
   await expect(page.getByText("Salve o rascunho antes de publicar.")).toBeVisible();

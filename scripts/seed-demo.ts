@@ -53,9 +53,6 @@ const DEMOS: Demo[] = [
     extra: (d) => {
       d.contact.googleRating = 4.9;
       d.contact.googleReviewCount = 312;
-      d.theme.cardStyle = "light";
-      setLink(d, "whatsapp", { featured: true });
-      setLink(d, "instagram", { value: "12 mil" });
       setLink(d, "google", { value: "4,9 ★", subtitle: "312 avaliações" });
       setLink(d, "cardapio", { tag: "Novo" });
     },
@@ -81,9 +78,6 @@ const DEMOS: Demo[] = [
     extra: (d) => {
       d.contact.googleRating = 5;
       d.contact.googleReviewCount = 128;
-      d.theme.cardStyle = "glass";
-      setLink(d, "agendar", { featured: true, featureStyle: "neon" });
-      setLink(d, "instagram", { value: "8,4 mil" });
     },
   },
   {
@@ -109,7 +103,6 @@ const DEMOS: Demo[] = [
     extra: (d) => {
       d.contact.googleRating = 4.8;
       d.contact.googleReviewCount = 96;
-      delete d.theme.cardStyle; // mostra o estilo "Cor do tema"
       const i = d.blocks.findIndex((b) => b.id === "telefone");
       d.blocks.splice(i, 0, {
         id: "convenios",

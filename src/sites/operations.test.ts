@@ -113,6 +113,29 @@ describe("applyOperation", () => {
     expect(JSON.parse(JSON.stringify(d)).theme).not.toHaveProperty("cardStyle");
   });
 
+  it("futurista: cor dos cartões e fundo animado sobrevivem à troca de tema; cor clara é recusada", () => {
+    let d = applyOperation(doc(), {
+      type: "theme",
+      patch: {
+        cardTint: "custom",
+        cardTintColor: "#0b6e4f",
+        motion: false,
+      },
+    });
+    expect(validateBio(d).ok).toBe(true);
+    d = applyOperation(d, { type: "theme-preset", themeId: "oceano" });
+    expect(d.theme).toMatchObject({
+      cardStyle: "glass",
+      cardTint: "custom",
+      cardTintColor: "#0b6e4f",
+      motion: false,
+    });
+    const pale = applyOperation(d, { type: "theme", patch: { cardTintColor: "#ffffff" } });
+    const r = validateBio(pale);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.issues.map((i) => i.path)).toContain("theme.cardTintColor");
+  });
+
   it("vidro escuro exige fundo escuro (texto branco)", () => {
     const d = applyOperation(doc(), {
       type: "theme",

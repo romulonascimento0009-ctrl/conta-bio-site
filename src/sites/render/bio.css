@@ -341,12 +341,18 @@ button.bio-tag {
     border-color 0.18s ease,
     box-shadow 0.18s ease;
 }
+/* Vidro: na cor do ícone (variáveis --glass-* por cartão) ou preto transparente (padrão do CSS). */
 .bio-card.glass:not(.own) {
   color: #fff;
-  background: linear-gradient(180deg, rgb(56 60 78 / 0.78), rgb(28 30 42 / 0.86));
-  border: 1px solid rgb(255 255 255 / 0.1);
+  background: linear-gradient(
+    180deg,
+    var(--glass-top, rgb(56 60 78 / 0.78)),
+    var(--glass-bottom, rgb(28 30 42 / 0.86))
+  );
+  border: 1px solid var(--glass-edge, rgb(255 255 255 / 0.1));
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.09),
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 0 22px -10px var(--glass-glow, transparent),
     0 18px 32px -20px rgb(0 0 0 / 0.95);
   backdrop-filter: blur(12px);
 }
@@ -413,6 +419,59 @@ button.bio-tag {
     filter: blur(4px);
   }
 }
+/* Fundo em movimento do futurista: luzes nas cores do topo, sobre o fundo escuro com grade. */
+.bio-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+.bio-aurora span {
+  position: absolute;
+  width: 90vmax;
+  height: 90vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow1) 0, transparent 62%);
+  will-change: transform;
+  animation: bio-drift-1 16s ease-in-out infinite alternate;
+}
+.bio-aurora span:nth-child(1) {
+  left: -45vmax;
+  top: -40vmax;
+}
+.bio-aurora span:nth-child(2) {
+  right: -50vmax;
+  top: 10vh;
+  background: radial-gradient(circle, var(--glow2) 0, transparent 62%);
+  animation-name: bio-drift-2;
+  animation-duration: 20s;
+}
+.bio-aurora span:nth-child(3) {
+  left: -30vmax;
+  bottom: -55vmax;
+  background: radial-gradient(circle, var(--glow3) 0, transparent 62%);
+  animation-name: bio-drift-3;
+  animation-duration: 24s;
+}
+@keyframes bio-drift-1 {
+  to {
+    transform: translate(35vw, 30vh) scale(1.25);
+  }
+}
+@keyframes bio-drift-2 {
+  to {
+    transform: translate(-40vw, 35vh) scale(0.85);
+  }
+}
+@keyframes bio-drift-3 {
+  to {
+    transform: translate(30vw, -45vh) scale(1.2);
+  }
+}
+
 /* Destaque no futurista: luz mais larga e forte, como um holofote atrás do cartão. */
 .bio--glass .bio-featured::before {
   left: 6%;
@@ -479,8 +538,13 @@ button.bio-tag {
 }
 
 /* Cartão em destaque: cor viva com halo de luz atrás (o halo fica no <li>, fora do recorte). */
-.bio-featured {
+/* Cada cartão fica acima do halo do destaque (o halo nunca cobre o texto do vizinho). */
+.bio-links > li {
   position: relative;
+  z-index: 1;
+}
+.bio-links > li.bio-featured {
+  z-index: 0;
   isolation: isolate;
 }
 .bio-featured::before {
@@ -823,7 +887,8 @@ button.bio-tag {
     display: none;
   }
   .bio-featured::before,
-  .bio--glass .bio-links > li {
+  .bio--glass .bio-links > li,
+  .bio-aurora span {
     animation: none;
   }
   .bio-card.glass {

@@ -6,7 +6,13 @@ import {
   type Briefing,
 } from "@/clients/briefing";
 import { SEGMENTS, type SegmentId } from "@/clients/segments";
-import { BIO_SCHEMA_VERSION, type BioDocument, type Block, type Contact } from "./bio";
+import {
+  BIO_SCHEMA_VERSION,
+  type BioDocument,
+  type Block,
+  type BlockOf,
+  type Contact,
+} from "./bio";
 import { THEMES, type ThemeId } from "./themes";
 
 type Seed = Partial<Briefing> & { businessName: string };
@@ -102,6 +108,25 @@ function blocksFor(segment: SegmentId, b: Seed): Block[] {
   return blocks;
 }
 
+/**
+ * Visual padrão da plataforma (o da demonstração Studio Lia Andrade, D38): estilo futurista e o
+ * cartão principal — o primeiro de WhatsApp ou link próprio — em destaque neon, se nenhum
+ * cartão já estiver em destaque. Usado nos Bio Sites novos e na migração dos existentes.
+ */
+export function applyStandardLook(doc: BioDocument): BioDocument {
+  const next = structuredClone(doc);
+  next.theme.cardStyle = "glass";
+  const links = next.blocks.filter((b) => b.type === "link" && !b.hidden) as BlockOf<"link">[];
+  if (!links.some((b) => b.featured)) {
+    const main = links.find((b) => b.action === "whatsapp" || b.action === "url");
+    if (main) {
+      main.featured = true;
+      main.featureStyle = "neon";
+    }
+  }
+  return next;
+}
+
 /** Bio Site inicial, montado de forma determinística a partir do briefing (sem IA). */
 export function createBioDocument(input: {
   segment: SegmentId;
@@ -116,7 +141,7 @@ export function createBioDocument(input: {
     .map((c) => c.slice(0, MAX_CATEGORY_LENGTH).trim());
   const where = b.city ? ` em ${b.city}` : "";
 
-  return {
+  return applyStandardLook({
     schemaVersion: BIO_SCHEMA_VERSION,
     meta: {
       title: b.businessName,
@@ -124,12 +149,7 @@ export function createBioDocument(input: {
         b.tagline || `${b.businessName}${where}. Siga, avalie e fale com a gente.`
       ).slice(0, 160),
     },
-    // Bio Sites novos nascem no estilo futurista (pedido do usuário, D38).
-    theme: {
-      ...structuredClone(preset.theme),
-      pattern: SEGMENTS[segment].pattern,
-      cardStyle: "glass",
-    },
+    theme: { ...structuredClone(preset.theme), pattern: SEGMENTS[segment].pattern },
     tickerTheme: { ...preset.ticker },
     profile: {
       name: b.businessName,
@@ -142,5 +162,5 @@ export function createBioDocument(input: {
     ticker: { enabled: false, items: [] },
     blocks: blocksFor(segment, b),
     floatingWhatsapp: true,
-  };
+  });
 }
