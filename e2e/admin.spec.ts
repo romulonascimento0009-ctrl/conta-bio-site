@@ -88,7 +88,9 @@ test("fluxo completo: cliente → briefing → Bio Site → edição rápida →
   await page.getByRole("link", { name: "Edição rápida" }).first().click();
   await expect(page.getByLabel("Instagram")).toHaveValue("doceacao");
   await expectNoA11yViolations(page);
-  await page.getByLabel("Instagram").fill("https://www.instagram.com/doce.acao.oficial/");
+  await page
+    .getByLabel("Instagram")
+    .fill("https://www.instagram.com/doce.acao.oficial/?igsh=MWZ0dTE5");
   await page.getByLabel("Nome da rede").fill("DOCE-WIFI");
   await page.getByLabel("Senha").fill("bolo1234");
   await page.getByLabel("Mostrar a faixa").check();
@@ -98,7 +100,7 @@ test("fluxo completo: cliente → briefing → Bio Site → edição rápida →
 
   await page.goto(`/${slug}`);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Doce Ação E2E");
-  await expect(page.getByRole("link", { name: /Instagram @doce\.acao\.oficial/ })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "Instagram Siga no Instagram" })).toHaveAttribute(
     "href",
     "https://instagram.com/doce.acao.oficial",
   );

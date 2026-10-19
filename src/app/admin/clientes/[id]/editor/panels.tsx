@@ -2,7 +2,14 @@
 
 import { useId, useState, type ReactNode } from "react";
 import { inputClass } from "@/app/admin/_components/form";
-import { instagramField, parseHours, phoneField, whatsappField } from "@/clients/briefing";
+import {
+  instagramField,
+  parseHours,
+  phoneField,
+  tiktokField,
+  urlField,
+  whatsappField,
+} from "@/clients/briefing";
 import {
   HERO_DEFAULTS,
   resolveLink,
@@ -13,7 +20,7 @@ import {
   type LinkAction,
 } from "@/sites/bio";
 import { FONT_IDS, FONTS } from "@/sites/fonts";
-import { ICON_IDS, ICONS } from "@/sites/icons";
+import { customIconStart, ICON_IDS, ICONS, type IconId, type SectionIconId } from "@/sites/icons";
 import { NEW_BLOCK_TYPES, newBlock, type NewBlockType } from "@/sites/operations";
 import { PATTERN_IDS, PATTERNS } from "@/sites/patterns";
 import { mediaUrl } from "@/sites/render/media";
@@ -31,10 +38,12 @@ function TextField({
   type = "text",
   placeholder,
   maxLength,
+  onBlur,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  onBlur?: () => void;
   hint?: string;
   multiline?: boolean;
   type?: string;
@@ -64,6 +73,7 @@ function TextField({
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
           placeholder={placeholder}
           maxLength={maxLength}
           aria-describedby={hint ? `${id}-h` : undefined}
@@ -255,6 +265,50 @@ function Range({
     </div>
   );
 }
+
+/** Cor própria do ícone de um bloco; desligada = cor padrão do ícone. */
+function IconColor({
+  icon,
+  value,
+  set,
+}: {
+  icon: IconId | SectionIconId;
+  value: string | undefined;
+  set: (patch: Record<string, unknown>, field: string) => void;
+}) {
+  return (
+    <div className="grid gap-2">
+      <Check
+        label="Cor própria do ícone"
+        checked={!!value}
+        onChange={(on) =>
+          set({ iconColor: on ? customIconStart(icon) : undefined }, "iconColor.toggle")
+        }
+      />
+      {value && (
+        <>
+          <ColorField
+            label="Cor do ícone"
+            value={value}
+            onChange={(v) => set({ iconColor: v }, "iconColor")}
+          />
+          <p className="text-xs text-muted">
+            O desenho do ícone fica branco: cores muito claras são recusadas ao salvar.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
+const ACTION_ICON: Record<LinkAction, IconId> = {
+  instagram: "instagram",
+  google_review: "google",
+  whatsapp: "whatsapp",
+  phone: "phone",
+  maps: "maps",
+  url: "link",
+};
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -519,6 +573,7 @@ function BlockEditor({
             checked={block.showQr}
             onChange={(v) => set({ showQr: v }, "showQr")}
           />
+          <IconColor icon="wifi" value={block.iconColor} set={set} />
         </Section>
       );
     case "hours":
@@ -538,6 +593,7 @@ function BlockEditor({
             parse={parseHours}
             onChange={(rows) => set({ rows }, "rows")}
           />
+          <IconColor icon="clock" value={block.iconColor} set={set} />
         </Section>
       );
     case "gallery":
@@ -584,6 +640,7 @@ function BlockEditor({
             </div>
             <p className="text-xs text-muted">A descrição de cada foto vem da aba Imagens.</p>
           </fieldset>
+          <IconColor icon="photos" value={block.iconColor} set={set} />
         </Section>
       );
     case "text":
@@ -651,7 +708,7 @@ function LinkEditor({
         label="Subtítulo"
         value={block.subtitle ?? ""}
         placeholder={resolved?.subtitle ? `Automático: ${resolved.subtitle}` : "Opcional"}
-        hint="Vazio = texto automático (ex.: @perfil, nota do Google, endereço)."
+        hint="Vazio = texto automático (ex.: nota do Google, endereço)."
         onChange={(v) => set({ subtitle: v }, "subtitle")}
         maxLength={90}
       />
@@ -719,6 +776,11 @@ function LinkEditor({
           </p>
         </div>
       )}
+      <IconColor
+        icon={block.action === "url" ? (block.icon ?? "link") : ACTION_ICON[block.action]}
+        value={block.iconColor}
+        set={set}
+      />
     </Section>
   );
 }
@@ -821,7 +883,7 @@ export function ProfilePanel({
 
 /* ---------- Contato ---------- */
 
-/** Normaliza como o briefing (ex.: link do Instagram → @perfil) quando o valor já é válido. */
+/** Normaliza como o briefing (ex.: link do Instagram → perfil) quando o valor já é válido. */
 function normalize(
   schema: { safeParse: (v: string) => { success: boolean; data?: string } },
   v: string,
@@ -844,14 +906,15 @@ export function ContactPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Di
         <TextField
           label="Instagram"
           value={c.instagram ?? ""}
-          hint="@perfil ou link do perfil"
+          hint="Cole o link do perfil ou escreva o @perfil"
           onChange={(v) => set("instagram", normalize(instagramField, v))}
         />
         <TextField
           label="Link para avaliar no Google"
-          type="url"
           value={c.googleReviewUrl ?? ""}
+          hint="Perfil da Empresa no Google → Pedir avaliações → copiar link"
           onChange={(v) => set("googleReviewUrl", v)}
+          onBlur={() => set("googleReviewUrl", normalize(urlField, c.googleReviewUrl ?? ""))}
         />
         <div className="grid grid-cols-2 gap-3">
           <TextField
@@ -873,8 +936,13 @@ export function ContactPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Di
           label="WhatsApp"
           type="tel"
           value={c.whatsapp ?? ""}
-          hint="Com DDI e DDD: 55 11 99999-8888"
-          onChange={(v) => set("whatsapp", normalize(whatsappField, v))}
+          hint="Cole o link (wa.me/…) ou escreva o número com DDD"
+          // Enquanto digita, só os dígitos (o 55 entraria cedo demais); link colado e saída do campo
+          // passam pela leitura completa.
+          onChange={(v) =>
+            set("whatsapp", /[a-z]/i.test(v) ? normalize(whatsappField, v) : v.replace(/D/g, ""))
+          }
+          onBlur={() => set("whatsapp", normalize(whatsappField, c.whatsapp ?? ""))}
         />
         <TextField
           label="Mensagem inicial do WhatsApp"
@@ -910,29 +978,29 @@ export function ContactPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Di
         />
         <TextField
           label="Link do mapa (opcional)"
-          type="url"
           value={c.mapsUrl ?? ""}
           onChange={(v) => set("mapsUrl", v)}
+          onBlur={() => set("mapsUrl", normalize(urlField, c.mapsUrl ?? ""))}
         />
       </Section>
       <Section title="Outras redes">
         <TextField
           label="Facebook (link)"
-          type="url"
           value={c.facebookUrl ?? ""}
           onChange={(v) => set("facebookUrl", v)}
+          onBlur={() => set("facebookUrl", normalize(urlField, c.facebookUrl ?? ""))}
         />
         <TextField
           label="TikTok"
           value={c.tiktok ?? ""}
-          placeholder="perfil"
-          onChange={(v) => set("tiktok", v.replace(/^@/, ""))}
+          hint="Cole o link do perfil ou escreva o @perfil"
+          onChange={(v) => set("tiktok", normalize(tiktokField, v))}
         />
         <TextField
           label="YouTube (link)"
-          type="url"
           value={c.youtubeUrl ?? ""}
           onChange={(v) => set("youtubeUrl", v)}
+          onBlur={() => set("youtubeUrl", normalize(urlField, c.youtubeUrl ?? ""))}
         />
       </Section>
     </div>

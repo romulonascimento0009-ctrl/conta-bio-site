@@ -104,6 +104,22 @@ describe("applyOperation", () => {
     expect(d.blocks.find((b) => b.id === "instagram")).not.toHaveProperty("colors");
   });
 
+  it("cor própria do ícone: aplica e volta à cor padrão", () => {
+    let d = applyOperation(doc(), {
+      type: "block-update",
+      id: "whatsapp",
+      patch: { iconColor: "#128c4a" },
+    });
+    expect(d.blocks.find((b) => b.id === "whatsapp")).toMatchObject({ iconColor: "#128c4a" });
+    expect(validateBio(d).ok).toBe(true);
+    d = applyOperation(d, {
+      type: "block-update",
+      id: "whatsapp",
+      patch: { iconColor: undefined },
+    });
+    expect(d.blocks.find((b) => b.id === "whatsapp")).not.toHaveProperty("iconColor");
+  });
+
   it("cor do botão do WhatsApp e da faixa padrão", () => {
     let d = applyOperation(doc(), { type: "floating-whatsapp-color", color: "#0b6e4f" });
     expect(d.floatingWhatsappColor).toBe("#0b6e4f");

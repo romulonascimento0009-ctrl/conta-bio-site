@@ -17,9 +17,38 @@ export function whatsappHref(digits: string, message?: string): string {
   return `https://wa.me/${digits}${text}`;
 }
 
-/** Perfil do Instagram: aceita "@perfil" ou "perfil"; devolve só o identificador. */
-export function normalizeInstagram(handle: string): string {
-  return handle.trim().replace(/^@/, "");
+/**
+ * WhatsApp como o usuário colar: link (wa.me/…, api.whatsapp.com/send?phone=…) ou número em
+ * qualquer formato. Devolve só os dígitos; número brasileiro sem DDI (10 ou 11 dígitos, com ou
+ * sem 0 na frente) ganha o 55. O resultado pode ser inválido — quem chama confere `WHATSAPP_DIGITS`.
+ */
+export function parseWhatsapp(input: string): string {
+  const v = input.trim();
+  const fromLink =
+    v.match(/wa\.me\/\+?(\d+)/i)?.[1] ?? v.match(/whatsapp\.com\/.*[?&]phone=\+?(\d+)/i)?.[1];
+  const digits = (fromLink ?? v.replace(/\D/g, "")).replace(/^0+/, "");
+  return digits.length === 10 || digits.length === 11 ? `55${digits}` : digits;
+}
+
+/** Perfil de rede (Instagram, TikTok): aceita "@perfil", "perfil" ou o link; devolve só o perfil. */
+function parseProfile(input: string, host: RegExp): string {
+  const v = input.trim();
+  const path = v.match(host)?.[1];
+  return (path ?? v).split(/[/?#]/)[0].replace(/^@/, "");
+}
+
+export function normalizeInstagram(input: string): string {
+  return parseProfile(input, /instagram\.com\/(.*)$/i);
+}
+
+export function normalizeTiktok(input: string): string {
+  return parseProfile(input, /tiktok\.com\/(.*)$/i);
+}
+
+/** Link colado sem "https://" (ex.: g.page/r/abc) ganha o prefixo; o resto fica como veio. */
+export function withScheme(input: string): string {
+  const v = input.trim();
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)+(\/|\?|$)/i.test(v) ? `https://${v}` : v;
 }
 
 export const INSTAGRAM_HANDLE = /^[A-Za-z0-9._]{1,30}$/;

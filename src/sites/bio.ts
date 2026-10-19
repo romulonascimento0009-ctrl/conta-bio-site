@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { averageHex, contrastRatio, HEX_COLOR, mixHex } from "./color";
 import { FONT_IDS } from "./fonts";
-import { ICON_IDS, type IconId } from "./icons";
+import { glossTop, ICON_IDS, type IconId } from "./icons";
 import { INSTAGRAM_HANDLE, isSafeHref, WHATSAPP_DIGITS, whatsappHref } from "./links";
 import { PATTERN_IDS } from "./patterns";
 
@@ -152,13 +152,28 @@ const blockBase = {
   hidden: z.boolean().default(false),
 };
 
+/** Cor própria do ícone do bloco (ausente = cor padrão do ícone). O desenho é branco. */
+const iconColor = { iconColor: hex.optional() };
+function checkIconColor(ctx: z.RefinementCtx, color: string | undefined) {
+  if (color) {
+    checkContrast(
+      ctx,
+      ["iconColor"],
+      WHITE,
+      glossTop(color),
+      "do desenho branco sobre a cor do ícone",
+      MIN_GRAPHIC_CONTRAST,
+    );
+  }
+}
+
 export const linkBlock = z
   .object({
     ...blockBase,
     type: z.literal("link"),
     action: z.enum(LINK_ACTIONS),
     title: text(60),
-    /** Vazio = texto automático (ex.: @perfil, nota do Google, endereço). */
+    /** Vazio = texto automático (ex.: nota do Google, endereço). */
     subtitle: optText(90),
     badge: optText(30),
     /** Só para action "url". */
@@ -168,8 +183,10 @@ export const linkBlock = z
     variant: z.enum(["solid", "light"]).default("solid"),
     /** Degradê próprio do cartão (só no estilo "solid"); ausente = cores do tema. */
     colors: z.object({ top: hex, bottom: hex }).optional(),
+    ...iconColor,
   })
   .superRefine((b, ctx) => {
+    checkIconColor(ctx, b.iconColor);
     if (b.colors && b.variant === "solid") {
       checkContrast(ctx, ["colors", "top"], WHITE, b.colors.top, "branco/cor do cartão (topo)");
       checkContrast(
@@ -185,32 +202,41 @@ export const linkBlock = z
     }
   });
 
-export const wifiBlock = z.object({
-  ...blockBase,
-  type: z.literal("wifi"),
-  title: text(40).default("Wi-Fi"),
-  network: text(32),
-  password: z.string().max(63).default(""),
-  security: z.enum(["WPA", "WEP", "nopass"]).default("WPA"),
-  showQr: z.boolean().default(true),
-});
+export const wifiBlock = z
+  .object({
+    ...blockBase,
+    type: z.literal("wifi"),
+    title: text(40).default("Wi-Fi"),
+    network: text(32),
+    password: z.string().max(63).default(""),
+    security: z.enum(["WPA", "WEP", "nopass"]).default("WPA"),
+    showQr: z.boolean().default(true),
+    ...iconColor,
+  })
+  .superRefine((b, ctx) => checkIconColor(ctx, b.iconColor));
 
-export const hoursBlock = z.object({
-  ...blockBase,
-  type: z.literal("hours"),
-  title: text(40).default("Horários"),
-  rows: z
-    .array(z.object({ days: text(40), time: text(40) }))
-    .min(1)
-    .max(10),
-});
+export const hoursBlock = z
+  .object({
+    ...blockBase,
+    type: z.literal("hours"),
+    title: text(40).default("Horários"),
+    rows: z
+      .array(z.object({ days: text(40), time: text(40) }))
+      .min(1)
+      .max(10),
+    ...iconColor,
+  })
+  .superRefine((b, ctx) => checkIconColor(ctx, b.iconColor));
 
-export const galleryBlock = z.object({
-  ...blockBase,
-  type: z.literal("gallery"),
-  title: text(40),
-  images: z.array(imageRef).min(1).max(12),
-});
+export const galleryBlock = z
+  .object({
+    ...blockBase,
+    type: z.literal("gallery"),
+    title: text(40),
+    images: z.array(imageRef).min(1).max(12),
+    ...iconColor,
+  })
+  .superRefine((b, ctx) => checkIconColor(ctx, b.iconColor));
 
 export const textBlock = z.object({
   ...blockBase,
@@ -352,7 +378,7 @@ export function resolveLink(block: BlockOf<"link">, c: Contact): ResolvedLink | 
         ? {
             href: `https://instagram.com/${c.instagram}`,
             icon: "instagram",
-            subtitle: `@${c.instagram}`,
+            subtitle: "Siga no Instagram",
             external: true,
           }
         : null;

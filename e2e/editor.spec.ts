@@ -86,6 +86,17 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
     "style",
     /--card-top:\s*#7b2cbf/,
   );
+
+  // Cor própria do ícone: cor clara é apontada; cor escura deixa o desenho branco na prévia
+  await page.getByLabel("Cor própria do ícone").check();
+  await page.getByLabel("Cor do ícone (código)").fill("#ffe08a");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Corrija antes de salvar" }),
+  ).toContainText("cor do ícone");
+  await page.getByLabel("Cor do ícone (código)").fill("#0b6e4f");
+  const icon = preview.locator('a[data-block-id="instagram"] .bio-ico');
+  await expect(icon).toHaveClass(/\bmono\b/);
+  await expect(icon).toHaveAttribute("style", /--ico-bottom:\s*#/);
   await page.getByRole("button", { name: /Mover Avaliar no Google para cima/ }).click();
   const order = () =>
     page.getByRole("list", { name: "Blocos na ordem exibida" }).getByRole("listitem").first();

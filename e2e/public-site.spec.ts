@@ -26,7 +26,7 @@ test.describe("Bio Site público", () => {
 
   test("links dos cartões levam ao serviço certo, em nova aba", async ({ page }) => {
     await page.goto(PADARIA);
-    const ig = page.getByRole("link", { name: /Instagram @fornodaserra/ });
+    const ig = page.getByRole("link", { name: "Instagram Siga no Instagram" });
     await expect(ig).toHaveAttribute("href", "https://instagram.com/fornodaserra");
     await expect(ig).toHaveAttribute("target", "_blank");
     await expect(ig).toHaveAttribute("rel", /noopener/);

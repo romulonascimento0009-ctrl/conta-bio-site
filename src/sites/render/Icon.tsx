@@ -45,10 +45,11 @@ const PATHS: Record<IconId | UiIcon, React.ReactNode> = {
     </g>
   ),
   maps: (
-    <g>
-      <path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7z" />
-      <circle cx="12" cy="9" r="2.6" fill="#fff" />
-    </g>
+    <path
+      fill="currentColor"
+      fillRule="evenodd"
+      d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 4.4a2.6 2.6 0 1 0 0 5.2 2.6 2.6 0 0 0 0-5.2z"
+    />
   ),
   phone: (
     <path

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { briefingSchema, parseHours } from "@/clients/briefing";
+import {
+  briefingSchema,
+  instagramField,
+  parseHours,
+  tiktokField,
+  urlField,
+  whatsappField,
+} from "@/clients/briefing";
 import { SEGMENT_IDS } from "@/clients/segments";
 import { contrastRatio } from "./color";
 import {
@@ -10,6 +17,7 @@ import {
   type BioDocument,
   type BlockOf,
 } from "./bio";
+import { BRAND_COLOR_EXCEPTIONS, glossTop, ICON_IDS, ICONS, SECTION_ICONS } from "./icons";
 import { isSafeHref } from "./links";
 import { applyQuickEdit, quickEditSchema, quickValuesFrom } from "./quick-edit";
 import { createBioDocument } from "./templates";
@@ -91,7 +99,7 @@ describe("resolveLink", () => {
     expect(resolveLink(link(d, "instagram"), d.contact)).toMatchObject({
       href: "https://instagram.com/fornodaserra",
       icon: "instagram",
-      subtitle: "@fornodaserra",
+      subtitle: "Siga no Instagram",
     });
     expect(resolveLink(link(d, "whatsapp"), d.contact)?.href).toMatch(
       /^https:\/\/wa\.me\/5519999998888/,
@@ -227,5 +235,75 @@ describe("utilitários", () => {
   it("formatPhone", () => {
     expect(formatPhone("5511999998888")).toBe("(11) 99999-8888");
     expect(formatPhone("551133330000")).toBe("(11) 3333-0000");
+  });
+});
+
+describe("links colados", () => {
+  it("Instagram: link, @perfil ou perfil viram só o perfil", () => {
+    for (const v of [
+      "https://www.instagram.com/forno.da_serra/",
+      "https://instagram.com/forno.da_serra?igsh=MWZ0dTE5",
+      "instagram.com/forno.da_serra",
+      "@forno.da_serra",
+      " forno.da_serra ",
+    ])
+      expect(instagramField.parse(v)).toBe("forno.da_serra");
+  });
+
+  it("TikTok: link com @ ou perfil", () => {
+    expect(tiktokField.parse("https://www.tiktok.com/@fornodaserra?lang=pt-BR")).toBe(
+      "fornodaserra",
+    );
+    expect(tiktokField.parse("@fornodaserra")).toBe("fornodaserra");
+  });
+
+  it("WhatsApp: links e números em qualquer formato", () => {
+    const n = "5519999998888";
+    for (const v of [
+      "https://wa.me/5519999998888",
+      "https://wa.me/5519999998888?text=Ol%C3%A1%2012",
+      "https://api.whatsapp.com/send?phone=5519999998888&text=Oi%20123",
+      "wa.me/+5519999998888",
+      "+55 (19) 99999-8888",
+      "(19) 99999-8888",
+      "019 99999-8888",
+    ])
+      expect(whatsappField.parse(v)).toBe(n);
+    expect(whatsappField.parse("19 3333-4444")).toBe("551933334444");
+    expect(whatsappField.safeParse("12345").success).toBe(false);
+  });
+
+  it("link sem https:// ganha o prefixo; texto solto não", () => {
+    expect(urlField.parse("g.page/r/abc/review")).toBe("https://g.page/r/abc/review");
+    expect(urlField.parse("https://g.page/r/abc")).toBe("https://g.page/r/abc");
+    expect(urlField.safeParse("javascript:alert(1)").success).toBe(false);
+    expect(urlField.safeParse("meu site").success).toBe(false);
+  });
+});
+
+describe("cores dos ícones", () => {
+  it("cada ícone tem cor própria com desenho branco legível (≥ 3:1), salvo exceções de marca", () => {
+    for (const id of ICON_IDS) {
+      if (BRAND_COLOR_EXCEPTIONS.includes(id) || id === "google") continue; // Google: fundo branco
+      expect(contrastRatio("#ffffff", glossTop(ICONS[id].color)), id).toBeGreaterThanOrEqual(3);
+    }
+    for (const [id, i] of Object.entries(SECTION_ICONS))
+      expect(contrastRatio("#ffffff", glossTop(i.color)), id).toBeGreaterThanOrEqual(3);
+  });
+
+  it("cor própria do ícone: aceita cor escura, recusa cor clara (cartão e painéis)", () => {
+    const d = doc();
+    const insta = link(d, "instagram");
+    insta.iconColor = "#1a6fe0";
+    expect(validateBio(d).ok).toBe(true);
+    insta.iconColor = "#ffe08a";
+    const r = validateBio(d);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.issues.some((i) => i.path.endsWith("iconColor"))).toBe(true);
+
+    const d2 = doc();
+    const wifi = d2.blocks.find((b) => b.type === "wifi")!;
+    Object.assign(wifi, { iconColor: "#f5f5f5" });
+    expect(validateBio(d2).ok).toBe(false);
   });
 });

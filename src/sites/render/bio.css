@@ -214,17 +214,15 @@ button.bio-tag {
 }
 .bio-card .bio-ico {
   flex: none;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: var(--radius-ico);
   display: grid;
   place-items: center;
-  background: rgb(255 255 255 / 0.18);
-  color: #fff;
 }
 .bio-card .bio-ico svg {
-  width: 22px;
-  height: 22px;
+  width: 23px;
+  height: 23px;
 }
 .bio-card .bio-txt {
   flex: 1;
@@ -283,7 +281,44 @@ button.bio-tag {
   box-shadow: 0 0 0 3px rgb(62 224 122 / 0.3);
 }
 
-/* Identidade de cada ícone (estilo ícone de app) */
+/* Ícones com brilho (estilo ícone de app): degradê da cor do ícone, reflexo no alto e sombra
+   colorida. As cores chegam por --ico-top/--ico-bottom/--ico-glow (`glossVars`). */
+.bio-ico,
+.bio-hico,
+.bio-gloss {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  color: #fff;
+  background: linear-gradient(160deg, var(--ico-top), var(--ico-bottom));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    inset 0 -3px 6px rgb(0 0 0 / 0.18),
+    0 6px 14px -6px var(--ico-glow);
+}
+.bio-ico::after,
+.bio-hico::after,
+.bio-gloss::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 2px 3px auto;
+  height: 48%;
+  border-radius: inherit;
+  border-bottom-left-radius: 40% 30%;
+  border-bottom-right-radius: 40% 30%;
+  background: linear-gradient(rgb(255 255 255 / 0.42), rgb(255 255 255 / 0.03));
+  pointer-events: none;
+}
+.bio-ico svg,
+.bio-hico svg,
+.bio-gloss svg {
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.22));
+}
+/* Cor própria: todo desenho fica branco (inclusive o "G" colorido do Google). */
+.bio .mono svg [fill]:not([fill="none"]) {
+  fill: currentColor;
+}
 .bio .brand-instagram {
   background: radial-gradient(
     circle at 30% 107%,
@@ -292,74 +327,19 @@ button.bio-tag {
     #d6249f 60%,
     #285aeb 90%
   );
-  color: #fff;
-}
-.bio .brand-whatsapp {
-  background: #25d366;
-  color: #fff;
 }
 .bio .brand-google {
-  background: #fff;
+  background: linear-gradient(160deg, #fff, #e6eaf0);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 -3px 6px rgb(0 0 0 / 0.08),
+    0 6px 14px -6px rgb(66 133 244 / 0.6);
 }
-.bio .brand-facebook {
-  background: #1877f2;
-  color: #fff;
+.bio .brand-google svg {
+  filter: none;
 }
-.bio .brand-tiktok {
-  background: #111;
-  color: #fff;
-}
-.bio .brand-youtube {
-  background: #fff;
-  color: #ff0000;
-}
-.bio .c-maps {
-  background: #fff;
-  color: #ea4335;
-}
-.bio .c-phone {
-  background: #34c759;
-  color: #fff;
-}
-.bio .c-menu {
-  background: #ff9500;
-  color: #fff;
-}
-.bio .c-calendar {
-  background: #fff;
-  color: #e5383b;
-}
-.bio .c-tag {
-  background: #af52de;
-  color: #fff;
-}
-.bio .c-gift {
-  background: #ff2d55;
-  color: #fff;
-}
-.bio .c-shield {
-  background: #5856d6;
-  color: #fff;
-}
-.bio .c-delivery {
-  background: #ff3b30;
-  color: #fff;
-}
-.bio .c-link {
-  background: #0a84ff;
-  color: #fff;
-}
-.bio .c-star {
-  background: #ffcc00;
-  color: #fff;
-}
-.bio .c-heart {
-  background: #ff375f;
-  color: #fff;
-}
-.bio .c-email {
-  background: #0a84ff;
-  color: #fff;
+.bio .c-photos {
+  background: linear-gradient(135deg, #ffcc00, #ff2d55 50%, #5856d6);
 }
 
 /* Painéis (Wi-Fi, horários, galeria, texto) */
@@ -390,15 +370,6 @@ button.bio-tag {
 .bio-hico svg {
   width: 18px;
   height: 18px;
-}
-.bio-hico.c-wifi {
-  background: #007aff;
-}
-.bio-hico.c-clock {
-  background: #c25e00;
-}
-.bio-hico.c-photos {
-  background: linear-gradient(135deg, #ffcc00, #ff2d55 50%, #5856d6);
 }
 .bio-wifi {
   text-align: center;
@@ -531,19 +502,6 @@ button.bio-tag {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  color: #fff;
-  background: rgb(0 0 0 / 0.28);
-  border: 1px solid rgb(255 255 255 / 0.5);
-}
-.bio-social a.brand-google,
-.bio-social a.brand-youtube,
-.bio-social a.brand-instagram,
-.bio-social a.brand-whatsapp,
-.bio-social a.c-phone,
-.bio-social a.brand-facebook,
-.bio-social a.brand-tiktok,
-.bio-social a.c-email {
-  border: 0;
 }
 .bio-social svg {
   width: 20px;

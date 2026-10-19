@@ -56,7 +56,12 @@ export function QuickEditForm({ clientId, initial }: { clientId: string; initial
   return (
     <form action={action} className="mt-6 grid gap-6">
       <Group title="Instagram e Google">
-        <Field name="instagram" label="Instagram" hint="@perfil ou link do perfil" state={state}>
+        <Field
+          name="instagram"
+          label="Instagram"
+          hint="Cole o link do perfil ou escreva o @perfil"
+          state={state}
+        >
           {(a) => <input {...a} defaultValue={text("instagram")} className={inputClass} />}
         </Field>
         <Field
@@ -68,7 +73,7 @@ export function QuickEditForm({ clientId, initial }: { clientId: string; initial
           {(a) => (
             <input
               {...a}
-              type="url"
+              inputMode="url"
               defaultValue={text("googleReviewUrl")}
               className={inputClass}
             />
@@ -105,7 +110,7 @@ export function QuickEditForm({ clientId, initial }: { clientId: string; initial
         <Field
           name="whatsapp"
           label="WhatsApp"
-          hint="Com DDI e DDD: 55 11 99999-8888"
+          hint="Cole o link (wa.me/…) ou escreva o número com DDD"
           state={state}
         >
           {(a) => (
@@ -228,7 +233,9 @@ export function QuickEditForm({ clientId, initial }: { clientId: string; initial
           hint="Opcional. Sem link, usamos o Google Maps com o endereço"
           state={state}
         >
-          {(a) => <input {...a} type="url" defaultValue={text("mapsUrl")} className={inputClass} />}
+          {(a) => (
+            <input {...a} inputMode="url" defaultValue={text("mapsUrl")} className={inputClass} />
+          )}
         </Field>
       </Group>
 

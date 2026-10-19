@@ -1,0 +1,791 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bio Site com vida</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Protótipo: ícones com vida, cartão em destaque com halo, topo com foto da fachada. */
+      :root {
+        --base: #2a1709;
+        --card-top: #9a5a22;
+        --card-bottom: #6e3a12;
+        --accent: #f6c681;
+        --ink: #2b1a0e;
+        --ink-muted: #6b5545;
+        --feature-a: #0e7f3e;
+        --feature-b: #075a2b;
+        --feature-glow: #2bd46f;
+        --display: Fraunces, Georgia, serif;
+        --body: Manrope, system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: var(--body);
+        background: #d9d4cf;
+        color: #1d1d1d;
+      }
+      .tools {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px 16px 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px 28px;
+        align-items: center;
+      }
+      .tools h1 {
+        width: 100%;
+        margin: 0;
+        font-size: 1.25rem;
+      }
+      .tools fieldset {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .tools legend {
+        float: left;
+        margin-right: 6px;
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+      .tools label {
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: #fff;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid #bbb;
+      }
+      .tools input {
+        position: absolute;
+        opacity: 0;
+      }
+      .tools input:checked + span {
+        color: #fff;
+      }
+      .tools label:has(input:checked) {
+        background: #1d1d1d;
+        color: #fff;
+        border-color: #1d1d1d;
+      }
+      .tools label:has(input:focus-visible) {
+        outline: 3px solid #1a5cff;
+        outline-offset: 2px;
+      }
+
+      .phone {
+        width: min(390px, 100%);
+        margin: 12px auto 40px;
+        border-radius: 28px;
+        overflow: hidden;
+        background: var(--base);
+        box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.6);
+        position: relative;
+      }
+
+      /* ---------- Topo ---------- */
+      .hero {
+        position: relative;
+        color: #fff;
+        text-align: center;
+      }
+      .hero .bg {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+      .hero .bg svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      /* Modo atual: fundo desfocado atrás de tudo */
+      .hero[data-mode="blur"] .bg svg {
+        filter: blur(16px) saturate(1.2);
+        transform: scale(1.2);
+      }
+      .hero[data-mode="blur"] .bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(rgb(42 23 9 / 0.45), var(--base));
+      }
+      .hero[data-mode="blur"] .inner {
+        padding: 44px 20px 22px;
+      }
+      /* Modo novo: foto nítida da fachada, borda em onda */
+      .hero[data-mode="photo"] .bg {
+        bottom: auto;
+        height: 300px;
+        -webkit-mask: var(--wave) bottom / 100% 100% no-repeat;
+        mask: var(--wave) bottom / 100% 100% no-repeat;
+      }
+      .hero[data-mode="photo"] .bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(rgb(0 0 0 / 0.05) 30%, rgb(20 10 4 / 0.82) 92%);
+      }
+      .hero {
+        --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 0H100V90C80 84 70 98 50 95S20 84 0 92Z'/%3E%3C/svg%3E");
+      }
+      .hero[data-mode="photo"] .inner {
+        padding: 150px 20px 10px;
+      }
+      .hero[data-mode="photo"] .logo {
+        width: 84px;
+        height: 84px;
+        font-size: 1.6rem;
+      }
+      .inner {
+        position: relative;
+      }
+      .logo {
+        width: 104px;
+        height: 104px;
+        margin: 0 auto 12px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: #f3dfbf;
+        color: #7a4515;
+        font: 700 2rem/1 var(--display);
+        border: 3px solid #fff;
+        box-shadow: 0 10px 24px -8px rgb(0 0 0 / 0.6);
+      }
+      .hero h2 {
+        margin: 0;
+        font: 700 1.6rem/1.15 var(--display);
+        text-shadow: 0 2px 12px rgb(0 0 0 / 0.5);
+      }
+      .hero p {
+        margin: 6px 0 0;
+        font-size: 0.95rem;
+        text-shadow: 0 1px 8px rgb(0 0 0 / 0.6);
+      }
+      .chips {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .chips span {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        padding: 7px 14px;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        background: rgb(0 0 0 / 0.35);
+        border: 1px solid rgb(255 255 255 / 0.35);
+        backdrop-filter: blur(6px);
+      }
+      .chips svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      /* ---------- Cartões ---------- */
+      .links {
+        list-style: none;
+        margin: 0;
+        padding: 22px 16px 28px;
+        display: grid;
+        gap: 12px;
+      }
+      .card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 72px;
+        padding: 12px 16px 12px 12px;
+        border-radius: 20px;
+        text-decoration: none;
+        isolation: isolate;
+      }
+      .card strong {
+        display: block;
+        font-size: 1rem;
+        line-height: 1.25;
+      }
+      .card small {
+        display: block;
+        margin-top: 2px;
+        font-size: 0.82rem;
+      }
+      .card .txt {
+        flex: 1;
+        min-width: 0;
+      }
+      .card .go {
+        width: 18px;
+        height: 18px;
+        flex: none;
+        opacity: 0.6;
+      }
+      .card .side {
+        font-weight: 800;
+        font-size: 0.95rem;
+      }
+
+      /* Pele 1: cor do tema (como hoje) */
+      .phone[data-skin="theme"] .card {
+        color: #fff;
+        background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+        border: 1px solid rgb(255 255 255 / 0.3);
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 0.3),
+          0 10px 22px -12px rgb(0 0 0 / 0.75);
+      }
+      /* Pele 2: claro (referência 1) */
+      .phone[data-skin="light"] .card {
+        color: var(--ink);
+        background: #fff;
+        box-shadow:
+          0 1px 0 rgb(255 255 255 / 0.9) inset,
+          0 12px 26px -16px rgb(0 0 0 / 0.7);
+      }
+      .phone[data-skin="light"] .card small {
+        color: var(--ink-muted);
+      }
+      /* Pele 3: vidro escuro (referência 2) */
+      .phone[data-skin="glass"] .card {
+        color: #fff;
+        border-radius: 999px;
+        padding-left: 10px;
+        padding-right: 22px;
+        background: linear-gradient(180deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.04));
+        border: 1px solid rgb(255 255 255 / 0.14);
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 0.12),
+          0 14px 28px -18px rgb(0 0 0 / 0.9);
+        backdrop-filter: blur(10px);
+      }
+      .phone[data-skin="glass"] .card small {
+        color: rgb(255 255 255 / 0.72);
+      }
+      .phone[data-skin="glass"] .card .side {
+        color: #7dffb0;
+      }
+
+      /* Cartão em destaque: cor viva + halo de luz atrás (referência 2) */
+      .card.feature {
+        color: #fff !important;
+        background: linear-gradient(135deg, var(--feature-a), var(--feature-b)) !important;
+        border: 1px solid rgb(255 255 255 / 0.35) !important;
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 0.45),
+          0 16px 30px -14px color-mix(in srgb, var(--feature-b) 90%, transparent) !important;
+      }
+      .card.feature small {
+        color: rgb(255 255 255 / 0.92) !important;
+      }
+      .card.feature::before {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        left: 10%;
+        right: 10%;
+        top: -26px;
+        height: 70px;
+        border-radius: 50%;
+        background: var(--feature-glow);
+        filter: blur(30px);
+        opacity: 0.75;
+        animation: halo 3.2s ease-in-out infinite;
+      }
+      @keyframes halo {
+        50% {
+          opacity: 0.4;
+          transform: scale(0.92);
+        }
+      }
+      .card.feature .ico {
+        background: rgb(255 255 255 / 0.22) !important;
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 0.55),
+          0 6px 14px -6px rgb(0 0 0 / 0.4) !important;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 3px;
+        padding: 2px 9px;
+        border-radius: 999px;
+        background: rgb(0 0 0 / 0.22);
+        font-size: 0.68rem;
+        font-weight: 800;
+      }
+      .badge::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #b6ffcf;
+        box-shadow: 0 0 0 3px rgb(182 255 207 / 0.35);
+      }
+      .tag-new {
+        position: absolute;
+        top: -1px;
+        right: 18px;
+        padding: 3px 10px;
+        border-radius: 0 0 10px 10px;
+        background: #6fd0ff;
+        color: #06324a;
+        font-size: 0.7rem;
+        font-weight: 800;
+      }
+
+      /* ---------- Ícones com vida ---------- */
+      .ico {
+        --c1: #888;
+        --c2: #555;
+        flex: none;
+        position: relative;
+        width: 48px;
+        height: 48px;
+        border-radius: 15px;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        overflow: hidden;
+      }
+      .ico svg {
+        width: 24px;
+        height: 24px;
+        position: relative;
+        filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.25));
+      }
+      .phone[data-icons="flat"] .ico {
+        background: var(--c2);
+        border-radius: 12px;
+        width: 44px;
+        height: 44px;
+      }
+      .phone[data-icons="flat"] .ico svg {
+        filter: none;
+      }
+      /* Ícone de app: degradê da própria cor, reflexo no alto, sombra colorida */
+      .phone[data-icons="glossy"] .ico {
+        background: linear-gradient(160deg, var(--c1), var(--c2));
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255 / 0.55),
+          inset 0 -3px 6px rgb(0 0 0 / 0.18),
+          0 8px 16px -6px color-mix(in srgb, var(--c2) 85%, transparent);
+      }
+      .phone[data-icons="glossy"] .ico::after {
+        content: "";
+        position: absolute;
+        left: 3px;
+        right: 3px;
+        top: 2px;
+        height: 48%;
+        border-radius: 12px 12px 20px 20px / 12px 12px 10px 10px;
+        background: linear-gradient(rgb(255 255 255 / 0.45), rgb(255 255 255 / 0.04));
+        pointer-events: none;
+      }
+      /* Ícone redondo, estilo avatar (referência 2) */
+      .phone[data-skin="glass"][data-icons="glossy"] .ico {
+        border-radius: 50%;
+        width: 52px;
+        height: 52px;
+      }
+      .phone[data-skin="glass"][data-icons="glossy"] .ico::after {
+        border-radius: 50% 50% 40% 40%;
+        left: 6px;
+        right: 6px;
+      }
+
+      .i-instagram {
+        --c1: #f9b35a;
+        --c2: #c92b8f;
+      }
+      .phone .ico.i-instagram {
+        background: radial-gradient(
+          circle at 30% 107%,
+          #fdf497 0%,
+          #fd5949 45%,
+          #d6249f 60%,
+          #285aeb 90%
+        );
+      }
+      .i-google {
+        --c1: #fff;
+        --c2: #e9edf2;
+      }
+      .phone .ico.i-google {
+        background: linear-gradient(160deg, #fff, #e6eaf0);
+      }
+      .phone[data-icons="glossy"] .ico.i-google {
+        box-shadow:
+          inset 0 1px 0 #fff,
+          inset 0 -3px 6px rgb(0 0 0 / 0.08),
+          0 8px 16px -6px rgb(66 133 244 / 0.6);
+      }
+      .i-whatsapp {
+        --c1: #5cf08f;
+        --c2: #13a84f;
+      }
+      .i-menu {
+        --c1: #ffc14d;
+        --c2: #f07a0a;
+      }
+      .i-maps {
+        --c1: #ff7a6b;
+        --c2: #d8261b;
+      }
+      .i-wifi {
+        --c1: #5aa8ff;
+        --c2: #1452d8;
+      }
+      .i-clock {
+        --c1: #c88cff;
+        --c2: #6c2bd9;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .card.feature::before {
+          animation: none;
+        }
+      }
+      .notes {
+        max-width: 640px;
+        margin: 0 auto 40px;
+        padding: 0 16px;
+        font-size: 0.92rem;
+        line-height: 1.55;
+      }
+    </style>
+  </head>
+  <body>
+    <form class="tools" aria-label="Opções do protótipo">
+      <h1>Protótipo: ícones com vida e foto da fachada</h1>
+      <fieldset>
+        <legend>Topo</legend>
+        <label
+          ><input type="radio" name="hero" value="photo" checked /><span
+            >Foto da fachada</span
+          ></label
+        >
+        <label
+          ><input type="radio" name="hero" value="blur" /><span>Fundo desfocado (hoje)</span></label
+        >
+      </fieldset>
+      <fieldset>
+        <legend>Cartões</legend>
+        <label><input type="radio" name="skin" value="light" checked /><span>Claros</span></label>
+        <label><input type="radio" name="skin" value="glass" /><span>Vidro escuro</span></label>
+        <label
+          ><input type="radio" name="skin" value="theme" /><span>Cor do tema (hoje)</span></label
+        >
+      </fieldset>
+      <fieldset>
+        <legend>Ícones</legend>
+        <label
+          ><input type="radio" name="icons" value="glossy" checked /><span>Com brilho</span></label
+        >
+        <label><input type="radio" name="icons" value="flat" /><span>Lisos (hoje)</span></label>
+      </fieldset>
+    </form>
+
+    <main class="phone" data-skin="light" data-icons="glossy">
+      <header class="hero" data-mode="photo">
+        <div class="bg" aria-hidden="true">
+          <!-- Fachada desenhada só para o protótipo; no sistema entra a foto enviada pelo cliente. -->
+          <svg viewBox="0 0 390 300" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#8ec5e8" />
+                <stop offset="1" stop-color="#f3d7b0" />
+              </linearGradient>
+              <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ffe6a8" />
+                <stop offset="1" stop-color="#c97b2a" />
+              </linearGradient>
+              <pattern id="awn" width="40" height="60" patternUnits="userSpaceOnUse">
+                <rect width="20" height="60" fill="#b8321f" />
+                <rect x="20" width="20" height="60" fill="#f4ead8" />
+              </pattern>
+            </defs>
+            <rect width="390" height="300" fill="url(#sky)" />
+            <rect x="0" y="40" width="390" height="260" fill="#d9b48a" />
+            <rect x="0" y="40" width="390" height="14" fill="#a87a4c" />
+            <rect x="60" y="62" width="270" height="34" rx="4" fill="#4a2a12" />
+            <text
+              x="195"
+              y="86"
+              text-anchor="middle"
+              font-family="Fraunces, serif"
+              font-size="20"
+              font-weight="700"
+              fill="#f6c681"
+            >
+              Forno da Serra
+            </text>
+            <path d="M20 110h350l-16 52H36z" fill="url(#awn)" />
+            <path
+              d="M36 162q10 10 20 0t20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 20 0 18 0"
+              fill="#b8321f"
+            />
+            <rect
+              x="34"
+              y="172"
+              width="130"
+              height="110"
+              fill="url(#glass)"
+              stroke="#4a2a12"
+              stroke-width="6"
+            />
+            <rect
+              x="226"
+              y="172"
+              width="130"
+              height="110"
+              fill="url(#glass)"
+              stroke="#4a2a12"
+              stroke-width="6"
+            />
+            <rect x="172" y="168" width="46" height="132" fill="#5a3216" />
+            <circle cx="210" cy="236" r="3" fill="#f6c681" />
+            <g fill="#8a4b17">
+              <ellipse cx="70" cy="262" rx="20" ry="9" />
+              <ellipse cx="112" cy="264" rx="22" ry="9" />
+              <ellipse cx="270" cy="262" rx="20" ry="9" />
+              <ellipse cx="314" cy="264" rx="22" ry="9" />
+            </g>
+            <rect x="20" y="152" width="20" height="40" rx="10" fill="#3f7d3a" />
+            <rect x="352" y="152" width="20" height="40" rx="10" fill="#3f7d3a" />
+          </svg>
+        </div>
+        <div class="inner">
+          <div class="logo" aria-hidden="true">FS</div>
+          <h2>Forno da Serra</h2>
+          <p>Pão de fermentação natural, todo dia às 6h.</p>
+          <div class="chips">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s7-7.8 7-13a7 7 0 0 0-14 0c0 5.2 7 13 7 13z" />
+                <circle cx="12" cy="9" r="2.5" />
+              </svg>
+              Campinas/SP
+            </span>
+            <span>Compartilhar</span>
+          </div>
+        </div>
+      </header>
+
+      <ul class="links">
+        <li>
+          <a class="card feature" href="#">
+            <span class="ico i-whatsapp">
+              <svg viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 2.9 2.9 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.6 11.6 0 0 0 4.4 3.9c1.6.7 2.3.8 3.1.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .2-1.2c-.1-.1-.3-.2-.5-.3z"
+                />
+              </svg>
+            </span>
+            <span class="txt"
+              ><span class="badge">Responde rápido</span><strong>Fazer pedido no WhatsApp</strong
+              ><small>Retire ou receba em casa</small></span
+            >
+            <svg
+              class="go"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+            >
+              <path d="m9 6 6 6-6 6" />
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a class="card" href="#">
+            <span class="ico i-instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+              </svg>
+            </span>
+            <span class="txt"><strong>Instagram</strong><small>@fornodaserra</small></span>
+            <span class="side">12 mil</span>
+          </a>
+        </li>
+        <li>
+          <a class="card" href="#">
+            <span class="ico i-google">
+              <svg viewBox="0 0 48 48" style="filter: none">
+                <path
+                  fill="#EA4335"
+                  d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+                />
+                <path
+                  fill="#4285F4"
+                  d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+                />
+              </svg>
+            </span>
+            <span class="txt"><strong>Avaliar no Google</strong><small>312 avaliações</small></span>
+            <span class="side">4,9 ★</span>
+          </a>
+        </li>
+        <li>
+          <a class="card" href="#">
+            <span class="tag-new">Novo</span>
+            <span class="ico i-menu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="3" width="14" height="18" rx="2" />
+                <path d="M9 8h6M9 12h6M9 16h4" />
+              </svg>
+            </span>
+            <span class="txt"
+              ><strong>Ver cardápio</strong><small>Pães, doces e salgados do dia</small></span
+            >
+            <svg
+              class="go"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+            >
+              <path d="m9 6 6 6-6 6" />
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a class="card" href="#">
+            <span class="ico i-wifi">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+              >
+                <path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0" />
+                <circle cx="12" cy="19.5" r="1" fill="currentColor" />
+              </svg>
+            </span>
+            <span class="txt"
+              ><strong>Wi-Fi grátis</strong><small>Rede: FORNO-CLIENTES</small></span
+            >
+            <svg
+              class="go"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a class="card" href="#">
+            <span class="ico i-clock">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5l3 2" />
+              </svg>
+            </span>
+            <span class="txt"
+              ><strong>Horários</strong><small>Aberto agora · fecha às 20h</small></span
+            >
+            <svg
+              class="go"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a class="card" href="#">
+            <span class="ico i-maps">
+              <svg viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7z"
+                />
+                <circle cx="12" cy="9" r="2.6" fill="#d8261b" />
+              </svg>
+            </span>
+            <span class="txt"
+              ><strong>Como chegar</strong><small>Av. das Andorinhas, 210 — Taquaral</small></span
+            >
+            <svg
+              class="go"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+            >
+              <path d="m9 6 6 6-6 6" />
+            </svg>
+          </a>
+        </li>
+      </ul>
+    </main>
+
+    <div class="notes">
+      <p>
+        <strong>O que muda:</strong> ícones com degradê da própria cor, reflexo e sombra colorida
+        (estilo ícone de app); um cartão em destaque com cor viva e halo de luz; número à direita
+        (seguidores, nota do Google); selo "Novo"; foto nítida da fachada no topo com borda em onda.
+      </p>
+      <p>
+        A fachada aqui é um desenho só para o protótipo. No sistema entra a foto que o cliente
+        envia.
+      </p>
+    </div>
+
+    <script>
+      const phone = document.querySelector(".phone");
+      const hero = document.querySelector(".hero");
+      document.querySelector(".tools").addEventListener("change", (e) => {
+        const { name, value } = e.target;
+        if (name === "hero") hero.dataset.mode = value;
+        if (name === "skin") phone.dataset.skin = value;
+        if (name === "icons") phone.dataset.icons = value;
+      });
+    </script>
+  </body>
+</html>

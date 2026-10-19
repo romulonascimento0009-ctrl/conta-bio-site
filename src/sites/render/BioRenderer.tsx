@@ -11,7 +11,7 @@ import {
   type BlockOf,
   type ImageRef,
 } from "@/sites/bio";
-import { ICONS, type IconId } from "@/sites/icons";
+import { glossVars, ICONS, SECTION_ICONS, type IconId, type SectionIconId } from "@/sites/icons";
 import { whatsappHref } from "@/sites/links";
 import { rgbaCss } from "@/sites/color";
 import { PATTERNS } from "@/sites/patterns";
@@ -64,6 +64,25 @@ function Img({
   );
 }
 
+/**
+ * Fundo do ícone com brilho. Sem cor própria, ícones de marca usam o visual da marca (`tile`);
+ * com cor própria, o desenho fica branco (`mono`, inclusive o "G" colorido do Google).
+ */
+function tileProps(icon: IconId | SectionIconId, base: string, custom?: string) {
+  const def: { color: string; tile?: string } =
+    icon in SECTION_ICONS ? SECTION_ICONS[icon as SectionIconId] : ICONS[icon as IconId];
+  const cls = custom ? `${base} mono` : def.tile ? `${base} ${def.tile}` : base;
+  return { className: cls, style: glossVars(custom ?? def.color) as CSSProperties };
+}
+
+function SectionIcon({ icon, color }: { icon: SectionIconId; color?: string }) {
+  return (
+    <span {...tileProps(icon, "bio-hico", color)}>
+      <Icon name={icon} />
+    </span>
+  );
+}
+
 function LinkCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"link"> }) {
   const resolved = resolveLink(block, ctx.doc.contact);
   if (!resolved) return null;
@@ -85,7 +104,7 @@ function LinkCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"link"> }) {
         {...(resolved.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         data-block-id={block.id}
       >
-        <span className={`bio-ico ${ICONS[resolved.icon].tile}`}>
+        <span {...tileProps(resolved.icon, "bio-ico", block.iconColor)}>
           <Icon name={resolved.icon} />
         </span>
         <span className="bio-txt">
@@ -128,9 +147,7 @@ function Panel({ block, ctx }: { block: Exclude<Block, BlockOf<"link">>; ctx: Ct
       return (
         <section className="bio-panel bio-wifi" aria-labelledby={titleId} data-block-id={block.id}>
           <h2 id={titleId}>
-            <span className="bio-hico c-wifi">
-              <Icon name="wifi" />
-            </span>
+            <SectionIcon icon="wifi" color={block.iconColor} />
             {block.title}
           </h2>
           <dl>
@@ -161,9 +178,7 @@ function Panel({ block, ctx }: { block: Exclude<Block, BlockOf<"link">>; ctx: Ct
       return (
         <section className="bio-panel" aria-labelledby={titleId} data-block-id={block.id}>
           <h2 id={titleId}>
-            <span className="bio-hico c-clock">
-              <Icon name="clock" />
-            </span>
+            <SectionIcon icon="clock" color={block.iconColor} />
             {block.title}
           </h2>
           <dl className="bio-hours">
@@ -182,9 +197,7 @@ function Panel({ block, ctx }: { block: Exclude<Block, BlockOf<"link">>; ctx: Ct
       return (
         <section className="bio-panel" aria-labelledby={titleId} data-block-id={block.id}>
           <h2 id={titleId}>
-            <span className="bio-hico c-photos">
-              <Icon name="photos" />
-            </span>
+            <SectionIcon icon="photos" color={block.iconColor} />
             {block.title}
           </h2>
           <ul className="bio-gallery" data-count={Math.min(images.length, 5)}>
@@ -385,7 +398,7 @@ export function BioRenderer({
                 <a
                   href={s.href}
                   data-track={`s:${s.icon}`}
-                  className={ICONS[s.icon].tile}
+                  {...tileProps(s.icon, "bio-gloss")}
                   aria-label={s.label}
                   {...(s.href.startsWith("http")
                     ? { target: "_blank", rel: "noopener noreferrer" }

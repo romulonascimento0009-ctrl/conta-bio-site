@@ -1,5 +1,13 @@
 import { z } from "zod";
-import { INSTAGRAM_HANDLE, isSafeHref, normalizeInstagram, WHATSAPP_DIGITS } from "@/sites/links";
+import {
+  INSTAGRAM_HANDLE,
+  isSafeHref,
+  normalizeInstagram,
+  normalizeTiktok,
+  parseWhatsapp,
+  WHATSAPP_DIGITS,
+  withScheme,
+} from "@/sites/links";
 
 const optional = (max: number) => z.string().trim().max(max).default("");
 
@@ -8,10 +16,10 @@ const optional = (max: number) => z.string().trim().max(max).default("");
 export const whatsappField = z
   .string()
   .trim()
-  .transform((v) => v.replace(/\D/g, ""))
+  .transform(parseWhatsapp)
   .refine(
     (v) => v === "" || WHATSAPP_DIGITS.test(v),
-    "WhatsApp com DDI e DDD, ex.: 55 11 99999-8888",
+    "WhatsApp: cole o link (wa.me/…) ou o número com DDD, ex.: 11 99999-8888",
   )
   .default("");
 
@@ -25,18 +33,27 @@ export const phoneField = z
 export const instagramField = z
   .string()
   .trim()
-  .transform((v) =>
-    normalizeInstagram(v.replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/.*$/, "")),
-  )
+  .transform(normalizeInstagram)
   .refine(
     (v) => v === "" || INSTAGRAM_HANDLE.test(v),
-    "perfil do Instagram inválido (ex.: @minhaloja)",
+    "Instagram: cole o link do perfil (instagram.com/…) ou o @perfil",
+  )
+  .default("");
+
+export const tiktokField = z
+  .string()
+  .trim()
+  .transform(normalizeTiktok)
+  .refine(
+    (v) => v === "" || INSTAGRAM_HANDLE.test(v),
+    "TikTok: cole o link do perfil (tiktok.com/@…) ou o @perfil",
   )
   .default("");
 
 export const urlField = z
   .string()
   .trim()
+  .transform(withScheme)
   .refine((v) => v === "" || isSafeHref(v), "link inválido (use https://...)")
   .default("");
 
@@ -132,8 +149,12 @@ export const BRIEFING_FIELDS: {
     hint: "Etiquetas curtas abaixo do nome: até 6, separadas por vírgula, com até 24 letras cada. Ex.: Manutenção, Reformas, Laudos",
   },
   { name: "city", label: "Cidade", hint: "Ex.: Campinas/SP" },
-  { name: "instagram", label: "Instagram", hint: "@perfil" },
-  { name: "whatsapp", label: "WhatsApp", hint: "Com DDI e DDD, ex.: 55 11 99999-8888" },
+  { name: "instagram", label: "Instagram", hint: "Cole o link do perfil ou escreva o @perfil" },
+  {
+    name: "whatsapp",
+    label: "WhatsApp",
+    hint: "Cole o link (wa.me/…) ou escreva o número com DDD, ex.: 11 99999-8888",
+  },
   { name: "phone", label: "Telefone fixo", hint: "Opcional" },
   {
     name: "googleReviewUrl",
