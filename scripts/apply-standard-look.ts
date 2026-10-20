@@ -1,5 +1,5 @@
 /**
- * Aplica o visual padrão (futurista + cartão principal em neon, `applyStandardLook`) no rascunho
+ * Aplica o visual padrão (D41: vidro neon, cartões iguais e sem destaque, `applyStandardLook`) no rascunho
  * de todos os Bio Sites. Não publica: o publicado só muda quando alguém publicar.
  * Uso: npx tsx --env-file-if-exists=.env.local scripts/apply-standard-look.ts
  */
@@ -44,7 +44,7 @@ async function main() {
     await recordAudit(
       row.clientId,
       "draft.save",
-      { source: "Visual padrão (futurista)", parts },
+      { source: "Visual padrão (vidro neon)", parts },
       { ...op, role: "operator" },
     );
     console.log(`/${row.slug}: rascunho no padrão`);

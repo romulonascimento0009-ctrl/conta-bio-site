@@ -4,7 +4,9 @@ import type { AssetInfo } from "@/data/assets";
 import {
   glassTop,
   HERO_DEFAULTS,
+  isStandardStyle,
   resolveLink,
+  standardCardBase,
   veilAlphas,
   wifiQrPayload,
   type BioDocument,
@@ -24,7 +26,7 @@ import { whatsappHref } from "@/sites/links";
 import { mixHex, rgbaCss } from "@/sites/color";
 import { PATTERNS } from "@/sites/patterns";
 import "./bio.css";
-import { CopyButton, ShareButton, Tracker } from "./client-buttons";
+import { CopyButton, SheetCard, ShareButton, Tracker } from "./client-buttons";
 import { loadedFont } from "./fonts";
 import { Icon } from "./Icon";
 import { mediaUrl } from "./media";
@@ -91,9 +93,79 @@ function SectionIcon({ icon, color }: { icon: SectionIconId; color?: string }) {
   );
 }
 
+/**
+ * Cartão do visual padrão (D41): todos iguais, sem destaque nem valor à direita. O estilo
+ * (vidro neon, cor do ícone, escuro) vem da classe no .bio; a cor do ícone tinge o cartão.
+ * Sem ícone (`hideIcon`), mostra só o nome, centralizado.
+ */
+function stdCard(iconColor: string, hideIcon?: boolean) {
+  return {
+    className: `bio-card std${hideIcon ? " plain" : ""}`,
+    style: { "--c": iconColor, "--tint": glassTop(iconColor) } as CSSProperties,
+  };
+}
+
+function StdCardBody({
+  icon,
+  iconColor,
+  hideIcon,
+  tag,
+  badge,
+  title,
+  subtitle,
+}: {
+  icon: IconId | SectionIconId;
+  iconColor?: string;
+  hideIcon?: boolean;
+  tag?: string;
+  badge?: string;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <>
+      {tag && <span className="bio-corner">{tag}</span>}
+      {!hideIcon && (
+        <span {...tileProps(icon, "bio-ico", iconColor)}>
+          <Icon name={icon} />
+        </span>
+      )}
+      <span className="bio-txt">
+        {badge && <span className="bio-badge">{badge}</span>}
+        <strong>{title}</strong>
+        {subtitle && <small>{subtitle}</small>}
+      </span>
+      {!hideIcon && <Icon name="chevron" className="bio-go" />}
+    </>
+  );
+}
+
 function LinkCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"link"> }) {
   const resolved = resolveLink(block, ctx.doc.contact);
   if (!resolved) return null;
+  if (isStandardStyle(ctx.doc.theme.cardStyle)) {
+    return (
+      <li>
+        <a
+          {...stdCard(block.iconColor ?? ICONS[resolved.icon].color, block.hideIcon)}
+          href={resolved.href}
+          data-track={`b:${block.id}`}
+          {...(resolved.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+          data-block-id={block.id}
+        >
+          <StdCardBody
+            icon={resolved.icon}
+            iconColor={block.iconColor}
+            hideIcon={block.hideIcon}
+            tag={block.tag}
+            badge={block.badge}
+            title={block.title}
+            subtitle={block.subtitle || resolved.subtitle}
+          />
+        </a>
+      </li>
+    );
+  }
   const subtitle = block.subtitle || resolved.subtitle;
   // Cor própria do cartão ou destaque mantêm o degradê em qualquer estilo; os demais seguem o
   // estilo escolhido na Aparência (cor do tema, claros, vidro).
@@ -168,6 +240,48 @@ function LinkCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"link"> }) {
           <Icon name="chevron" className="bio-go" />
         )}
       </a>
+    </li>
+  );
+}
+
+/** Galeria em cartão ("Meus trabalhos", "Feedback de clientes"): abre as fotos com legenda. */
+function GalleryCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"gallery"> }) {
+  const images = block.images.filter((img) => ctx.assets.has(img.assetId));
+  if (!images.length) return null;
+  return (
+    <li>
+      <SheetCard
+        {...stdCard(block.iconColor ?? SECTION_ICONS.photos.color, block.hideIcon)}
+        track={`b:${block.id}`}
+        blockId={block.id}
+        title={block.title}
+        trigger={
+          <StdCardBody
+            icon="photos"
+            iconColor={block.iconColor}
+            hideIcon={block.hideIcon}
+            title={block.title}
+            subtitle={block.subtitle}
+          />
+        }
+      >
+        {images.map((img, i) => (
+          <figure key={`${img.assetId}-${i}`} className="bio-shot">
+            <Img
+              ctx={ctx}
+              image={img}
+              sizes="(max-width: 480px) 100vw, 440px"
+              alt={img.alt || img.title || ""}
+            />
+            {(img.title || img.caption) && (
+              <figcaption>
+                {img.title && <strong>{img.title}</strong>}
+                {img.caption}
+              </figcaption>
+            )}
+          </figure>
+        ))}
+      </SheetCard>
     </li>
   );
 }
@@ -282,10 +396,13 @@ function Panel({ block, ctx }: { block: Exclude<Block, BlockOf<"link">>; ctx: Ct
 
 /** Agrupa cartões consecutivos numa lista e intercala os painéis, mantendo a ordem do documento. */
 function Blocks({ ctx }: { ctx: Ctx }) {
-  const groups: (BlockOf<"link">[] | Exclude<Block, BlockOf<"link">>)[] = [];
+  type CardBlock = BlockOf<"link"> | BlockOf<"gallery">;
+  const groups: (CardBlock[] | Exclude<Block, BlockOf<"link">>)[] = [];
+  // Galeria em cartão só no visual padrão; nos estilos antigos continua como painel.
+  const std = isStandardStyle(ctx.doc.theme.cardStyle);
   for (const b of ctx.doc.blocks) {
     if (b.hidden) continue;
-    if (b.type === "link") {
+    if (b.type === "link" || (std && b.type === "gallery" && b.display === "card")) {
       const last = groups.at(-1);
       if (Array.isArray(last)) last.push(b);
       else groups.push([b]);
@@ -296,9 +413,13 @@ function Blocks({ ctx }: { ctx: Ctx }) {
   return groups.map((g, i) =>
     Array.isArray(g) ? (
       <ul key={`links-${i}`} className="bio-links" style={i > 0 ? { paddingTop: 14 } : undefined}>
-        {g.map((b) => (
-          <LinkCard key={b.id} ctx={ctx} block={b} />
-        ))}
+        {g.map((b) =>
+          b.type === "link" ? (
+            <LinkCard key={b.id} ctx={ctx} block={b} />
+          ) : (
+            <GalleryCard key={b.id} ctx={ctx} block={b} />
+          ),
+        )}
       </ul>
     ) : (
       <Panel key={g.id} ctx={ctx} block={g} />
@@ -380,6 +501,7 @@ export function BioRenderer({
     "--radius-panel": RADIUS[radius].panel,
     "--font-display": display.family,
     "--font-body": body.family,
+    "--std-card": standardCardBase(colors.ink),
   } as CSSProperties;
 
   const social: { icon: IconId; href: string; label: string }[] = [];
@@ -400,6 +522,12 @@ export function BioRenderer({
 
   const tickerOn = doc.ticker.enabled && doc.ticker.items.length > 0;
   const motion = doc.theme.cardStyle === "glass" && doc.theme.motion !== false;
+  const std = isStandardStyle(doc.theme.cardStyle);
+  // Fundo do ramo (visual padrão): imagem nítida, parada enquanto a página rola.
+  const page =
+    std && doc.profile.pageBackground && assets.has(doc.profile.pageBackground.assetId)
+      ? doc.profile.pageBackground
+      : undefined;
   // Foto da fachada: nítida no alto (com onda); o fundo da página fica só com as cores do tema.
   const cover =
     doc.profile.backgroundMode === "cover" &&
@@ -410,11 +538,15 @@ export function BioRenderer({
 
   return (
     <div
-      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}`}
+      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}${std ? ` bio--std bio--${doc.theme.cardStyle}` : ""}${page ? " bio--page" : ""}`}
       style={style}
     >
       <div className="bio-photo" aria-hidden="true">
-        {!cover && <Img ctx={ctx} image={doc.profile.background} sizes="480px" alt="" />}
+        {page ? (
+          <Img ctx={ctx} image={page} sizes="(max-width: 480px) 100vw, 1080px" alt="" />
+        ) : (
+          !cover && <Img ctx={ctx} image={doc.profile.background} sizes="480px" alt="" />
+        )}
       </div>
       <div className="bio-veil" aria-hidden="true" />
       {motion && <Aurora />}
@@ -491,6 +623,14 @@ export function BioRenderer({
               </li>
             ))}
           </ul>
+        )}
+        {std && (
+          <p className="bio-sign">
+            <span>
+              {doc.profile.name}
+              {doc.profile.city ? ` · ${doc.profile.city}` : ""}
+            </span>
+          </p>
         )}
       </main>
 

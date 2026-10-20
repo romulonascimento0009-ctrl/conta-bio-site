@@ -11,8 +11,10 @@ import { SEGMENT_IDS } from "@/clients/segments";
 import { contrastRatio } from "./color";
 import {
   formatPhone,
+  collectImageRefs,
   glassTop,
   resolveLink,
+  standardCardBase,
   validateBio,
   wifiQrPayload,
   type BioDocument,
@@ -29,7 +31,7 @@ import {
 import { isSafeHref } from "./links";
 import { applyQuickEdit, quickEditSchema, quickValuesFrom } from "./quick-edit";
 import { applyStandardLook, createBioDocument } from "./templates";
-import { THEME_IDS } from "./themes";
+import { THEME_IDS, THEMES } from "./themes";
 
 const FULL = briefingSchema.parse({
   businessName: "Forno da Serra",
@@ -117,11 +119,11 @@ describe("resolveLink", () => {
     );
   });
 
-  it("mostra a nota do Google quando informada", () => {
+  it("não mostra nota nem avaliações do Google, mesmo informadas (pedido do usuário, D41)", () => {
     const d = doc();
     d.contact.googleRating = 4.9;
     d.contact.googleReviewCount = 1312;
-    expect(resolveLink(link(d, "google"), d.contact)?.subtitle).toBe("4,9 ★ · 1.312 avaliações");
+    expect(resolveLink(link(d, "google"), d.contact)?.subtitle).toBe("Sua opinião ajuda");
   });
 
   it("oculta o cartão quando falta o dado", () => {
@@ -326,35 +328,111 @@ describe("cores dos ícones", () => {
   });
 });
 
-describe("visual padrão (Studio Lia Andrade)", () => {
-  it("todo Bio Site novo nasce futurista com o cartão principal em neon", () => {
+describe("visual padrão (D41: cartões iguais, sem halo, fundo do ramo)", () => {
+  it("todo Bio Site novo nasce em vidro neon, sem destaque nem valor à direita", () => {
     for (const segment of SEGMENT_IDS) {
       const d = createBioDocument({ segment, briefing: FULL });
-      expect(d.theme.cardStyle, segment).toBe("glass");
-      const featured = d.blocks.filter((b) => b.type === "link" && b.featured);
-      expect(featured, segment).toHaveLength(1);
-      expect(featured[0], segment).toMatchObject({ featureStyle: "neon" });
-      expect(["whatsapp", "url"], segment).toContain((featured[0] as BlockOf<"link">).action);
+      expect(d.theme.cardStyle, segment).toBe("neon");
+      const links = d.blocks.filter((b) => b.type === "link") as BlockOf<"link">[];
+      expect(
+        links.some((b) => b.featured || b.featureStyle || b.value),
+        segment,
+      ).toBe(false);
       expect(validateBio(d).ok, segment).toBe(true);
     }
   });
 
-  it("migração: aplica em documento antigo, respeita destaque já escolhido e repetir não muda nada", () => {
+  it("migração: tira destaque, valor e ajustes do futurista; mantém um padrão já escolhido; repetir não muda nada", () => {
     const old = doc();
-    delete old.theme.cardStyle;
-    for (const b of old.blocks) if (b.type === "link") delete b.featured;
+    old.theme.cardStyle = "glass";
+    old.theme.cardTint = "black";
+    old.theme.motion = false;
+    link(old, "instagram").featured = true;
+    link(old, "instagram").featureStyle = "neon";
+    link(old, "instagram").value = "12 mil";
     const once = applyStandardLook(old);
-    expect(once.theme.cardStyle).toBe("glass");
-    expect(once.blocks.filter((b) => b.type === "link" && b.featured)).toHaveLength(1);
+    expect(once.theme).toMatchObject({ cardStyle: "neon" });
+    expect(once.theme.cardTint).toBeUndefined();
+    expect(once.theme.motion).toBeUndefined();
+    const insta = link(once, "instagram");
+    expect([insta.featured, insta.featureStyle, insta.value]).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ]);
     expect(applyStandardLook(once)).toEqual(once);
-    expect(old.theme.cardStyle).toBeUndefined(); // original intacto
+    expect(old.theme.cardStyle).toBe("glass"); // original intacto
 
     const chosen = doc();
-    for (const b of chosen.blocks) if (b.type === "link") delete b.featured;
-    link(chosen, "instagram").featured = true;
-    const kept = applyStandardLook(chosen);
-    expect(kept.blocks.filter((b) => b.type === "link" && b.featured).map((b) => b.id)).toEqual([
-      "instagram",
-    ]);
+    chosen.theme.cardStyle = "tint";
+    expect(applyStandardLook(chosen).theme.cardStyle).toBe("tint");
+  });
+
+  it("texto branco precisa ser legível na base dos cartões (cor do texto dos painéis)", () => {
+    const d = doc();
+    d.theme.cardStyle = "dark";
+    expect(contrastRatio("#ffffff", standardCardBase(d.theme.colors.ink))).toBeGreaterThanOrEqual(
+      4.5,
+    );
+    expect(validateBio(d).ok).toBe(true);
+    for (const id of THEME_IDS) {
+      const t = doc();
+      t.theme = {
+        ...structuredClone(THEMES[id].theme),
+        pattern: t.theme.pattern,
+        cardStyle: "neon",
+      };
+      expect(validateBio(t).ok, id).toBe(true);
+    }
+  });
+
+  it("cor do ícone: cor própria clara demais é recusada no cartão tingido", () => {
+    const d = doc();
+    d.theme.cardStyle = "tint";
+    link(d, "instagram").iconColor = "#0b6e4f";
+    expect(validateBio(d).ok).toBe(true);
+    link(d, "instagram").iconColor = "#ffe14d";
+    const r = validateBio(d);
+    expect(r.ok).toBe(false);
+  });
+
+  it("galeria em cartão com título e legenda por foto, e fundo da página entram no documento", () => {
+    const d = doc();
+    const img = "11111111-1111-4111-8111-111111111111";
+    const bg = "22222222-2222-4222-8222-222222222222";
+    d.profile.pageBackground = { assetId: bg, alt: "" };
+    d.blocks.push({
+      id: "trabalhos",
+      type: "gallery",
+      hidden: false,
+      title: "Meus trabalhos",
+      display: "card",
+      subtitle: "Fotos com explicação",
+      images: [
+        { assetId: img, alt: "Parque", title: "Parque tema praia", caption: "Montagem completa." },
+      ],
+    });
+    d.blocks.push({
+      id: "feedback",
+      type: "gallery",
+      hidden: false,
+      title: "Feedback de clientes",
+      display: "card",
+      hideIcon: true,
+      images: [{ assetId: img, alt: "Conversa de cliente agradecendo" }],
+    });
+    const r = validateBio(d);
+    expect(r.ok).toBe(true);
+    expect(collectImageRefs(d).map((x) => x.assetId)).toEqual(expect.arrayContaining([img, bg]));
+
+    const long = structuredClone(d);
+    (long.blocks.at(-2) as BlockOf<"gallery">).images[0].caption = "x".repeat(241);
+    expect(validateBio(long).ok).toBe(false);
+  });
+
+  it("cartão só com o nome (sem ícone) é válido", () => {
+    const d = doc();
+    link(d, "instagram").hideIcon = true;
+    expect(validateBio(d).ok).toBe(true);
   });
 });

@@ -12,6 +12,7 @@ import {
 } from "@/clients/briefing";
 import {
   HERO_DEFAULTS,
+  isStandardStyle,
   resolveLink,
   type BioDocument,
   type Block,
@@ -642,6 +643,85 @@ function BlockEditor({
             </div>
             <p className="text-xs text-muted">A descrição de cada foto vem da aba Imagens.</p>
           </fieldset>
+          <Select
+            label="Como mostrar"
+            value={block.display ?? "panel"}
+            options={[
+              { value: "panel", label: "Painel com as fotos" },
+              { value: "card", label: "Cartão que abre as fotos (ex.: Meus trabalhos, Feedback)" },
+            ]}
+            onChange={(v) => set({ display: v === "panel" ? undefined : v }, "display")}
+          />
+          {block.display === "card" && (
+            <>
+              {!isStandardStyle(doc.theme.cardStyle) && (
+                <p role="note" className="rounded bg-amber-50 p-2 text-sm text-amber-900">
+                  O cartão só aparece nos estilos “Padrão” (Aparência). Nos outros, as fotos ficam
+                  num painel.
+                </p>
+              )}
+              <TextField
+                label="Subtítulo do cartão (opcional)"
+                value={block.subtitle ?? ""}
+                placeholder="Ex.: Fotos com explicação"
+                onChange={(v) => set({ subtitle: v }, "subtitle")}
+                maxLength={90}
+              />
+              <Check
+                label="Mostrar só o nome (sem ícone)"
+                checked={!!block.hideIcon}
+                onChange={(v) => set({ hideIcon: v || undefined }, "hideIcon")}
+              />
+              <fieldset className="grid gap-3">
+                <legend className="text-sm font-medium">Título e legenda de cada foto</legend>
+                {block.images.map((img, i) => {
+                  const a = assets.find((x) => x.id === img.assetId);
+                  const setImage = (patch: Partial<typeof img>, field: string) =>
+                    set(
+                      {
+                        images: block.images.map((x, j) =>
+                          j === i
+                            ? Object.fromEntries(
+                                Object.entries({ ...x, ...patch }).filter(
+                                  ([, v]) => v !== "" && v !== undefined,
+                                ),
+                              )
+                            : x,
+                        ),
+                      },
+                      `images.${i}.${field}`,
+                    );
+                  return (
+                    <div key={`${img.assetId}-${i}`} className="flex gap-3">
+                      {a && (
+                        // eslint-disable-next-line @next/next/no-img-element -- miniatura própria
+                        <img
+                          src={mediaUrl(a.id, a.variants[0])}
+                          alt=""
+                          className="h-16 w-16 flex-none rounded object-cover"
+                        />
+                      )}
+                      <div className="grid flex-1 gap-2">
+                        <TextField
+                          label={`Foto ${i + 1} — título`}
+                          value={img.title ?? ""}
+                          onChange={(v) => setImage({ title: v }, "title")}
+                          maxLength={60}
+                        />
+                        <TextField
+                          label={`Foto ${i + 1} — legenda`}
+                          value={img.caption ?? ""}
+                          multiline
+                          onChange={(v) => setImage({ caption: v }, "caption")}
+                          maxLength={240}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </fieldset>
+            </>
+          )}
           <IconColor icon="photos" value={block.iconColor} set={set} />
         </Section>
       );
@@ -677,6 +757,7 @@ function LinkEditor({
   set: (patch: Record<string, unknown>, field: string) => void;
 }) {
   const resolved = resolveLink(block, doc.contact);
+  const std = isStandardStyle(doc.theme.cardStyle);
   return (
     <Section title="Cartão">
       {!resolved && (
@@ -710,7 +791,7 @@ function LinkEditor({
         label="Subtítulo"
         value={block.subtitle ?? ""}
         placeholder={resolved?.subtitle ? `Automático: ${resolved.subtitle}` : "Opcional"}
-        hint="Vazio = texto automático (ex.: nota do Google, endereço)."
+        hint="Vazio = texto automático (ex.: endereço)."
         onChange={(v) => set({ subtitle: v }, "subtitle")}
         maxLength={90}
       />
@@ -721,23 +802,30 @@ function LinkEditor({
         onChange={(v) => set({ badge: v }, "badge")}
         maxLength={30}
       />
-      <Select
-        label="Destaque"
-        value={!block.featured ? "none" : (block.featureStyle ?? "color")}
-        options={[
-          { value: "none", label: "Sem destaque" },
-          { value: "neon", label: "Neon (vidro preto com luz na cor do ícone)" },
-          { value: "color", label: "Cheio na cor do ícone" },
-        ]}
-        onChange={(v) =>
-          set(
-            v === "none"
-              ? { featured: undefined, featureStyle: undefined }
-              : { featured: true, featureStyle: v === "neon" ? "neon" : undefined },
-            "featured",
-          )
-        }
+      <Check
+        label="Mostrar só o nome (sem ícone)"
+        checked={!!block.hideIcon}
+        onChange={(v) => set({ hideIcon: v || undefined }, "hideIcon")}
       />
+      {!std && (
+        <Select
+          label="Destaque"
+          value={!block.featured ? "none" : (block.featureStyle ?? "color")}
+          options={[
+            { value: "none", label: "Sem destaque" },
+            { value: "neon", label: "Neon (vidro preto com luz na cor do ícone)" },
+            { value: "color", label: "Cheio na cor do ícone" },
+          ]}
+          onChange={(v) =>
+            set(
+              v === "none"
+                ? { featured: undefined, featureStyle: undefined }
+                : { featured: true, featureStyle: v === "neon" ? "neon" : undefined },
+              "featured",
+            )
+          }
+        />
+      )}
       <TextField
         label="Etiqueta no canto (opcional)"
         value={block.tag ?? ""}
@@ -745,14 +833,16 @@ function LinkEditor({
         onChange={(v) => set({ tag: v }, "tag")}
         maxLength={14}
       />
-      <TextField
-        label="Valor à direita (opcional)"
-        value={block.value ?? ""}
-        placeholder="Ex.: 12 mil, 4,9 ★"
-        hint="Aparece no lugar da seta. Ex.: seguidores do Instagram ou a nota do Google."
-        onChange={(v) => set({ value: v }, "value")}
-        maxLength={12}
-      />
+      {!std && (
+        <TextField
+          label="Valor à direita (opcional)"
+          value={block.value ?? ""}
+          placeholder="Ex.: Grátis"
+          hint="Aparece no lugar da seta (não aparece nos estilos “Padrão”)."
+          onChange={(v) => set({ value: v }, "value")}
+          maxLength={12}
+        />
+      )}
       {block.action === "url" && (
         <>
           <TextField
@@ -770,30 +860,37 @@ function LinkEditor({
           />
         </>
       )}
-      <Select
-        label="Cor do cartão"
-        value={block.colors && block.variant === "solid" ? "custom" : block.variant}
-        options={[
-          { value: "solid", label: "Cor do tema" },
-          { value: "custom", label: "Cor própria" },
-          { value: "light", label: "Claro" },
-        ]}
-        onChange={(v) =>
-          set(
-            v === "custom"
-              ? {
-                  variant: "solid",
-                  colors: block.colors ?? {
-                    top: doc.theme.colors.cardTop,
-                    bottom: doc.theme.colors.cardBottom,
-                  },
-                }
-              : { variant: v, colors: undefined },
-            "variant",
-          )
-        }
-      />
-      {block.colors && block.variant === "solid" && (
+      {std ? (
+        <p className="text-xs text-muted">
+          No visual padrão todos os cartões seguem o estilo da Aparência; a cor do ícone (abaixo)
+          tinge o cartão.
+        </p>
+      ) : (
+        <Select
+          label="Cor do cartão"
+          value={block.colors && block.variant === "solid" ? "custom" : block.variant}
+          options={[
+            { value: "solid", label: "Cor do tema" },
+            { value: "custom", label: "Cor própria" },
+            { value: "light", label: "Claro" },
+          ]}
+          onChange={(v) =>
+            set(
+              v === "custom"
+                ? {
+                    variant: "solid",
+                    colors: block.colors ?? {
+                      top: doc.theme.colors.cardTop,
+                      bottom: doc.theme.colors.cardBottom,
+                    },
+                  }
+                : { variant: v, colors: undefined },
+              "variant",
+            )
+          }
+        />
+      )}
+      {!std && block.colors && block.variant === "solid" && (
         <div className="grid gap-2">
           <ColorField
             label="Topo do degradê"
@@ -887,11 +984,21 @@ export function ProfilePanel({
           onChange={(id) => set({ logo: ref(id) }, "logo")}
         />
         <ImagePicker
-          label="Foto de fundo ou da fachada"
+          label="Foto da fachada (ou de fundo)"
           assets={assets}
           value={p.background?.assetId}
           onChange={(id) => set({ background: ref(id) }, "background")}
         />
+        <ImagePicker
+          label="Fundo da página (conforme o ramo)"
+          assets={assets}
+          value={p.pageBackground?.assetId}
+          onChange={(id) => set({ pageBackground: ref(id) }, "pageBackground")}
+        />
+        <p className="-mt-2 text-xs text-muted">
+          Fica parado enquanto a página rola (ex.: céu com arco-íris para parque infantil; preto com
+          dourado para barbearia). Aparece nos estilos “Padrão” da Aparência.
+        </p>
         {p.background && (
           <Select
             label="Como mostrar a foto"
@@ -1285,14 +1392,24 @@ export function LookPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Dispa
           label="Estilo dos cartões"
           value={th.cardStyle ?? "theme"}
           options={[
-            { value: "theme", label: "Cor do tema" },
-            { value: "light", label: "Claros" },
-            { value: "glass", label: "Futurista (vidro escuro)" },
+            { value: "neon", label: "Padrão — Vidro neon" },
+            { value: "tint", label: "Padrão — Cor do ícone" },
+            { value: "dark", label: "Padrão — Escuro" },
+            { value: "theme", label: "Antigo — Cor do tema" },
+            { value: "light", label: "Antigo — Claros" },
+            { value: "glass", label: "Antigo — Futurista" },
           ]}
           onChange={(v) =>
             dispatch({ type: "theme", patch: { cardStyle: v === "theme" ? undefined : v } })
           }
         />
+        {isStandardStyle(th.cardStyle) && (
+          <p className="text-xs text-muted">
+            Todos os cartões iguais, sem destaque. O fundo da página (aba Topo) e a cor do texto dos
+            painéis (abaixo) dão o tom: ela colore as categorias, o contorno do nome e a base dos
+            cartões.
+          </p>
+        )}
         {th.cardStyle === "glass" && (
           <>
             <Select

@@ -3,6 +3,7 @@ import {
   DM_Sans,
   EB_Garamond,
   Fraunces,
+  Fredoka,
   Lora,
   Manrope,
   Playfair_Display,
@@ -10,7 +11,7 @@ import {
 } from "next/font/google";
 import type { FontId } from "@/sites/fonts";
 
-// Auto-hospedadas no build. preload: false porque cada site usa só 1–2 das 8 famílias;
+// Auto-hospedadas no build. preload: false porque cada site usa só 1–2 das 9 famílias;
 // o navegador baixa apenas as que forem de fato usadas.
 // O next/font exige opções literais em cada chamada (sem objetos compartilhados).
 // Toda família nova deve passar por `scripts/font-specimen.mts` (acentos do português).
@@ -57,6 +58,12 @@ const dmSans = DM_Sans({
   preload: false,
   variable: "--f-dm-sans",
 });
+const fredoka = Fredoka({
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+  variable: "--f-fredoka",
+});
 
 const LOADED: Record<FontId, { variable: string; family: string }> = {
   "eb-garamond": { variable: ebGaramond.variable, family: "var(--f-eb-garamond), Georgia, serif" },
@@ -70,6 +77,7 @@ const LOADED: Record<FontId, { variable: string; family: string }> = {
   manrope: { variable: manrope.variable, family: "var(--f-manrope), system-ui, sans-serif" },
   "work-sans": { variable: workSans.variable, family: "var(--f-work-sans), system-ui, sans-serif" },
   "dm-sans": { variable: dmSans.variable, family: "var(--f-dm-sans), system-ui, sans-serif" },
+  fredoka: { variable: fredoka.variable, family: "var(--f-fredoka), system-ui, sans-serif" },
 };
 
 export function loadedFont(id: FontId) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Icon } from "./Icon";
 
 /** Compartilhar: usa o menu nativo do celular; no computador, copia o link. */
@@ -40,6 +40,65 @@ export function CopyButton({ value, label, done }: { value: string; label: strin
       <Icon name="wifi" />
       <span aria-live="polite">{copied ? done : label}</span>
     </button>
+  );
+}
+
+/**
+ * Cartão que abre um painel por cima da página (galeria "Meus trabalhos", "Feedback de clientes").
+ * Na prévia do editor o toque só seleciona o bloco (o painel não abre).
+ */
+export function SheetCard({
+  className,
+  style,
+  track,
+  blockId,
+  title,
+  trigger,
+  children,
+}: {
+  className: string;
+  style?: CSSProperties;
+  track: string;
+  blockId: string;
+  title: string;
+  trigger: ReactNode;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  return (
+    <>
+      <button
+        type="button"
+        className={className}
+        style={style}
+        data-track={track}
+        data-block-id={blockId}
+        aria-haspopup="dialog"
+        onClick={(e) => {
+          if (!e.currentTarget.closest(".bio--embedded")) ref.current?.showModal();
+        }}
+      >
+        {trigger}
+      </button>
+      <dialog
+        ref={ref}
+        className="bio-sheet"
+        aria-labelledby={titleId}
+        onClick={(e) => {
+          // Toque fora do painel (no fundo escurecido) fecha.
+          if (e.target === e.currentTarget) e.currentTarget.close();
+        }}
+      >
+        <div className="bio-sheet-head">
+          <h2 id={titleId}>{title}</h2>
+          <button type="button" aria-label="Fechar" onClick={() => ref.current?.close()}>
+            ×
+          </button>
+        </div>
+        <div className="bio-sheet-body">{children}</div>
+      </dialog>
+    </>
   );
 }
 

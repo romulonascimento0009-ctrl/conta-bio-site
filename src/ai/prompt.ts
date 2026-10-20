@@ -10,7 +10,7 @@ O que um bom Bio Site tem:
 - Slogan curto e concreto que diz o que a empresa faz e para quem (sem clichês como "excelência", "qualidade", "o melhor").
 - Até 6 categorias curtas no topo (no máximo 24 caracteres cada, sem emojis): os serviços ou públicos principais.
 - Cartões com títulos de ação ("Pedir orçamento", "Ver catálogo", "Agendar visita"), subtítulos que dizem o que acontece ao tocar.
-- O cartão principal (o que gera negócio) em destaque, normalmente o de WhatsApp.
+- Todos os cartões têm o mesmo visual (não existe cartão em destaque); o principal, o que gera negócio (normalmente o de WhatsApp), vem bem visível na lista.
 - Uma faixa de avisos com 2 a 4 frases curtas e verdadeiras quando o cadastro der assunto (região atendida, diferencial, garantia).
 - Um texto "Sobre" curto quando o cadastro trouxer serviços ou diferenciais.
 
@@ -53,7 +53,6 @@ function docSummary(doc: BioDocument) {
           subtitulo: b.subtitle ?? "",
           selo: b.badge ?? "",
           etiqueta: b.tag ?? "",
-          destaque: !!b.featured,
           oculto: b.hidden,
           ...(b.url && { link: b.url }),
         };
@@ -98,7 +97,7 @@ export function userPrompt(p: PromptInput): string {
     .join("\n");
   const task =
     p.mode === "generate"
-      ? "Monte o Bio Site completo a partir do cadastro: slogan, categorias, títulos e subtítulos dos cartões, destaque do cartão principal, faixa e um texto curto sobre a empresa, quando houver assunto." +
+      ? "Monte o Bio Site completo a partir do cadastro: slogan, categorias, títulos e subtítulos dos cartões, faixa e um texto curto sobre a empresa, quando houver assunto." +
         (p.hasLogo
           ? " Ajuste as Cor 1, 2 e 3 do topo e a cor das categorias às cores do logo (imagem anexa)."
           : "")

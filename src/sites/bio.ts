@@ -19,7 +19,13 @@ const safeUrl = z.string().trim().max(500).refine(isSafeHref, "link inválido ou
 const text = (max: number) => z.string().trim().min(1).max(max);
 const optText = (max: number) => z.string().trim().max(max).optional();
 
-export const imageRef = z.object({ assetId: z.uuid(), alt: z.string().trim().max(200) });
+export const imageRef = z.object({
+  assetId: z.uuid(),
+  alt: z.string().trim().max(200),
+  /** Título e legenda da foto (só aparecem na galeria em cartão, ex.: "Meus trabalhos"). */
+  title: optText(60),
+  caption: optText(240),
+});
 export type ImageRef = z.infer<typeof imageRef>;
 
 function checkContrast(
@@ -66,8 +72,18 @@ export const veilAlphas = (h: Hero) => [
   Math.min(0.95, (h.veilOpacity / 100) * 1.3),
 ];
 
-export const CARD_STYLES = ["theme", "light", "glass"] as const;
+export const CARD_STYLES = ["theme", "light", "glass", "neon", "tint", "dark"] as const;
 export type CardStyle = (typeof CARD_STYLES)[number];
+/**
+ * Visual padrão (referências do usuário, 2026-10-20 — D41): todos os cartões iguais e sem halo,
+ * fundo do ramo, topo legível sobre qualquer fundo. Três estilos de cartão: vidro neon (ref. 2),
+ * cor do ícone (ref. 3) e escuro (ref. 1).
+ */
+export const STANDARD_CARD_STYLES = ["neon", "tint", "dark"] as const;
+export const isStandardStyle = (s: CardStyle | undefined) =>
+  (STANDARD_CARD_STYLES as readonly (CardStyle | undefined)[]).includes(s);
+/** Base dos cartões do visual padrão: a cor do texto dos painéis puxada para o grafite. */
+export const standardCardBase = (ink: string) => mixHex(ink, "#1b1f2e", 0.5);
 /** Quanto o vidro clareia o fundo (aproximação para conferir o contraste). */
 export const GLASS_TINT = 0.12;
 /** Vidro colorido do futurista: a cor misturada ao grafite (texto branco por cima). */
@@ -100,7 +116,7 @@ export const themeSchema = z
     radius: z.enum(["square", "soft", "pill"]),
     pattern: z.enum(PATTERN_IDS),
     hero: heroSchema.optional(),
-    /** Estilo dos cartões: cor do tema (ausente), claros ou vidro escuro. */
+    /** Estilo dos cartões: cor do tema (ausente), claros, vidro escuro ou um dos padrões (D41). */
     cardStyle: z.enum(CARD_STYLES).optional(),
     /** Futurista: vidro na cor de cada ícone (ausente), preto transparente ou uma cor só. */
     cardTint: z.enum(["icon", "black", "custom"]).optional(),
@@ -132,6 +148,15 @@ export const themeSchema = z
         WHITE,
         glassTop(t.cardTintColor),
         "do texto branco sobre a cor dos cartões",
+      );
+    }
+    if (isStandardStyle(t.cardStyle)) {
+      checkContrast(
+        ctx,
+        ["colors", "ink"],
+        WHITE,
+        standardCardBase(c.ink),
+        "do texto branco sobre os cartões (cor do texto dos painéis)",
       );
     }
     if (t.cardStyle === "glass") {
@@ -215,6 +240,8 @@ export const linkBlock = z
     featured: z.boolean().optional(),
     /** Visual do destaque: cheio na cor do ícone (ausente) ou neon (vidro escuro, luz na cor). */
     featureStyle: z.enum(["color", "neon"]).optional(),
+    /** Só o nome, sem ícone (ex.: "Feedback de clientes"). */
+    hideIcon: z.boolean().optional(),
     /** Etiqueta no canto do cartão (ex.: "Novo"). */
     tag: optText(14),
     /** Valor à direita, no lugar da seta (ex.: "12 mil", "4,9 ★"). */
@@ -277,6 +304,11 @@ export const galleryBlock = z
     type: z.literal("gallery"),
     title: text(40),
     images: z.array(imageRef).min(1).max(12),
+    /** Painel com as fotos (ausente) ou cartão que abre as fotos com legenda ("Meus trabalhos"). */
+    display: z.enum(["panel", "card"]).optional(),
+    /** Só no cartão: texto embaixo do título e opção de mostrar só o nome. */
+    subtitle: optText(90),
+    hideIcon: z.boolean().optional(),
     ...iconColor,
   })
   .superRefine((b, ctx) => checkIconColor(ctx, b.iconColor));
@@ -334,6 +366,8 @@ export const bioDocumentSchema = z
       background: imageRef.optional(),
       /** Como mostrar a foto de fundo: desfocada atrás de tudo (ausente) ou nítida no alto. */
       backgroundMode: z.enum(["blur", "cover"]).optional(),
+      /** Fundo da página conforme o ramo (ex.: céu com arco-íris), parado enquanto a página rola. */
+      pageBackground: imageRef.optional(),
     }),
     contact: contactSchema,
     ticker: tickerSchema,
@@ -359,6 +393,19 @@ export const bioDocumentSchema = z
         "do ícone do botão do WhatsApp",
         MIN_GRAPHIC_CONTRAST,
       );
+    }
+    if (doc.theme.cardStyle === "tint") {
+      // Cor do ícone: o lado esquerdo do cartão leva a cor própria do ícone, misturada ao grafite.
+      doc.blocks.forEach((b, i) => {
+        if (b.type === "link" && b.iconColor && !b.hideIcon)
+          checkContrast(
+            ctx,
+            ["blocks", i, "iconColor"],
+            WHITE,
+            glassTop(b.iconColor),
+            "do texto branco sobre o cartão na cor do ícone",
+          );
+      });
     }
     const seen = new Set<string>();
     doc.blocks.forEach((b, i) => {
@@ -393,24 +440,12 @@ export function collectImageRefs(doc: BioDocument): ImageRef[] {
   const refs: ImageRef[] = [];
   if (doc.profile.logo) refs.push(doc.profile.logo);
   if (doc.profile.background) refs.push(doc.profile.background);
+  if (doc.profile.pageBackground) refs.push(doc.profile.pageBackground);
   for (const b of doc.blocks) if (b.type === "gallery") refs.push(...b.images);
   return refs;
 }
 
 export type ResolvedLink = { href: string; icon: IconId; subtitle?: string; external: boolean };
-
-function formatRating(c: Contact): string | undefined {
-  if (c.googleRating === undefined) return undefined;
-  const nota = c.googleRating.toLocaleString("pt-BR", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  });
-  const total =
-    c.googleReviewCount !== undefined
-      ? ` · ${c.googleReviewCount.toLocaleString("pt-BR")} avaliações`
-      : "";
-  return `${nota} ★${total}`;
-}
 
 /**
  * Monta o destino, o ícone e o subtítulo automático de um cartão a partir dos dados de contato.
@@ -429,7 +464,7 @@ export function resolveLink(block: BlockOf<"link">, c: Contact): ResolvedLink | 
         : null;
     case "google_review":
       return c.googleReviewUrl
-        ? { href: c.googleReviewUrl, icon: "google", subtitle: formatRating(c), external: true }
+        ? { href: c.googleReviewUrl, icon: "google", subtitle: "Sua opinião ajuda", external: true }
         : null;
     case "whatsapp":
       return c.whatsapp

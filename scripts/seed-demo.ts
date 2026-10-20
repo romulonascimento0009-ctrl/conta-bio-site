@@ -51,9 +51,7 @@ const DEMOS: Demo[] = [
     gallery: "Saindo do forno",
     facade: true,
     extra: (d) => {
-      d.contact.googleRating = 4.9;
-      d.contact.googleReviewCount = 312;
-      setLink(d, "google", { value: "4,9 ★", subtitle: "312 avaliações" });
+      d.theme.cardStyle = "tint";
       setLink(d, "cardapio", { tag: "Novo" });
     },
   },
@@ -75,10 +73,6 @@ const DEMOS: Demo[] = [
     },
     ticker: ["Agenda aberta para novembro", "Consultoria de cachos"],
     gallery: "Antes e depois",
-    extra: (d) => {
-      d.contact.googleRating = 5;
-      d.contact.googleReviewCount = 128;
-    },
   },
   {
     slug: "demo-clinica",
@@ -101,8 +95,7 @@ const DEMOS: Demo[] = [
     ticker: ["Aceitamos convênios", "Avaliação inicial", "Estacionamento no local"],
     gallery: "Nosso espaço",
     extra: (d) => {
-      d.contact.googleRating = 4.8;
-      d.contact.googleReviewCount = 96;
+      d.theme.cardStyle = "dark";
       const i = d.blocks.findIndex((b) => b.id === "telefone");
       d.blocks.splice(i, 0, {
         id: "convenios",
@@ -240,6 +233,8 @@ async function main() {
           `${demo.gallery} — foto ${i + 1}`,
         ),
       );
+      images[i].title = `${demo.gallery} — ${i + 1}`;
+      images[i].caption = "Legenda de exemplo: conte o que foi feito nesta foto.";
     }
     const mapsIndex = doc.blocks.findIndex((b) => b.id === "como-chegar");
     doc.blocks.splice(mapsIndex, 0, {
@@ -247,6 +242,8 @@ async function main() {
       type: "gallery",
       hidden: false,
       title: demo.gallery,
+      display: "card",
+      subtitle: "Fotos com explicação",
       images,
     });
     doc.ticker = { enabled: true, items: demo.ticker };

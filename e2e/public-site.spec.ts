@@ -16,12 +16,12 @@ test.describe("Bio Site público", () => {
     await expect(cards.first()).toHaveText("Instagram");
     await expect(cards.nth(1)).toHaveText("Avaliar no Google");
     await expect(cards.last()).toHaveText("Como chegar");
-    // Visual padrão: futurista, WhatsApp (cartão principal) em neon; nota à direita e fachada
+    // Visual padrão (D41): cartões iguais, sem destaque; Google sem nota; fachada no alto
     const google = page.locator('a[data-block-id="google"]');
-    await expect(google.locator(".bio-value")).toHaveText("4,9 ★");
-    await expect(google).toContainText("312 avaliações");
-    await expect(google).toHaveClass(/\bglass\b/);
-    await expect(page.locator('a[data-block-id="whatsapp"]')).toHaveClass(/\bneon\b/);
+    await expect(google).toHaveClass(/\bstd\b/);
+    await expect(google).toContainText("Sua opinião ajuda");
+    await expect(google.locator(".bio-value")).toHaveCount(0);
+    await expect(page.locator(".bio-featured, .bio-card.featured")).toHaveCount(0);
     await expect(page.getByRole("img", { name: "Fachada da Forno da Serra" })).toBeVisible();
 
     const overflow = await page.evaluate(
@@ -82,10 +82,25 @@ test.describe("Bio Site público", () => {
     await page.goto(PADARIA);
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await page.waitForLoadState("networkidle");
+    // Fotos dentro de um painel fechado ("Meus trabalhos") só carregam ao abrir.
     const broken = await page.$$eval("img", (imgs) =>
-      imgs.filter((i) => !(i.complete && i.naturalWidth > 0)).map((i) => i.src),
+      imgs
+        .filter((i) => !i.closest("dialog:not([open])"))
+        .filter((i) => !(i.complete && i.naturalWidth > 0))
+        .map((i) => i.src),
     );
     expect(broken).toEqual([]);
+  });
+
+  test("galeria em cartão abre as fotos com legenda e fecha", async ({ page }) => {
+    await page.goto(PADARIA);
+    await page.getByRole("button", { name: /Saindo do forno/ }).click();
+    const sheet = page.getByRole("dialog", { name: "Saindo do forno" });
+    await expect(sheet).toBeVisible();
+    await expect(sheet.locator("figcaption").first()).toContainText("Saindo do forno — 1");
+    await expect(sheet.locator("img").first()).toHaveJSProperty("complete", true);
+    await sheet.getByRole("button", { name: "Fechar" }).click();
+    await expect(sheet).toBeHidden();
   });
 
   for (const slug of ["/demo-padaria", "/demo-salao", "/demo-clinica"]) {
@@ -116,7 +131,7 @@ test.describe("Bio Site público", () => {
 
   test("mídia: variante inexistente e id inválido respondem 404", async ({ request, page }) => {
     await page.goto(PADARIA);
-    const src = await page.locator(".bio-gallery img").first().getAttribute("src");
+    const src = await page.locator(".bio-shot img").first().getAttribute("src");
     const [, assetId] = /\/media\/([^/]+)\//.exec(src!)!;
     expect((await request.get(`/media/${assetId}/480.webp`)).status()).toBe(200);
     expect((await request.get(`/media/${assetId}/123.webp`)).status()).toBe(404);

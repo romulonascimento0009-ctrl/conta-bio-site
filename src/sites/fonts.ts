@@ -9,6 +9,8 @@ export const FONTS = {
   manrope: { label: "Manrope", category: "sans" },
   "work-sans": { label: "Work Sans", category: "sans" },
   "dm-sans": { label: "DM Sans", category: "sans" },
+  /** Arredondada e alegre (ramos infantis, festas); só para títulos. */
+  fredoka: { label: "Fredoka", category: "sans" },
 } as const;
 
 export type FontId = keyof typeof FONTS;

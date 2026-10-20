@@ -90,13 +90,20 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   expect(consoleErrors.filter((e) => /controlled/.test(e))).toEqual([]);
   await page.getByLabel("Título", { exact: true }).fill("Siga no Instagram");
 
-  // Cor própria do cartão (código digitado) aparece na prévia
-  await page.getByLabel("Cor do cartão").selectOption("custom");
-  await page.getByLabel("Topo do degradê (código)").fill("#7b2cbf");
-  await expect(preview.locator('a[data-block-id="instagram"]')).toHaveAttribute(
-    "style",
-    /--card-top:\s*#7b2cbf/,
-  );
+  // Visual padrão (D41): sem destaque, sem valor à direita e sem cor própria do cartão
+  await expect(page.getByLabel("Destaque", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("Valor à direita (opcional)")).toHaveCount(0);
+  await expect(page.getByLabel("Cor do cartão")).toHaveCount(0);
+  const card = preview.locator('a[data-block-id="instagram"]');
+  await expect(card).toHaveClass(/\bstd\b/);
+
+  // Só o nome (sem ícone) e etiqueta no canto aparecem na prévia
+  await page.getByLabel("Mostrar só o nome (sem ícone)").check();
+  await expect(card).toHaveClass(/\bplain\b/);
+  await expect(card.locator(".bio-ico")).toHaveCount(0);
+  await page.getByLabel("Mostrar só o nome (sem ícone)").uncheck();
+  await page.getByLabel("Etiqueta no canto (opcional)").fill("Novo");
+  await expect(card.locator(".bio-corner")).toHaveText("Novo");
 
   // Cor própria do ícone: cor clara é apontada; cor escura deixa o desenho branco na prévia
   await page.getByLabel("Cor própria do ícone").check();
@@ -109,16 +116,7 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   await expect(icon).toHaveClass(/\bmono\b/);
   await expect(icon).toHaveAttribute("style", /--ico-bottom:\s*#/);
 
-  // Destaque, etiqueta e valor à direita aparecem na prévia
-  await page.getByLabel("Destaque", { exact: true }).selectOption("neon");
-  await page.getByLabel("Etiqueta no canto (opcional)").fill("Novo");
-  await page.getByLabel("Valor à direita (opcional)").fill("12 mil");
-  const card = preview.locator('a[data-block-id="instagram"]');
-  await expect(card).toHaveClass(/\bfeatured\b/);
-  await expect(card).toHaveClass(/\bneon\b/);
-  await expect(card.locator(".bio-corner")).toHaveText("Novo");
-  await expect(card.locator(".bio-value")).toHaveText("12 mil");
-  await page.getByLabel("Destaque", { exact: true }).selectOption("none");
+  await expect(card).toHaveAttribute("style", /--c:\s*#0b6e4f/);
   await page.getByRole("button", { name: /Mover Avaliar no Google para cima/ }).click();
   const order = () =>
     page.getByRole("list", { name: "Blocos na ordem exibida" }).getByRole("listitem").first();
@@ -141,8 +139,13 @@ test("editor visual: editar → salvar → aprovar e publicar → restaurar → 
   await expect(page.getByRole("button", { name: "Salvar rascunho" })).toBeDisabled();
   await page.getByLabel("Usar cores próprias").uncheck();
 
-  // Estilo dos cartões: vidro escuro nos cartões sem cor própria
+  // Estilo dos cartões: os três padrões trocam na prévia; o futurista antigo continua disponível
   await page.getByRole("tab", { name: "Aparência" }).click();
+  await expect(page.getByLabel("Estilo dos cartões")).toHaveValue("neon");
+  for (const style of ["tint", "dark", "neon"]) {
+    await page.getByLabel("Estilo dos cartões").selectOption(style);
+    await expect(preview.locator(".bio")).toHaveClass(new RegExp(`\\bbio--${style}\\b`));
+  }
   await page.getByLabel("Estilo dos cartões").selectOption("glass");
   if (isMobile) await page.getByRole("button", { name: "Prévia", exact: true }).click();
   const google = preview.locator('a[data-block-id="google"]');

@@ -16,11 +16,11 @@ const families = await p.evaluate(async () => {
   for (const fam of fams) {
     const line = document.createElement("div");
     line.style.cssText = `font-family:${fam};font-size:40px;line-height:1.3`;
-    line.textContent = `vocÃª Ã© aÃ§Ã£o pÃ´r nÃ£o Ã‚ngela â€” ${fam.replace(/['"]/g, "")}`;
+    line.textContent = `você é ação pôr não Ângela à Ç õ — ${fam.replace(/['"]/g, "")}`;
     box.append(line);
   }
   document.body.prepend(box);
-  await Promise.all(fams.map((f) => document.fonts.load(`40px ${f}`, "vocÃª Ã©")));
+  await Promise.all(fams.map((f) => document.fonts.load(`40px ${f}`, "você é")));
   await document.fonts.ready;
   return fams;
 });

@@ -32,7 +32,7 @@ test("fluxo completo: cliente → briefing → Bio Site → edição rápida →
 
   // ID de uma imagem de OUTRO cliente (demo), para testar o isolamento.
   await page.goto("/demo-padaria");
-  const demoSrc = await page.locator(".bio-gallery img").first().getAttribute("src");
+  const demoSrc = await page.locator(".bio-shot img").first().getAttribute("src");
   const [, foreignAssetId] = /\/media\/([^/]+)\//.exec(demoSrc!)!;
 
   // Cadastro

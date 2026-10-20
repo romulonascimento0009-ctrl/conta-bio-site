@@ -51,7 +51,7 @@ describe("alterações da IA", () => {
     expect(r.summary).toBe("Resumo.");
     expect(validateBio(r.document).ok).toBe(true);
     expect(r.document.profile.categories).toEqual(["PARQUES", "BUFFETS", "SHOPPINGS", "GARANTIA"]);
-    expect(r.document.theme.cardStyle).toBe("glass");
+    expect(r.document.theme.cardStyle).toBe("neon");
     expect(r.document.ticker).toMatchObject({ enabled: true });
   });
 
@@ -102,11 +102,13 @@ describe("alterações da IA", () => {
     ]);
   });
 
-  it("destaque escolhido pela IA vira neon; não altera contatos", () => {
+  it("não existe destaque (todos os cartões iguais); não altera contatos", () => {
     const before = doc();
-    const r = run([{ type: "update_card", id: "instagram", featured: true }], before);
+    const r = run([{ type: "update_card", id: "instagram", title: "Siga a gente" }], before);
     const insta = r.document.blocks.find((b) => b.id === "instagram") as BlockOf<"link">;
-    expect(insta).toMatchObject({ featured: true, featureStyle: "neon" });
+    expect(insta).toMatchObject({ title: "Siga a gente" });
+    expect(r.document.blocks.some((b) => b.type === "link" && b.featured)).toBe(false);
+    expect(aiEditSchema.shape.edits.element.options.some((o) => "featured" in o.shape)).toBe(false);
     expect(r.document.contact).toEqual(before.contact);
   });
 

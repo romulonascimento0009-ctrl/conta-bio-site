@@ -48,7 +48,6 @@ export const aiEditSchema = z.object({
         subtitle: z.string().optional().describe("Até 90 caracteres; vazio = texto automático."),
         badge: z.string().optional().describe("Selo curto acima do título, até 30 caracteres."),
         tag: z.string().optional().describe("Etiqueta no canto (ex.: Novo), até 14 caracteres."),
-        featured: z.boolean().optional(),
         hidden: z.boolean().optional(),
       }),
       z.object({
@@ -160,10 +159,6 @@ function toOperations(
       for (const k of ["title", "subtitle", "badge", "tag"] as const)
         if (e[k] !== undefined) patch[k] = clean(e[k]);
       if (e.hidden !== undefined) patch.hidden = e.hidden;
-      if (e.featured !== undefined) {
-        patch.featured = e.featured || undefined;
-        patch.featureStyle = e.featured ? "neon" : undefined;
-      }
       return [{ type: "block-update", id: e.id, patch }];
     }
     case "add_card": {

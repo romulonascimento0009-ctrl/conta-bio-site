@@ -117,6 +117,7 @@ describe("applyOperation", () => {
     let d = applyOperation(doc(), {
       type: "theme",
       patch: {
+        cardStyle: "glass",
         cardTint: "custom",
         cardTintColor: "#0b6e4f",
         motion: false,

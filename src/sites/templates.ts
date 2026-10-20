@@ -10,8 +10,8 @@ import {
   BIO_SCHEMA_VERSION,
   type BioDocument,
   type Block,
-  type BlockOf,
   type Contact,
+  isStandardStyle,
 } from "./bio";
 import { THEMES, type ThemeId } from "./themes";
 
@@ -109,20 +109,22 @@ function blocksFor(segment: SegmentId, b: Seed): Block[] {
 }
 
 /**
- * Visual padrão da plataforma (o da demonstração Studio Lia Andrade, D38): estilo futurista e o
- * cartão principal — o primeiro de WhatsApp ou link próprio — em destaque neon, se nenhum
- * cartão já estiver em destaque. Usado nos Bio Sites novos e na migração dos existentes.
+ * Visual padrão da plataforma (referências do usuário, 2026-10-20 — D41): cartões em vidro neon,
+ * todos iguais — sem cartão em destaque, sem valor à direita (seguidores, nota) e sem os ajustes do
+ * futurista antigo. Mantém o estilo se já for um dos padrões (o operador pode ter escolhido outro).
+ * Usado nos Bio Sites novos e pela migração dos existentes (`scripts/apply-standard-look.ts`).
  */
 export function applyStandardLook(doc: BioDocument): BioDocument {
   const next = structuredClone(doc);
-  next.theme.cardStyle = "glass";
-  const links = next.blocks.filter((b) => b.type === "link" && !b.hidden) as BlockOf<"link">[];
-  if (!links.some((b) => b.featured)) {
-    const main = links.find((b) => b.action === "whatsapp" || b.action === "url");
-    if (main) {
-      main.featured = true;
-      main.featureStyle = "neon";
-    }
+  if (!isStandardStyle(next.theme.cardStyle)) next.theme.cardStyle = "neon";
+  delete next.theme.cardTint;
+  delete next.theme.cardTintColor;
+  delete next.theme.motion;
+  for (const b of next.blocks) {
+    if (b.type !== "link") continue;
+    delete b.featured;
+    delete b.featureStyle;
+    delete b.value;
   }
   return next;
 }
