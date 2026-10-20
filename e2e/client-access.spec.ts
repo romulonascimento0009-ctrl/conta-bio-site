@@ -121,6 +121,8 @@ test("convite → cliente edita e publica só o próprio Bio Site; isolamento e 
 
   // Isolamento no servidor: trocar o clientId enviado pelo navegador não grava em outro cliente
   await client.goto("/painel");
+  // A IA é só do operador (gasto controlado pela plataforma)
+  await expect(client.getByRole("tab", { name: "IA", exact: true })).toHaveCount(0);
   await client.getByRole("tab", { name: "Topo" }).click();
   await client.getByLabel("Nome", { exact: true }).fill("Invasão");
   await client.route("**/painel", async (route) => {

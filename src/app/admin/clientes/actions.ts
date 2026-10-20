@@ -7,6 +7,7 @@ import type { FormState } from "@/app/admin/_components/form";
 import { slugify } from "@/clients/slug";
 import { createInvite, EmailTaken, removeMember, revokeInvite } from "@/data/access";
 import { AssetInUse, deleteAsset, updateAssetAlt, uploadAsset } from "@/data/assets";
+import { requestAiEdit, type AiEditResult } from "@/data/ai";
 import { saveBriefing } from "@/data/briefings";
 import { createClient, deleteClient, getClient, SlugTaken, updateClient } from "@/data/clients";
 import { createSiteFromTemplate, publishDraft, saveDraft, saveQuickEdit } from "@/data/sites";
@@ -247,6 +248,19 @@ export async function saveEditorAction(id: string, doc: unknown): Promise<Editor
     return { ok: false, message: "Não salvo: corrija os itens indicados.", issues: result.issues };
   refresh(id);
   return { ok: true, message: "Rascunho salvo." };
+}
+
+/**
+ * IA (só operador): devolve uma proposta sobre o documento do editor, sem salvar. O operador
+ * vê a prévia e decide aplicar no rascunho.
+ */
+export async function aiEditAction(
+  id: string,
+  mode: "generate" | "request",
+  doc: unknown,
+  request: string,
+): Promise<AiEditResult> {
+  return requestAiEdit(id, mode === "generate" ? "generate" : "request", doc, String(request));
 }
 
 export async function restoreVersionAction(

@@ -10,6 +10,12 @@ export const envSchema = z.object({
   STORAGE_DIR: z.preprocess(emptyToUndefined, z.string().default(".data/storage")),
   /** Endereço público da plataforma: Bio Sites em <PUBLIC_URL>/<slug>. */
   PUBLIC_URL: z.preprocess(emptyToUndefined, z.url().default("http://localhost:3000")),
+  /** Chave da API da Claude (Fase 5). Vazia = IA desligada no painel. */
+  ANTHROPIC_API_KEY: z.preprocess(emptyToUndefined, z.string().startsWith("sk-ant-").optional()),
+  /** Teto de gasto com IA por mês (US$), somando todos os clientes. */
+  AI_MONTHLY_BUDGET_USD: z.preprocess(emptyToUndefined, z.coerce.number().positive().default(10)),
+  /** "1" = respostas simuladas da IA, sem chamar a API (testes E2E). Proibido em produção. */
+  AI_FAKE: z.preprocess(emptyToUndefined, z.enum(["1"]).optional()),
 });
 
 export type Env = z.infer<typeof envSchema>;

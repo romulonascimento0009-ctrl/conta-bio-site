@@ -175,3 +175,27 @@ export const siteEvents = pgTable(
   },
   (t) => [index("site_events_client_created_idx").on(t.clientId, t.createdAt)],
 );
+
+/**
+ * Uso da IA (Fase 5): um registro por chamada, com tokens e custo. Soma do mês = teto de gasto.
+ * `client_id` vira nulo se o cliente for excluído (o gasto do mês continua contando).
+ */
+export const aiUsage = pgTable(
+  "ai_usage",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id").references(() => clients.id, { onDelete: "set null" }),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    /** generate = montar a partir do cadastro; request = pedido em linguagem natural. */
+    kind: text("kind", { enum: ["generate", "request"] }).notNull(),
+    model: text("model").notNull(),
+    inputTokens: integer("input_tokens").notNull(),
+    outputTokens: integer("output_tokens").notNull(),
+    cacheReadTokens: integer("cache_read_tokens").notNull().default(0),
+    cacheWriteTokens: integer("cache_write_tokens").notNull().default(0),
+    /** Custo em milionésimos de dólar (US$ 1 = 1.000.000). */
+    costMicros: integer("cost_micros").notNull(),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [index("ai_usage_created_idx").on(t.createdAt)],
+);

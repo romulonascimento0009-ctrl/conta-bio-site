@@ -17,6 +17,9 @@ const e2eEnv = {
   PUBLIC_URL: baseURL,
   ADMIN_EMAIL: E2E_ADMIN.email,
   ADMIN_PASSWORD: E2E_ADMIN.password,
+  // IA simulada: os testes nunca chamam a API da Claude (nem com chave no .env.local).
+  AI_FAKE: "1",
+  ANTHROPIC_API_KEY: "",
 };
 
 export default defineConfig({

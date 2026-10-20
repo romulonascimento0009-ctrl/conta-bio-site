@@ -19,6 +19,7 @@ export const AUDIT_ACTIONS = {
   "invite.revoke": "Convite cancelado",
   "invite.accept": "Convite aceito",
   "member.remove": "Acesso removido",
+  "ai.request": "Pedido à IA (prévia)",
 } as const;
 export type AuditAction = keyof typeof AUDIT_ACTIONS;
 

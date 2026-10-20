@@ -33,7 +33,9 @@ export type Operation =
   /** Ajustes do topo; `reset` volta ao visual padrão. */
   | { type: "hero"; patch: Partial<Hero> }
   | { type: "hero-reset" }
-  | { type: "meta"; patch: Partial<BioDocument["meta"]> };
+  | { type: "meta"; patch: Partial<BioDocument["meta"]> }
+  /** Documento inteiro (proposta da IA aplicada, reordenação): entra no desfazer como um passo. */
+  | { type: "replace"; document: BioDocument };
 
 /** Remove chaves com `undefined` ou string vazia (campos opcionais "apagados" no editor). */
 function compact<T extends object>(obj: T): T {
@@ -124,6 +126,8 @@ export function applyOperation(doc: BioDocument, op: Operation): BioDocument {
     case "meta":
       next.meta = { ...next.meta, ...op.patch };
       break;
+    case "replace":
+      return structuredClone(op.document);
   }
   return next;
 }
@@ -260,4 +264,4 @@ export function issueLocation(
   return { tab: "look", label: "Aparência" };
 }
 
-export type EditorTab = "blocks" | "profile" | "contact" | "ticker" | "look";
+export type EditorTab = "blocks" | "profile" | "contact" | "ticker" | "look" | "ai";

@@ -25,6 +25,7 @@ import {
 } from "@/sites/operations";
 import { BioRenderer } from "@/sites/render/BioRenderer";
 import { saveEditorAction } from "../../actions";
+import { AiPanel, type AiInfo, type AiProposal } from "./ai-panel";
 import { BlocksPanel, ContactPanel, LookPanel, ProfilePanel, TickerPanel } from "./panels";
 
 export type EditorAsset = AssetInfo & { alt: string; name: string };
@@ -54,12 +55,15 @@ export function Editor({
   assets,
   pending,
   publishedUrl,
+  ai,
 }: {
   clientId: string;
   initial: BioDocument;
   assets: EditorAsset[];
   pending: boolean;
   publishedUrl?: string;
+  /** Só para o operador: a aba IA. */
+  ai?: AiInfo;
 }) {
   const [history, send] = useReducer(reducer, initial, historyInit);
   const doc = history.present;
@@ -70,6 +74,8 @@ export function Editor({
   const [saving, startSaving] = useTransition();
   const [saveMessage, setSaveMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const [proposal, setProposal] = useState<AiProposal | null>(null);
+  const tabs = ai ? [...TABS, { id: "ai" as const, label: "IA" }] : TABS;
 
   const dispatch: Dispatch = useCallback((op, key) => send({ type: "apply", op, key }), []);
   const assetMap = useMemo(
@@ -248,7 +254,12 @@ export function Editor({
               className="editor-preview h-full overflow-y-auto"
               onClickCapture={onPreviewClick}
             >
-              <BioRenderer doc={doc} assets={assetMap} embedded />
+              {proposal && (
+                <p className="sticky top-0 z-30 bg-accent px-3 py-1.5 text-center text-xs font-semibold text-white">
+                  Prévia da proposta da IA (ainda não aplicada)
+                </p>
+              )}
+              <BioRenderer doc={proposal?.document ?? doc} assets={assetMap} embedded />
             </div>
           </div>
           <p className="mt-2 text-center text-xs text-muted">
@@ -266,7 +277,7 @@ export function Editor({
             aria-label="Partes do Bio Site"
             className="flex gap-1 overflow-x-auto border-b border-border"
           >
-            {TABS.map((t) => (
+            {tabs.map((t) => (
               <button
                 key={t.id}
                 type="button"
@@ -295,6 +306,19 @@ export function Editor({
             {tab === "contact" && <ContactPanel doc={doc} dispatch={dispatch} />}
             {tab === "ticker" && <TickerPanel doc={doc} dispatch={dispatch} />}
             {tab === "look" && <LookPanel doc={doc} dispatch={dispatch} />}
+            {tab === "ai" && ai && (
+              <AiPanel
+                clientId={clientId}
+                doc={doc}
+                info={ai}
+                proposal={proposal}
+                onProposal={setProposal}
+                onApply={() => {
+                  if (proposal) dispatch({ type: "replace", document: proposal.document });
+                  setProposal(null);
+                }}
+              />
+            )}
           </div>
 
           <div className="mt-8 grid gap-2">

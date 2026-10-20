@@ -1,6 +1,6 @@
 # Estado atual
 
-Atualizado: 2026-10-19 · **Fase 4 concluída** · ajustes visuais D38 entregues (partes 1 e 2) · Fase 5 (IA) aguarda aprovação.
+Atualizado: 2026-10-19 · **Fase 5 (IA) em andamento** — primeira entrega pronta e testada, **não commitada**; parada à espera da chave da API. Retomar por "Próximo passo" abaixo.
 
 ## Pronto e verificado
 
@@ -20,6 +20,7 @@ Atualizado: 2026-10-19 · **Fase 4 concluída** · ajustes visuais D38 entregues
 - **Futurista e correção (2026-10-19):** estilo Futurista (padrão dos novos), destaque Neon ou Cheio. Corrigido o aviso "A component is changing a controlled input to be uncontrolled" ao apagar um campo obrigatório no editor (E2E cobre). 149 unitários e 47 E2E ✔. Commitado.
 - **Visual padrão único (2026-10-19):** todos os Bio Sites no visual Studio Lia Andrade (futurista + cartão principal em neon): novos já nascem assim; rascunhos existentes ajustados por `scripts/apply-standard-look.ts` (só o Park Vision mudou; **o publicado dele só muda quando publicar**). Demos recriadas no padrão. 151 unitários e 47 E2E ✔.
 - **Futurista com vida (2026-10-19):** cartões no vidro da cor de cada ícone (ou preto, ou uma cor só) e fundo em movimento nas cores do topo (Cor 1–3), ambos padrão; a luz do destaque não cobre mais o cartão vizinho (visto no Park Vision). Seguidores do Instagram tirados das demos. 153 unitários e 47 E2E ✔. **Park Vision é o modelo oficial** para conferir toda alteração (`scripts/preview-screenshot.mts`).
+- **Fase 5 — IA (D39, 2026-10-19), primeira entrega:** aba IA no editor (só operador): montar a partir do cadastro e pedidos em linguagem natural, com prévia, aplicar/descartar, alterações inválidas barradas com motivo, custo registrado e teto mensal (US$ 10). 161 unitários e 49 E2E ✔ · build ✔. Migração `0004_ai_usage` aplicada no banco local. **Falta a chave da API** (`ANTHROPIC_API_KEY` no `.env.local`) para o primeiro uso real — no Park Vision. **Ainda não commitado** (aguarda aprovação do usuário).
 
 ## Ambiente
 
@@ -42,4 +43,7 @@ Atualizado: 2026-10-19 · **Fase 4 concluída** · ajustes visuais D38 entregues
 
 ## Próximo passo
 
-Fase 5 — IA (`ROADMAP.md`): briefing → Bio Site inicial, textos, direção visual, pedidos em linguagem natural com prévia, custo registrado e teto. Requer P7 (conta e chave da API da Claude).
+0. Perguntar ao usuário se pode commitar a Fase 5 (arquivos novos: `src/ai/`, `src/data/ai.ts`, `ai-panel.tsx`, `e2e/ai.spec.ts`, migração `0004_ai_usage`; alterados: editor, env, playwright, docs). Antes, `npm run check` e `npm run test:e2e` (passavam: 161 / 49).
+1. Usuário coloca `ANTHROPIC_API_KEY` no `.env.local` e reinicia o servidor.
+2. Primeiro uso real no **Park Vision** (modelo oficial): "Montar com IA", conferir a prévia, ajustar o prompt conforme o resultado; medir o custo real por montagem.
+3. Depois: os pedidos pendentes do usuário (vídeo curto, portfólio de serviços no orçamento) e a Fase 6 (produção).
