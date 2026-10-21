@@ -52,3 +52,13 @@ export function withScheme(input: string): string {
 }
 
 export const INSTAGRAM_HANDLE = /^[A-Za-z0-9._]{1,30}$/;
+
+/** Texto que é um link (ex.: colado no subtítulo por engano): nunca é mostrado como texto no cartão. */
+export function looksLikeLink(text: string): boolean {
+  return /^(https?:\/\/|www\.)\S+$/i.test(text.trim());
+}
+
+/** Subtítulo exibido no cartão: o escrito pelo usuário, ou o automático se ele estiver vazio ou for um link. */
+export function cardSubtitle(own: string | undefined, auto?: string): string | undefined {
+  return own && !looksLikeLink(own) ? own : auto;
+}

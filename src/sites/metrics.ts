@@ -71,6 +71,7 @@ export const TARGET_LABEL: Record<string, string> = {
   "social:tiktok": "Rodapé: TikTok",
   "social:youtube": "Rodapé: YouTube",
   "social:phone": "Rodapé: Telefone",
+  "social:whatsapp": "Rodapé: WhatsApp",
   "social:email": "Rodapé: E-mail",
   "social:google": "Rodapé: Google",
 };
@@ -85,7 +86,16 @@ export function trackTargets(doc: BioDocument): Map<string, { target: string; la
     if (b.type !== "link" || b.hidden || !resolveLink(b, doc.contact)) continue;
     map.set(`b:${b.id}`, { target: b.action, label: b.title });
   }
-  for (const icon of ["instagram", "google", "facebook", "tiktok", "youtube", "phone", "email"]) {
+  for (const icon of [
+    "instagram",
+    "google",
+    "facebook",
+    "tiktok",
+    "youtube",
+    "phone",
+    "whatsapp",
+    "email",
+  ]) {
     map.set(`s:${icon}`, { target: `social:${icon}`, label: TARGET_LABEL[`social:${icon}`] });
   }
   if (doc.floatingWhatsapp && doc.contact.whatsapp) {

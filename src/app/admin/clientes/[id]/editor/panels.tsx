@@ -24,6 +24,7 @@ import { FONT_IDS, FONTS } from "@/sites/fonts";
 import { customIconStart, ICON_IDS, ICONS, type IconId, type SectionIconId } from "@/sites/icons";
 import { NEW_BLOCK_TYPES, newBlock, type NewBlockType } from "@/sites/operations";
 import { PATTERN_IDS, PATTERNS } from "@/sites/patterns";
+import { looksLikeLink } from "@/sites/links";
 import { mediaUrl } from "@/sites/render/media";
 import { THEME_IDS, THEMES } from "@/sites/themes";
 import type { Dispatch, EditorAsset } from "./editor";
@@ -795,6 +796,12 @@ function LinkEditor({
         onChange={(v) => set({ subtitle: v }, "subtitle")}
         maxLength={90}
       />
+      {looksLikeLink(block.subtitle ?? "") && (
+        <p role="note" className="rounded bg-amber-50 p-2 text-sm text-amber-900">
+          Links não aparecem escritos no cartão; ali fica o texto automático. Quem tocar vai para o
+          link informado em Contato.
+        </p>
+      )}
       <TextField
         label="Selo (opcional)"
         value={block.badge ?? ""}

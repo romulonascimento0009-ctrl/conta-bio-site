@@ -28,7 +28,7 @@ import {
   ICONS,
   SECTION_ICONS,
 } from "./icons";
-import { isSafeHref } from "./links";
+import { cardSubtitle, isSafeHref } from "./links";
 import { applyQuickEdit, quickEditSchema, quickValuesFrom } from "./quick-edit";
 import { applyStandardLook, createBioDocument } from "./templates";
 import { THEME_IDS, THEMES } from "./themes";
@@ -288,6 +288,15 @@ describe("links colados", () => {
     expect(urlField.parse("https://g.page/r/abc")).toBe("https://g.page/r/abc");
     expect(urlField.safeParse("javascript:alert(1)").success).toBe(false);
     expect(urlField.safeParse("meu site").success).toBe(false);
+  });
+
+  it("link colado no subtítulo do cartão não aparece: vale o texto automático", () => {
+    const auto = "Sua opinião ajuda";
+    expect(cardSubtitle("https://search.google.com/local/writereview?placeid=X", auto)).toBe(auto);
+    expect(cardSubtitle("www.instagram.com/_parkvision/", auto)).toBe(auto);
+    expect(cardSubtitle(" https://x.com/a ")).toBeUndefined();
+    expect(cardSubtitle("Leva 1 minuto", auto)).toBe("Leva 1 minuto");
+    expect(cardSubtitle("", auto)).toBe(auto);
   });
 });
 

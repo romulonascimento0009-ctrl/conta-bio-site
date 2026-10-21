@@ -22,7 +22,7 @@ import {
   type IconId,
   type SectionIconId,
 } from "@/sites/icons";
-import { whatsappHref } from "@/sites/links";
+import { cardSubtitle, whatsappHref } from "@/sites/links";
 import { mixHex, rgbaCss } from "@/sites/color";
 import { PATTERNS } from "@/sites/patterns";
 import "./bio.css";
@@ -160,13 +160,13 @@ function LinkCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"link"> }) {
             tag={block.tag}
             badge={block.badge}
             title={block.title}
-            subtitle={block.subtitle || resolved.subtitle}
+            subtitle={cardSubtitle(block.subtitle, resolved.subtitle)}
           />
         </a>
       </li>
     );
   }
-  const subtitle = block.subtitle || resolved.subtitle;
+  const subtitle = cardSubtitle(block.subtitle, resolved.subtitle);
   // Cor própria do cartão ou destaque mantêm o degradê em qualquer estilo; os demais seguem o
   // estilo escolhido na Aparência (cor do tema, claros, vidro).
   const own = block.variant === "solid" ? block.colors : undefined;
@@ -261,7 +261,7 @@ function GalleryCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"gallery"> }) {
             iconColor={block.iconColor}
             hideIcon={block.hideIcon}
             title={block.title}
-            subtitle={block.subtitle}
+            subtitle={cardSubtitle(block.subtitle)}
           />
         }
       >
@@ -517,7 +517,14 @@ export function BioRenderer({
   if (c.tiktok)
     social.push({ icon: "tiktok", href: `https://www.tiktok.com/@${c.tiktok}`, label: "TikTok" });
   if (c.youtubeUrl) social.push({ icon: "youtube", href: c.youtubeUrl, label: "YouTube" });
-  if (c.phone) social.push({ icon: "phone", href: `tel:${c.phone}`, label: "Telefone" });
+  // Mesmo número do WhatsApp: o ícone abre o WhatsApp com a mensagem pronta (o número não aparece).
+  if (c.phone && c.phone === c.whatsapp)
+    social.push({
+      icon: "whatsapp",
+      href: whatsappHref(c.whatsapp, c.whatsappMessage),
+      label: "WhatsApp",
+    });
+  else if (c.phone) social.push({ icon: "phone", href: `tel:${c.phone}`, label: "Telefone" });
   if (c.email) social.push({ icon: "email", href: `mailto:${c.email}`, label: "E-mail" });
 
   const tickerOn = doc.ticker.enabled && doc.ticker.items.length > 0;
