@@ -23,7 +23,9 @@ export function LoginForm() {
       setError(
         error.status === 429
           ? "Muitas tentativas. Aguarde um minuto e tente de novo."
-          : "E-mail ou senha incorretos.",
+          : error.status === 401
+            ? "E-mail ou senha incorretos."
+            : `Não foi possível entrar agora (erro ${error.status}). Tente de novo.`,
       );
       return;
     }
