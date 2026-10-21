@@ -19,6 +19,7 @@ playwright/.cache/
 .env
 .env.*
 !.env.example
+!.env.neon.example
 
 # dados locais (ancorado na raiz para não ignorar src/lib/storage)
 /.data/

@@ -11,6 +11,7 @@ Fases 0, 1, 2, 2B (Bio Sites), 3 (editor visual e versões) e 4 (acesso de clien
 ## Documentação (ler só o necessário para a tarefa)
 
 - `docs/STATE.md` — onde paramos, pendências, próximo passo. Ler sempre ao retomar.
+- `docs/PLAYBOOK.md` — **modelo piloto**: cliente novo do pedido ao ar e montagem da produção (Netlify + Neon), com armadilhas já vistas. Seguir em todo cliente novo.
 - `docs/PROJECT.md` — visão, escopo e requisitos.
 - `docs/ARCHITECTURE.md` — arquitetura e modelo de dados.
 - `docs/DECISIONS.md` — decisões tomadas e pendentes, com alternativas.
