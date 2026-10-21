@@ -47,7 +47,7 @@ Atualizado: 2026-10-21 · **Park Vision publicado no visual D41** (local). Próx
 
 ## Próximo passo
 
-0. **Fase 6 (produção)** para o Park Vision funcionar na internet: exige aprovação da fase e o domínio (P6). Ainda faltam do usuário: prints do Feedback e endereço do Park Vision. Para novos clientes: pedir a referência do fundo do ramo antes de montar.
+0. **Fase 6 (produção) aprovada em 2026-10-21, D42: Netlify + Neon grátis.** Passo 1: usuário cria as contas (sem cartão); passo 2: teste com as demos (Next 16, envio de fotos com sharp, painel); depois Blobs, backup diário, 2FA e CSP, migração do Park Vision. Ainda faltam do usuário: prints do Feedback e endereço do Park Vision. Para novos clientes: pedir a referência do fundo do ramo antes de montar.
 1. Usuário coloca `ANTHROPIC_API_KEY` no `.env.local` e reinicia o servidor.
 2. Primeiro uso real no **Park Vision** (modelo oficial): "Montar com IA", conferir a prévia, ajustar o prompt conforme o resultado; medir o custo real por montagem.
 3. Depois: os pedidos pendentes do usuário (vídeo curto, portfólio de serviços no orçamento) e a Fase 6 (produção).
