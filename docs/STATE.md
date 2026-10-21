@@ -1,6 +1,6 @@
 # Estado atual
 
-Atualizado: 2026-10-20 · **Visual padrão D41 feito e commitado (`0454a15`)**; Fase 5 (IA) parada à espera da chave da API. Retomar por "Próximo passo" abaixo.
+Atualizado: 2026-10-21 · **Park Vision publicado no visual D41** (local). Próximo: Fase 6 (produção), aguardando aprovação e o domínio.
 
 ## Pronto e verificado
 
@@ -24,6 +24,7 @@ Atualizado: 2026-10-20 · **Visual padrão D41 feito e commitado (`0454a15`)**; 
 - **Park Vision publicado no visual padrão (2026-10-20)**, autorizado pelo usuário; conferido em `/park-vision`. Categorias corrigidas no cadastro e no Bio Site (estavam separadas por ponto e com emojis, uma delas era cortada em 24 letras) e republicado. Visual padrão é grátis (não depende da IA): novos já nascem nele.
 
 - **Visual padrão D41 (2026-10-20):** D40 descartado e revertido. Novo fluxo: **referência do usuário → protótipo → ajustes → sistema**. Protótipo aprovado ("perfeito demais"): `prototipos/bio-site-park-vision.html`. No sistema: três estilos de cartão padrão (Vidro neon — padrão; Cor do ícone; Escuro), todos iguais e sem halo; fundo da página por cliente (Topo → "Fundo da página"); cartão só com o nome; galeria em cartão com título e legenda por foto ("Meus trabalhos", "Feedback de clientes"); sem nota do Google e sem seguidores; fonte Fredoka. Rascunhos de todos os Bio Sites migrados; demos recriadas (padaria: cor do ícone; salão: vidro neon; clínica: escuro). **Park Vision (rascunho):** fundo arco-íris enviado como imagem do cliente, vidro neon, Fredoka no nome, "Meus trabalhos" com legendas **provisórias** (o usuário deve revisar), quadro "Sobre" com os dados do cadastro. Conferido lado a lado com o protótipo numa cópia temporária publicada (já apagada). **O publicado do Park Vision só muda quando publicar.** Faltam dados do usuário: **prints do Feedback** (criar galeria "Feedback de clientes" em cartão, só o nome) e **endereço** em Contato (o cartão "Como chegar" não aparece sem ele). Verificação: `npm run check` ✔ (165) · `npm run test:e2e` 51/51 ✔ · build ✔. Lighthouse não refeito. Commitado em `0454a15`.
+- **Park Vision publicado (2026-10-21)** pelo usuário, no painel, após testar a prévia. Ajustes pedidos antes: link colado no subtítulo nunca aparece no cartão (vale o texto automático; aviso no editor); ícone de telefone do rodapé vira WhatsApp quando é o mesmo número (o número não aparece); mensagem do WhatsApp: "Oi, vim pelo Bio Site, gostaria de solicitar um orçamento." Conferido em `/park-vision`: destinos certos, sem link nem número escritos. 166 unitários ✔ · commit `c100b6f`. No texto "Sobre": "Norde e Nordeste" (provável "Norte e Nordeste") — confirmar com o usuário.
 
 ## Ambiente
 
@@ -46,7 +47,7 @@ Atualizado: 2026-10-20 · **Visual padrão D41 feito e commitado (`0454a15`)**; 
 
 ## Próximo passo
 
-0. Usuário revisa a prévia do Park Vision (legendas, fundo), envia os prints de feedback e o endereço; publicar quando aprovar. Para novos clientes: pedir a referência do fundo do ramo antes de montar.
+0. **Fase 6 (produção)** para o Park Vision funcionar na internet: exige aprovação da fase e o domínio (P6). Ainda faltam do usuário: prints do Feedback e endereço do Park Vision. Para novos clientes: pedir a referência do fundo do ramo antes de montar.
 1. Usuário coloca `ANTHROPIC_API_KEY` no `.env.local` e reinicia o servidor.
 2. Primeiro uso real no **Park Vision** (modelo oficial): "Montar com IA", conferir a prévia, ajustar o prompt conforme o resultado; medir o custo real por montagem.
 3. Depois: os pedidos pendentes do usuário (vídeo curto, portfólio de serviços no orçamento) e a Fase 6 (produção).
