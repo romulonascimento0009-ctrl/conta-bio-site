@@ -13,6 +13,9 @@ export const envSchema = z.object({
     emptyToUndefined,
     z.enum(["local", "netlify-blobs"]).default("local"),
   ),
+  /** Só fora da Netlify (scripts locais gravando no Blobs): ID do projeto e token pessoal. */
+  NETLIFY_SITE_ID: z.preprocess(emptyToUndefined, z.string().optional()),
+  NETLIFY_API_TOKEN: z.preprocess(emptyToUndefined, z.string().optional()),
   /** Endereço público da plataforma: Bio Sites em <PUBLIC_URL>/<slug>. */
   PUBLIC_URL: z.preprocess(emptyToUndefined, z.url().default("http://localhost:3000")),
   /** Chave da API da Claude (Fase 5). Vazia = IA desligada no painel. */

@@ -79,8 +79,14 @@ export function createBlobStorage(options?: { siteID: string; token: string }): 
 let instance: Storage | undefined;
 
 export function storage(): Storage {
-  const { STORAGE_DRIVER, STORAGE_DIR } = env();
+  const { STORAGE_DRIVER, STORAGE_DIR, NETLIFY_SITE_ID, NETLIFY_API_TOKEN } = env();
+  const remote =
+    NETLIFY_SITE_ID && NETLIFY_API_TOKEN
+      ? { siteID: NETLIFY_SITE_ID, token: NETLIFY_API_TOKEN }
+      : undefined;
   instance ??=
-    STORAGE_DRIVER === "netlify-blobs" ? createBlobStorage() : createLocalStorage(STORAGE_DIR);
+    STORAGE_DRIVER === "netlify-blobs"
+      ? createBlobStorage(remote)
+      : createLocalStorage(STORAGE_DIR);
   return instance;
 }
