@@ -31,7 +31,8 @@ export async function callClaude(
     return fakeCall(userText);
   }
   if (!e.ANTHROPIC_API_KEY) throw new AiUnavailable("IA não configurada (ANTHROPIC_API_KEY).");
-  client ??= new Anthropic({ apiKey: e.ANTHROPIC_API_KEY });
+  // Endereço fixo: ignora o ANTHROPIC_BASE_URL que a Netlify injeta (AI Gateway, cobrado em créditos).
+  client ??= new Anthropic({ apiKey: e.ANTHROPIC_API_KEY, baseURL: "https://api.anthropic.com" });
 
   let response;
   try {

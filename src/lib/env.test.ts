@@ -18,6 +18,15 @@ describe("envSchema", () => {
     expect(envSchema.safeParse({ ...valid, BETTER_AUTH_SECRET: "curto" }).success).toBe(false);
   });
 
+  it("chave da IA em outro formato (ex.: injetada pela Netlify) desliga a IA sem derrubar o site", () => {
+    expect(
+      envSchema.parse({ ...valid, ANTHROPIC_API_KEY: "nf-gateway-123" }).ANTHROPIC_API_KEY,
+    ).toBeUndefined();
+    expect(envSchema.parse({ ...valid, ANTHROPIC_API_KEY: "sk-ant-abc" }).ANTHROPIC_API_KEY).toBe(
+      "sk-ant-abc",
+    );
+  });
+
   it("rejeita URL inválida", () => {
     expect(envSchema.safeParse({ ...valid, BETTER_AUTH_URL: "localhost" }).success).toBe(false);
   });
