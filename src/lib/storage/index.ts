@@ -1,11 +1,12 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { getStore } from "@netlify/blobs";
 import path from "node:path";
 import { env } from "@/lib/env";
 import { assertSafeKey } from "./keys";
 
 export { clientKey } from "./keys";
 
-/** Armazenamento de arquivos. Implementação local agora; R2/S3 quando houver conta (DECISIONS P3). */
+/** Armazenamento de arquivos: pasta local (desenvolvimento) ou Netlify Blobs (produção, D42). */
 export interface Storage {
   put(key: string, data: Uint8Array): Promise<void>;
   /** Retorna `null` se a chave não existir. */
@@ -49,9 +50,37 @@ export function createLocalStorage(rootDir: string): Storage {
   };
 }
 
+/** Netlify Blobs: dentro da Netlify o acesso vem do ambiente; fora dela, de `siteID` + `token`. */
+export function createBlobStorage(options?: { siteID: string; token: string }): Storage {
+  // "strong": a foto recém-enviada já aparece na próxima leitura (o editor mostra na hora).
+  const store = getStore({ name: "files", consistency: "strong", ...options });
+  return {
+    async put(key, data) {
+      assertSafeKey(key);
+      await store.set(key, new Blob([new Uint8Array(data)]));
+    },
+    async get(key) {
+      assertSafeKey(key);
+      const data = (await store.get(key, { type: "arrayBuffer" })) as ArrayBuffer | null;
+      return data ? new Uint8Array(data) : null;
+    },
+    async delete(key) {
+      assertSafeKey(key);
+      await store.delete(key);
+    },
+    async deletePrefix(prefix) {
+      assertSafeKey(prefix);
+      for await (const page of store.list({ prefix: `${prefix}/`, paginate: true }))
+        for (const blob of page.blobs) await store.delete(blob.key);
+    },
+  };
+}
+
 let instance: Storage | undefined;
 
 export function storage(): Storage {
-  instance ??= createLocalStorage(env().STORAGE_DIR);
+  const { STORAGE_DRIVER, STORAGE_DIR } = env();
+  instance ??=
+    STORAGE_DRIVER === "netlify-blobs" ? createBlobStorage() : createLocalStorage(STORAGE_DIR);
   return instance;
 }

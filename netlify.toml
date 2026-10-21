@@ -1,0 +1,8 @@
+# Netlify (D42). O adaptador de Next.js é detectado automaticamente.
+# Variáveis de ambiente (DATABASE_URL, BETTER_AUTH_*, PUBLIC_URL, STORAGE_DRIVER) ficam no painel da Netlify.
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "24.21.0"

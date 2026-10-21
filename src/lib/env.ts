@@ -8,6 +8,11 @@ export const envSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32, "BETTER_AUTH_SECRET precisa de pelo menos 32 caracteres"),
   BETTER_AUTH_URL: z.url(),
   STORAGE_DIR: z.preprocess(emptyToUndefined, z.string().default(".data/storage")),
+  /** Onde ficam os arquivos: pasta local (desenvolvimento) ou Netlify Blobs (produção, D42). */
+  STORAGE_DRIVER: z.preprocess(
+    emptyToUndefined,
+    z.enum(["local", "netlify-blobs"]).default("local"),
+  ),
   /** Endereço público da plataforma: Bio Sites em <PUBLIC_URL>/<slug>. */
   PUBLIC_URL: z.preprocess(emptyToUndefined, z.url().default("http://localhost:3000")),
   /** Chave da API da Claude (Fase 5). Vazia = IA desligada no painel. */

@@ -28,6 +28,10 @@ export const auth = betterAuth({
       "/sign-in/email": { window: 60, max: 5 },
     },
   },
+  advanced: {
+    // D42: na Netlify o IP real vem em `x-nf-client-connection-ip` (o visitante não o altera).
+    ipAddress: { ipAddressHeaders: ["x-nf-client-connection-ip", "x-forwarded-for"] },
+  },
   plugins: [nextCookies()], // deve ser o último plugin
 });
 
