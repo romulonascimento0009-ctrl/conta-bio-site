@@ -1459,6 +1459,21 @@ function StandardDetails({ doc, dispatch }: { doc: BioDocument; dispatch: Dispat
         checked={!!th.shine}
         onChange={(on) => theme({ shine: on || undefined })}
       />
+      <Select
+        label="Efeitos do fundo"
+        value={th.effects ?? "none"}
+        options={[
+          { value: "none", label: "Nenhum" },
+          { value: "electric", label: "Elétrico (raios, neon, engrenagens, faíscas)" },
+        ]}
+        onChange={(v) => theme({ effects: v === "none" ? undefined : v })}
+      />
+      {th.effects === "electric" && (
+        <p className="text-xs text-muted">
+          As luzes usam as cores da borda neon (acima). Com o logo sem moldura, ganha um anel de luz
+          girando. Ficam parados para quem desligou as animações no celular.
+        </p>
+      )}
     </div>
   );
 }

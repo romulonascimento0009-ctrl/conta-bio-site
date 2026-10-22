@@ -30,6 +30,7 @@ import { mixHex, rgbaCss } from "@/sites/color";
 import { PATTERNS } from "@/sites/patterns";
 import "./bio.css";
 import { CopyButton, SheetCard, ShareButton, Tracker } from "./client-buttons";
+import { ElectricFx } from "./ElectricFx";
 import { loadedFont } from "./fonts";
 import { Icon } from "./Icon";
 import { mediaUrl } from "./media";
@@ -551,6 +552,7 @@ export function BioRenderer({
   const motion = doc.theme.cardStyle === "glass" && doc.theme.motion !== false;
   const std = isStandardStyle(doc.theme.cardStyle);
   const logoFree = std && doc.profile.logoFrame === "none" && !!doc.profile.logo;
+  const electric = std && th.effects === "electric";
   // Destaque do nome: última palavra na cor escolhida ("Rota 316").
   const nameParts = std && th.nameAccent ? splitNameAccent(doc.profile.name) : null;
   // Fundo do ramo (visual padrão): imagem nítida, parada enquanto a página rola.
@@ -568,7 +570,7 @@ export function BioRenderer({
 
   return (
     <div
-      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}${std ? ` bio--std bio--${doc.theme.cardStyle}` : ""}${page ? " bio--page" : ""}${logoFree ? " bio--logo-free" : ""}${std && th.taglineDark ? " bio--tagline-dark" : ""}`}
+      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}${std ? ` bio--std bio--${doc.theme.cardStyle}` : ""}${page ? " bio--page" : ""}${logoFree ? " bio--logo-free" : ""}${std && th.taglineDark ? " bio--tagline-dark" : ""}${electric ? " bio--fx-electric" : ""}`}
       style={style as CSSProperties}
     >
       <div className="bio-photo" aria-hidden="true">
@@ -581,6 +583,7 @@ export function BioRenderer({
       <div className="bio-veil" aria-hidden="true" />
       {motion && <Aurora />}
       {std && th.shine && <div className="bio-shine" aria-hidden="true" />}
+      {electric && <ElectricFx />}
 
       <main className="bio-main">
         {cover && (
@@ -590,6 +593,7 @@ export function BioRenderer({
         )}
         <header className="bio-hero" data-edit="profile">
           <div className="bio-logo" aria-hidden={doc.profile.logo ? undefined : "true"}>
+            {electric && logoFree && <span className="bio-logo-ring" aria-hidden="true" />}
             {doc.profile.logo && assets.has(doc.profile.logo.assetId) ? (
               <Img
                 ctx={ctx}

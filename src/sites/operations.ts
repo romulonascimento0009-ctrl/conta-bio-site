@@ -72,6 +72,7 @@ export function applyOperation(doc: BioDocument, op: Operation): BioDocument {
         "nameAccent",
         "taglineDark",
         "shine",
+        "effects",
       ] as const) {
         if (doc.theme[k] !== undefined)
           Object.assign(next.theme, { [k]: structuredClone(doc.theme[k]) });

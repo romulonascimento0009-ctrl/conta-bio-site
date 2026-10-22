@@ -1208,6 +1208,336 @@ button.bio-tag {
   bottom: 18px;
 }
 
+/* Efeitos "elétrico" (D44, protótipo `prototipos/bio-site-rota316.html`): camada parada atrás do
+   conteúdo. Só transform/opacity; cores da borda neon do cliente. Componente: ElectricFx.tsx. */
+.bio--fx-electric {
+  --fx-a: var(--neon-a, #39e0ff);
+  --fx-b: var(--neon-b, #ff3fd1);
+}
+.bio-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bio-fx > * {
+  position: absolute;
+}
+@keyframes bio-fx-flash {
+  0%,
+  6%,
+  100% {
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+  2% {
+    opacity: 0.25;
+  }
+  3% {
+    opacity: 0.95;
+  }
+}
+.bio-fx-flare {
+  inset: 0;
+  background: radial-gradient(
+    60% 35% at 85% 10%,
+    color-mix(in srgb, var(--fx-a) 30%, transparent),
+    transparent 70%
+  );
+  opacity: 0;
+  animation: bio-fx-flash 7s infinite;
+}
+.bio-fx-orb {
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--t) 0%, transparent 70%);
+  opacity: 0.55;
+  animation: bio-fx-drift 9s ease-in-out infinite alternate;
+}
+@keyframes bio-fx-drift {
+  to {
+    transform: translate(var(--dx), var(--dy));
+    opacity: 0.25;
+  }
+}
+/* Tubos de neon: acendem piscando (letreiro), pulsam e têm um ponto de luz correndo por dentro. */
+.bio-fx-tube {
+  --t: var(--fx-a);
+  left: -30%;
+  width: 160%;
+  height: 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--t) 25%, #fff);
+  box-shadow:
+    0 0 4px #fff,
+    0 0 10px var(--t),
+    0 0 22px var(--t),
+    0 0 44px var(--t);
+  transform: rotate(-28deg);
+  animation:
+    bio-fx-on 1.6s steps(1) both,
+    bio-fx-pulse 3.2s ease-in-out 1.6s infinite alternate;
+}
+.bio-fx-tube.t1 {
+  top: 30%;
+}
+.bio-fx-tube.t2 {
+  --t: var(--fx-b);
+  top: 74%;
+  height: 3px;
+  animation-delay: 0.5s, 2.1s;
+}
+.bio-fx-tube.t3 {
+  top: 54%;
+  height: 3px;
+  animation-delay: 0.9s, 2.5s;
+}
+.bio-fx-tube::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 18%;
+  height: 11px;
+  border-radius: 11px;
+  background: linear-gradient(90deg, transparent, #fff 60%, transparent);
+  box-shadow: 0 0 18px 6px var(--t);
+  animation: bio-fx-comet 2.8s linear infinite;
+}
+.bio-fx-tube.t2::after {
+  animation-direction: reverse;
+  animation-duration: 3.2s;
+}
+.bio-fx-tube.t3::after {
+  animation-duration: 3.6s;
+  animation-delay: 1.2s;
+}
+@keyframes bio-fx-on {
+  0%,
+  12%,
+  30% {
+    opacity: 0;
+  }
+  8%,
+  20%,
+  45% {
+    opacity: 1;
+  }
+  38% {
+    opacity: 0.3;
+  }
+}
+@keyframes bio-fx-pulse {
+  to {
+    opacity: 0.55;
+  }
+}
+@keyframes bio-fx-comet {
+  from {
+    transform: translateX(-20%);
+  }
+  to {
+    transform: translateX(560%);
+  }
+}
+/* Luz correndo pelas bordas da tela. */
+.bio-fx-edge {
+  --t: var(--fx-a);
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: linear-gradient(
+    180deg,
+    transparent 35%,
+    var(--t) 45%,
+    #fff 50%,
+    var(--t) 55%,
+    transparent 65%
+  );
+  background-size: 100% 300%;
+  filter: drop-shadow(0 0 6px var(--t)) drop-shadow(0 0 14px var(--t));
+  animation: bio-fx-run 3.2s linear infinite;
+}
+.bio-fx-edge.e1 {
+  left: 0;
+}
+.bio-fx-edge.e2 {
+  --t: var(--fx-b);
+  right: 0;
+  animation-direction: reverse;
+  animation-duration: 5.5s;
+}
+@keyframes bio-fx-run {
+  from {
+    background-position: 0 0%;
+  }
+  to {
+    background-position: 0 100%;
+  }
+}
+/* Rastros de luz cruzando a tela (farol de carro em foto noturna). */
+.bio-fx-streak {
+  top: var(--y);
+  left: -40%;
+  width: 40%;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--t), #fff);
+  box-shadow: 0 0 10px 2px var(--t);
+  opacity: 0;
+  transform: rotate(-28deg);
+  animation: bio-fx-streak 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes bio-fx-streak {
+  0% {
+    opacity: 0;
+    translate: 0 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  30%,
+  100% {
+    opacity: 0;
+    translate: 380% -190%;
+  }
+}
+.bio-fx-gear {
+  width: 230px;
+  fill: none;
+  stroke: var(--fx-a);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px var(--fx-a));
+  opacity: 0.55;
+  animation: bio-fx-spin 40s linear infinite;
+}
+.bio-fx-gear.g1 {
+  top: 18%;
+  right: -95px;
+}
+.bio-fx-gear.g2 {
+  bottom: -70px;
+  left: -80px;
+  width: 260px;
+  stroke: var(--fx-b);
+  filter: drop-shadow(0 0 6px var(--fx-b));
+  opacity: 0.35;
+  animation-duration: 55s;
+  animation-direction: reverse;
+}
+@keyframes bio-fx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.bio-fx-bolt {
+  width: 46%;
+  fill: none;
+  stroke: color-mix(in srgb, var(--fx-a) 20%, #fff);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px var(--fx-a)) drop-shadow(0 0 12px var(--fx-a));
+  opacity: 0;
+  animation: bio-fx-flash 7s infinite;
+}
+.bio-fx-bolt.b1 {
+  top: 4%;
+  right: -4%;
+}
+.bio-fx-bolt.b2 {
+  top: 52%;
+  left: -6%;
+  transform: scaleX(-1) rotate(12deg);
+  animation-delay: 2.6s;
+}
+.bio-fx-bolt.b3 {
+  bottom: 6%;
+  right: 2%;
+  width: 34%;
+  animation-delay: 4.9s;
+}
+.bio-fx-spark {
+  bottom: -10px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--fx-b) 70%, #fff);
+  box-shadow: 0 0 6px 1px var(--fx-b);
+  opacity: 0;
+  animation: bio-fx-rise 6s linear infinite;
+}
+@keyframes bio-fx-rise {
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx, 20px), -70vh);
+  }
+}
+/* Anel de neon girando atrás do logo solto. */
+.bio--fx-electric.bio--logo-free .bio-logo {
+  position: relative;
+}
+.bio--fx-electric.bio--logo-free .bio-logo img {
+  position: relative;
+}
+.bio-logo-ring {
+  position: absolute;
+  inset: -6px 4px;
+  border-radius: 50%;
+  background: conic-gradient(
+    transparent 0deg,
+    var(--fx-a) 70deg,
+    #fff 90deg,
+    transparent 120deg,
+    transparent 180deg,
+    var(--fx-b) 250deg,
+    #fff 270deg,
+    transparent 300deg
+  );
+  mask: radial-gradient(closest-side, transparent 92%, #000 93%, #000 99%, transparent 100%);
+  filter: drop-shadow(0 0 8px var(--fx-a));
+  animation: bio-fx-spin 6s linear infinite;
+}
+/* Entrada: logo com um pulo, cartões e painéis sobem um a um. */
+.bio--fx-electric .bio-logo {
+  animation: bio-fx-pop 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+.bio--fx-electric .bio-links > li,
+.bio--fx-electric .bio-panel {
+  animation: bio-fx-up 0.6s ease-out both;
+}
+.bio--fx-electric .bio-links > li:nth-child(1) {
+  animation-delay: 0.25s;
+}
+.bio--fx-electric .bio-links > li:nth-child(2) {
+  animation-delay: 0.38s;
+}
+.bio--fx-electric .bio-links > li:nth-child(3) {
+  animation-delay: 0.51s;
+}
+.bio--fx-electric .bio-links > li:nth-child(n + 4),
+.bio--fx-electric .bio-panel {
+  animation-delay: 0.64s;
+}
+@keyframes bio-fx-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(10px);
+  }
+}
+@keyframes bio-fx-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bio-ticker-track {
     animation: none;
@@ -1219,8 +1549,21 @@ button.bio-tag {
   .bio-featured::before,
   .bio--glass .bio-links > li,
   .bio-aurora span,
-  .bio-shine::after {
+  .bio-shine::after,
+  .bio-fx *,
+  .bio-fx-tube::after,
+  .bio-logo-ring,
+  .bio--fx-electric .bio-logo,
+  .bio--fx-electric .bio-links > li,
+  .bio--fx-electric .bio-panel {
     animation: none;
+  }
+  .bio-fx-flare,
+  .bio-fx-streak,
+  .bio-fx-spark,
+  .bio-fx-bolt,
+  .bio-fx-tube::after {
+    display: none;
   }
   .bio-card.glass,
   .bio-card.std {

@@ -467,6 +467,7 @@ describe("detalhes por cliente no visual padrão (Rota 316, 2026-10-22)", () => 
     d.theme.nameAccent = "#f5c400";
     d.theme.taglineDark = true;
     d.theme.shine = true;
+    d.theme.effects = "electric";
     d.theme.fonts.display = "exo-2";
     d.profile.logoFrame = "none";
     const r = validateBio(d);
@@ -492,6 +493,12 @@ describe("detalhes por cliente no visual padrão (Rota 316, 2026-10-22)", () => 
     const d = rota();
     d.theme.fonts.body = "exo-2";
     expect(paths(d)).toEqual(["theme.fonts.body"]);
+  });
+
+  it("efeitos do fundo: só os conhecidos", () => {
+    const d = rota();
+    Object.assign(d.theme, { effects: "fogos" });
+    expect(paths(d)).toEqual(["theme.effects"]);
   });
 
   it("destaque do nome vai na última palavra", () => {

@@ -123,6 +123,7 @@ describe("applyOperation", () => {
         nameAccent: "#f5c400",
         taglineDark: true,
         shine: true,
+        effects: "electric",
       },
     });
     d = applyOperation(d, { type: "theme-preset", themeId: "oceano" });
@@ -132,6 +133,7 @@ describe("applyOperation", () => {
       nameAccent: "#f5c400",
       taglineDark: true,
       shine: true,
+      effects: "electric",
     });
   });
 

@@ -138,6 +138,12 @@ export const themeSchema = z
     taglineDark: z.boolean().optional(),
     /** Visual padrão: reflexo de luz passando devagar sobre o fundo da página. */
     shine: z.boolean().optional(),
+    /**
+     * Visual padrão: efeitos animados atrás do conteúdo. "electric" = raios, tubos e rastros de neon,
+     * luz nas bordas, engrenagens, faíscas, anel no logo solto e entrada dos cartões (Rota 316).
+     * Cores da borda neon (`neonEdges`). Parados para quem desligou as animações.
+     */
+    effects: z.enum(["electric"]).optional(),
   })
   .superRefine((t, ctx) => {
     const c = t.colors;
