@@ -113,6 +113,28 @@ describe("applyOperation", () => {
     expect(JSON.parse(JSON.stringify(d)).theme).not.toHaveProperty("cardStyle");
   });
 
+  it("detalhes do visual padrão sobrevivem à troca de tema", () => {
+    let d = applyOperation(doc(), {
+      type: "theme",
+      patch: {
+        cardStyle: "neon",
+        neonEdges: { start: "#1e6fff", end: "#f5c400" },
+        chips: { bg: "#f5c400", fg: "#061a33" },
+        nameAccent: "#f5c400",
+        taglineDark: true,
+        shine: true,
+      },
+    });
+    d = applyOperation(d, { type: "theme-preset", themeId: "oceano" });
+    expect(d.theme).toMatchObject({
+      neonEdges: { start: "#1e6fff", end: "#f5c400" },
+      chips: { bg: "#f5c400", fg: "#061a33" },
+      nameAccent: "#f5c400",
+      taglineDark: true,
+      shine: true,
+    });
+  });
+
   it("futurista: cor dos cartões e fundo animado sobrevivem à troca de tema; cor clara é recusada", () => {
     let d = applyOperation(doc(), {
       type: "theme",

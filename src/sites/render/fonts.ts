@@ -2,6 +2,7 @@ import {
   Bricolage_Grotesque,
   DM_Sans,
   EB_Garamond,
+  Exo_2,
   Fraunces,
   Fredoka,
   Lora,
@@ -11,7 +12,7 @@ import {
 } from "next/font/google";
 import type { FontId } from "@/sites/fonts";
 
-// Auto-hospedadas no build. preload: false porque cada site usa só 1–2 das 9 famílias;
+// Auto-hospedadas no build. preload: false porque cada site usa só 1–2 das 10 famílias;
 // o navegador baixa apenas as que forem de fato usadas.
 // O next/font exige opções literais em cada chamada (sem objetos compartilhados).
 // Toda família nova deve passar por `scripts/font-specimen.mts` (acentos do português).
@@ -64,6 +65,13 @@ const fredoka = Fredoka({
   preload: false,
   variable: "--f-fredoka",
 });
+const exo2 = Exo_2({
+  subsets: ["latin"],
+  style: "italic",
+  display: "swap",
+  preload: false,
+  variable: "--f-exo-2",
+});
 
 const LOADED: Record<FontId, { variable: string; family: string }> = {
   "eb-garamond": { variable: ebGaramond.variable, family: "var(--f-eb-garamond), Georgia, serif" },
@@ -78,6 +86,7 @@ const LOADED: Record<FontId, { variable: string; family: string }> = {
   "work-sans": { variable: workSans.variable, family: "var(--f-work-sans), system-ui, sans-serif" },
   "dm-sans": { variable: dmSans.variable, family: "var(--f-dm-sans), system-ui, sans-serif" },
   fredoka: { variable: fredoka.variable, family: "var(--f-fredoka), system-ui, sans-serif" },
+  "exo-2": { variable: exo2.variable, family: "var(--f-exo-2), system-ui, sans-serif" },
 };
 
 export function loadedFont(id: FontId) {

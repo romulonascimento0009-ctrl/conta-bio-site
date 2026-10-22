@@ -11,8 +11,13 @@ export const FONTS = {
   "dm-sans": { label: "DM Sans", category: "sans" },
   /** Arredondada e alegre (ramos infantis, festas); só para títulos. */
   fredoka: { label: "Fredoka", category: "sans" },
-} as const;
+  /** Esportiva e inclinada (oficinas, autopeças, academias); só para títulos, sempre em itálico. */
+  "exo-2": { label: "Exo 2 (esportiva)", category: "sans", italic: true },
+} as const satisfies Record<string, { label: string; category: string; italic?: boolean }>;
 
 export type FontId = keyof typeof FONTS;
 
 export const FONT_IDS = Object.keys(FONTS) as [FontId, ...FontId[]];
+
+/** Fontes só de título, desenhadas em itálico (não servem para o texto corrido). */
+export const isItalicFont = (id: FontId) => "italic" in FONTS[id];

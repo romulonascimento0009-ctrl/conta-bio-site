@@ -22,7 +22,12 @@ Decisões por trás: D41 (visual a partir de referências), D42 (produção grá
 3. **Protótipo** em `prototipos/bio-site-<cliente>.html` (fundo em `prototipos/ref/`), ajustar até o
    usuário aprovar. Conferir no celular, lado a lado com a referência, antes de pedir aprovação.
 4. **Levar para o sistema** (rascunho do cliente): fundo da página enviado como imagem do cliente,
-   estilo de cartão padrão (vidro neon), fonte, galerias em cartão com legenda.
+   estilo de cartão padrão (vidro neon), fonte, galerias em cartão com legenda. Cores e detalhes do
+   cliente ficam em Aparência → "Detalhes do visual padrão" (D43: borda neon, categorias, destaque
+   do nome, slogan escuro, reflexo) e Topo → "Moldura do logo" (sem moldura para logo recortado).
+   Logo com fundo preto: recortar só o preto ligado às bordas antes de enviar.
+   **Código novo** (fonte, ícone, opção) só chega à produção com `git push`: enviar antes de copiar
+   o cliente.
 5. **Conferência do rascunho** (prévia no celular), itens que já deram problema:
    - Subtítulo dos cartões **sem link colado** (o sistema esconde, mas o certo é deixar vazio).
    - Mensagem do WhatsApp do cliente (ex.: "Oi, vim pelo Bio Site, gostaria de solicitar um

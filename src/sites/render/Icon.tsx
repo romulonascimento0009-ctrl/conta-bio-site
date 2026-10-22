@@ -87,6 +87,14 @@ const PATHS: Record<IconId | UiIcon, React.ReactNode> = {
       <path d="M12 9v6M9 12h6" />
     </g>
   ),
+  wheel: (
+    <g {...stroke}>
+      <circle cx="12" cy="12" r="9.5" />
+      <circle cx="12" cy="12" r="6.5" strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="1.8" />
+      <path d="M12 10.2V5.5M13.7 11.4l4.5-1.4M13.1 13.5l2.7 3.8M10.9 13.5l-2.7 3.8M10.3 11.4L5.8 10" />
+    </g>
+  ),
   delivery: (
     <g {...stroke}>
       <circle cx="5.5" cy="17" r="3" />

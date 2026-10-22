@@ -20,7 +20,7 @@ import {
   type Hero,
   type LinkAction,
 } from "@/sites/bio";
-import { FONT_IDS, FONTS } from "@/sites/fonts";
+import { FONT_IDS, FONTS, isItalicFont } from "@/sites/fonts";
 import { customIconStart, ICON_IDS, ICONS, type IconId, type SectionIconId } from "@/sites/icons";
 import { NEW_BLOCK_TYPES, newBlock, type NewBlockType } from "@/sites/operations";
 import { PATTERN_IDS, PATTERNS } from "@/sites/patterns";
@@ -673,6 +673,17 @@ function BlockEditor({
                 checked={!!block.hideIcon}
                 onChange={(v) => set({ hideIcon: v || undefined }, "hideIcon")}
               />
+              {!block.hideIcon && (
+                <Select
+                  label="Ícone do cartão"
+                  value={block.icon ?? "photos"}
+                  options={[
+                    { value: "photos", label: "Fotos" },
+                    ...ICON_IDS.map((i) => ({ value: i, label: ICONS[i].label })),
+                  ]}
+                  onChange={(v) => set({ icon: v === "photos" ? undefined : v }, "icon")}
+                />
+              )}
               <fieldset className="grid gap-3">
                 <legend className="text-sm font-medium">Título e legenda de cada foto</legend>
                 {block.images.map((img, i) => {
@@ -990,6 +1001,17 @@ export function ProfilePanel({
           value={p.logo?.assetId}
           onChange={(id) => set({ logo: ref(id) }, "logo")}
         />
+        {p.logo && (
+          <Select
+            label="Moldura do logo"
+            value={p.logoFrame ?? "circle"}
+            options={[
+              { value: "circle", label: "Círculo" },
+              { value: "none", label: "Sem moldura, maior (logo sem fundo, ex.: escudo)" },
+            ]}
+            onChange={(v) => set({ logoFrame: v === "circle" ? undefined : v }, "logoFrame")}
+          />
+        )}
         <ImagePicker
           label="Foto da fachada (ou de fundo)"
           assets={assets}
@@ -1359,6 +1381,88 @@ const COLOR_GROUPS: { title: string; colors: [ThemeColor, string][] }[] = [
 
 const WHATSAPP_GREEN = "#25d366";
 
+/** Detalhes do visual padrão por cliente: borda neon, categorias, nome, slogan e reflexo. */
+function StandardDetails({ doc, dispatch }: { doc: BioDocument; dispatch: Dispatch }) {
+  const th = doc.theme;
+  const theme = (patch: Partial<BioDocument["theme"]>, field?: string) =>
+    dispatch({ type: "theme", patch }, field);
+  return (
+    <div className="grid gap-3 rounded-md border border-border p-3">
+      <h3 className="text-sm font-semibold">Detalhes do visual padrão</h3>
+      {th.cardStyle === "neon" && (
+        <>
+          <Check
+            label="Borda neon nas cores do cliente"
+            checked={!!th.neonEdges}
+            onChange={(on) =>
+              theme({ neonEdges: on ? { start: "#1e6fff", end: "#f5c400" } : undefined })
+            }
+          />
+          {th.neonEdges && (
+            <div className="grid gap-2 xl:grid-cols-2">
+              <ColorField
+                label="Borda: início"
+                value={th.neonEdges.start}
+                onChange={(start) =>
+                  theme({ neonEdges: { ...th.neonEdges!, start } }, "theme.neonEdges.start")
+                }
+              />
+              <ColorField
+                label="Borda: fim"
+                value={th.neonEdges.end}
+                onChange={(end) =>
+                  theme({ neonEdges: { ...th.neonEdges!, end } }, "theme.neonEdges.end")
+                }
+              />
+            </div>
+          )}
+        </>
+      )}
+      <Check
+        label="Categorias em cor própria"
+        checked={!!th.chips}
+        onChange={(on) => theme({ chips: on ? { bg: "#f5c400", fg: th.colors.ink } : undefined })}
+      />
+      {th.chips && (
+        <div className="grid gap-2 xl:grid-cols-2">
+          <ColorField
+            label="Categorias: fundo"
+            value={th.chips.bg}
+            onChange={(bg) => theme({ chips: { ...th.chips!, bg } }, "theme.chips.bg")}
+          />
+          <ColorField
+            label="Categorias: letra"
+            value={th.chips.fg}
+            onChange={(fg) => theme({ chips: { ...th.chips!, fg } }, "theme.chips.fg")}
+          />
+        </div>
+      )}
+      <Check
+        label="Última palavra do nome em destaque"
+        checked={!!th.nameAccent}
+        onChange={(on) => theme({ nameAccent: on ? "#f5c400" : undefined })}
+      />
+      {th.nameAccent && (
+        <ColorField
+          label="Cor do destaque do nome"
+          value={th.nameAccent}
+          onChange={(nameAccent) => theme({ nameAccent }, "theme.nameAccent")}
+        />
+      )}
+      <Check
+        label="Slogan em faixa escura (fundos escuros)"
+        checked={!!th.taglineDark}
+        onChange={(on) => theme({ taglineDark: on || undefined })}
+      />
+      <Check
+        label="Reflexo de luz passando no fundo"
+        checked={!!th.shine}
+        onChange={(on) => theme({ shine: on || undefined })}
+      />
+    </div>
+  );
+}
+
 export function LookPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Dispatch }) {
   const th = doc.theme;
   return (
@@ -1417,6 +1521,7 @@ export function LookPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Dispa
             cartões.
           </p>
         )}
+        {isStandardStyle(th.cardStyle) && <StandardDetails doc={doc} dispatch={dispatch} />}
         {th.cardStyle === "glass" && (
           <>
             <Select
@@ -1486,7 +1591,10 @@ export function LookPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Dispa
         <Select
           label="Fonte do texto"
           value={th.fonts.body}
-          options={FONT_IDS.map((f) => ({ value: f, label: FONTS[f].label }))}
+          options={FONT_IDS.filter((f) => !isItalicFont(f)).map((f) => ({
+            value: f,
+            label: FONTS[f].label,
+          }))}
           onChange={(body) => dispatch({ type: "theme", patch: { fonts: { ...th.fonts, body } } })}
         />
       </Section>

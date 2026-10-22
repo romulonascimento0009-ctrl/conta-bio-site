@@ -5,7 +5,9 @@ import {
   glassTop,
   HERO_DEFAULTS,
   isStandardStyle,
+  neonGlass,
   resolveLink,
+  splitNameAccent,
   standardCardBase,
   veilAlphas,
   wifiQrPayload,
@@ -22,6 +24,7 @@ import {
   type IconId,
   type SectionIconId,
 } from "@/sites/icons";
+import { isItalicFont } from "@/sites/fonts";
 import { cardSubtitle, whatsappHref } from "@/sites/links";
 import { mixHex, rgbaCss } from "@/sites/color";
 import { PATTERNS } from "@/sites/patterns";
@@ -251,13 +254,16 @@ function GalleryCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"gallery"> }) {
   return (
     <li>
       <SheetCard
-        {...stdCard(block.iconColor ?? SECTION_ICONS.photos.color, block.hideIcon)}
+        {...stdCard(
+          block.iconColor ?? (block.icon ? ICONS[block.icon] : SECTION_ICONS.photos).color,
+          block.hideIcon,
+        )}
         track={`b:${block.id}`}
         blockId={block.id}
         title={block.title}
         trigger={
           <StdCardBody
-            icon="photos"
+            icon={block.icon ?? "photos"}
             iconColor={block.iconColor}
             hideIcon={block.hideIcon}
             title={block.title}
@@ -502,7 +508,21 @@ export function BioRenderer({
     "--font-display": display.family,
     "--font-body": body.family,
     "--std-card": standardCardBase(colors.ink),
-  } as CSSProperties;
+    "--display-style": isItalicFont(fonts.display) ? "italic" : "normal",
+  } as Record<string, string>;
+  const th = doc.theme;
+  if (th.neonEdges) {
+    const [glassA, glassB] = neonGlass(colors.base, th.neonEdges.start);
+    Object.assign(style, {
+      "--neon-a": th.neonEdges.start,
+      "--neon-b": th.neonEdges.end,
+      "--neon-glass-a": rgbaCss(glassA, 0.9),
+      "--neon-glass-b": rgbaCss(glassB, 0.9),
+      "--neon-inset": rgbaCss(th.neonEdges.start, 0.2),
+    });
+  }
+  if (th.chips) Object.assign(style, { "--chip-bg": th.chips.bg, "--chip-fg": th.chips.fg });
+  if (th.nameAccent) style["--name-accent"] = th.nameAccent;
 
   const social: { icon: IconId; href: string; label: string }[] = [];
   if (c.instagram)
@@ -530,6 +550,9 @@ export function BioRenderer({
   const tickerOn = doc.ticker.enabled && doc.ticker.items.length > 0;
   const motion = doc.theme.cardStyle === "glass" && doc.theme.motion !== false;
   const std = isStandardStyle(doc.theme.cardStyle);
+  const logoFree = std && doc.profile.logoFrame === "none" && !!doc.profile.logo;
+  // Destaque do nome: última palavra na cor escolhida ("Rota 316").
+  const nameParts = std && th.nameAccent ? splitNameAccent(doc.profile.name) : null;
   // Fundo do ramo (visual padrão): imagem nítida, parada enquanto a página rola.
   const page =
     std && doc.profile.pageBackground && assets.has(doc.profile.pageBackground.assetId)
@@ -545,8 +568,8 @@ export function BioRenderer({
 
   return (
     <div
-      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}${std ? ` bio--std bio--${doc.theme.cardStyle}` : ""}${page ? " bio--page" : ""}`}
-      style={style}
+      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}${std ? ` bio--std bio--${doc.theme.cardStyle}` : ""}${page ? " bio--page" : ""}${logoFree ? " bio--logo-free" : ""}${std && th.taglineDark ? " bio--tagline-dark" : ""}`}
+      style={style as CSSProperties}
     >
       <div className="bio-photo" aria-hidden="true">
         {page ? (
@@ -557,6 +580,7 @@ export function BioRenderer({
       </div>
       <div className="bio-veil" aria-hidden="true" />
       {motion && <Aurora />}
+      {std && th.shine && <div className="bio-shine" aria-hidden="true" />}
 
       <main className="bio-main">
         {cover && (
@@ -567,12 +591,26 @@ export function BioRenderer({
         <header className="bio-hero" data-edit="profile">
           <div className="bio-logo" aria-hidden={doc.profile.logo ? undefined : "true"}>
             {doc.profile.logo && assets.has(doc.profile.logo.assetId) ? (
-              <Img ctx={ctx} image={doc.profile.logo} sizes="108px" priority />
+              <Img
+                ctx={ctx}
+                image={doc.profile.logo}
+                sizes={logoFree ? "220px" : "108px"}
+                priority
+              />
             ) : (
               initials(doc.profile.name)
             )}
           </div>
-          <h1 className="bio-name">{doc.profile.name}</h1>
+          <h1 className="bio-name">
+            {nameParts ? (
+              <>
+                {nameParts[0]}
+                <span className="bio-name-accent">{nameParts[1]}</span>
+              </>
+            ) : (
+              doc.profile.name
+            )}
+          </h1>
           {doc.profile.tagline && <p className="bio-tagline">{doc.profile.tagline}</p>}
           {doc.profile.categories.length > 0 && (
             <ul className="bio-chips" aria-label="Categorias">

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { averageHex, contrastRatio, HEX_COLOR, mixHex } from "./color";
-import { FONT_IDS } from "./fonts";
+import { FONT_IDS, FONTS, isItalicFont } from "./fonts";
 import { glossTop, ICON_IDS, type IconId } from "./icons";
 import { INSTAGRAM_HANDLE, isSafeHref, WHATSAPP_DIGITS, whatsappHref } from "./links";
 import { PATTERN_IDS } from "./patterns";
@@ -90,6 +90,11 @@ export const GLASS_TINT = 0.12;
 export const GLASS_DARK = "#262a38";
 export const GLASS_COLOR_MIX = 0.42;
 export const glassTop = (color: string) => mixHex(GLASS_DARK, color, GLASS_COLOR_MIX);
+/** Vidro neon com cores próprias: do fundo da página até ele levemente tingido pela borda. */
+export const neonGlass = (base: string, edge: string): [string, string] => [
+  base,
+  mixHex(base, edge, 0.15),
+];
 
 export const themeSchema = z
   .object({
@@ -123,6 +128,16 @@ export const themeSchema = z
     cardTintColor: hex.optional(),
     /** Futurista: fundo em movimento nas cores do topo (ausente = ligado). */
     motion: z.boolean().optional(),
+    /** Vidro neon: cores da borda (ausente = ciano → rosa). O vidro puxa a cor de fundo da página. */
+    neonEdges: z.object({ start: hex, end: hex }).optional(),
+    /** Visual padrão: categorias numa cor própria (ausente = cor do texto dos painéis, letra branca). */
+    chips: z.object({ bg: hex, fg: hex }).optional(),
+    /** Visual padrão: cor da última palavra do nome (ex.: "Rota 316" com o 316 em amarelo). */
+    nameAccent: hex.optional(),
+    /** Visual padrão: slogan numa faixa escura (ausente = faixa clara). */
+    taglineDark: z.boolean().optional(),
+    /** Visual padrão: reflexo de luz passando devagar sobre o fundo da página. */
+    shine: z.boolean().optional(),
   })
   .superRefine((t, ctx) => {
     const c = t.colors;
@@ -157,6 +172,36 @@ export const themeSchema = z
         WHITE,
         standardCardBase(c.ink),
         "do texto branco sobre os cartões (cor do texto dos painéis)",
+      );
+    }
+    if (isItalicFont(t.fonts.body)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["fonts", "body"],
+        message: `${FONTS[t.fonts.body].label} é só para títulos`,
+      });
+    }
+    if (t.neonEdges) {
+      checkContrast(
+        ctx,
+        ["neonEdges", "start"],
+        WHITE,
+        neonGlass(c.base, t.neonEdges.start)[1],
+        "do texto branco sobre o vidro neon (fundo da página + cor da borda)",
+      );
+    }
+    if (t.chips) {
+      checkContrast(ctx, ["chips", "fg"], t.chips.fg, t.chips.bg, "das categorias (letra/fundo)");
+    }
+    if (t.nameAccent) {
+      // Nome grande com contorno na cor do texto dos painéis: basta o contraste de texto grande.
+      checkContrast(
+        ctx,
+        ["nameAccent"],
+        t.nameAccent,
+        c.ink,
+        "do destaque do nome sobre o contorno",
+        MIN_GRAPHIC_CONTRAST,
       );
     }
     if (t.cardStyle === "glass") {
@@ -309,6 +354,8 @@ export const galleryBlock = z
     /** Só no cartão: texto embaixo do título e opção de mostrar só o nome. */
     subtitle: optText(90),
     hideIcon: z.boolean().optional(),
+    /** Só no cartão: ícone (ausente = fotos), ex.: roda para "Meus serviços" de oficina. */
+    icon: z.enum(ICON_IDS).optional(),
     ...iconColor,
   })
   .superRefine((b, ctx) => checkIconColor(ctx, b.iconColor));
@@ -366,6 +413,8 @@ export const bioDocumentSchema = z
       background: imageRef.optional(),
       /** Como mostrar a foto de fundo: desfocada atrás de tudo (ausente) ou nítida no alto. */
       backgroundMode: z.enum(["blur", "cover"]).optional(),
+      /** Logo no círculo (ausente) ou solto e maior, sem moldura (escudos e logos recortados). */
+      logoFrame: z.enum(["circle", "none"]).optional(),
       /** Fundo da página conforme o ramo (ex.: céu com arco-íris), parado enquanto a página rola. */
       pageBackground: imageRef.optional(),
     }),
@@ -484,6 +533,12 @@ export function resolveLink(block: BlockOf<"link">, c: Contact): ResolvedLink | 
     case "url":
       return block.url ? { href: block.url, icon: block.icon ?? "link", external: true } : null;
   }
+}
+
+/** "Rota 316" → ["Rota ", "316"] (a última palavra leva o destaque); nome de uma palavra → null. */
+export function splitNameAccent(name: string): [string, string] | null {
+  const m = name.match(/^(.*\s)(\S+)$/);
+  return m ? [m[1], m[2]] : null;
 }
 
 /** 5511999998888 → (11) 99999-8888; outros formatos ficam como vieram. */

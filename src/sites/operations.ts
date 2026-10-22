@@ -62,7 +62,17 @@ export function applyOperation(doc: BioDocument, op: Operation): BioDocument {
       // sobrevivem à troca de tema.
       next.theme = { ...structuredClone(preset.theme), pattern: next.theme.pattern };
       if (doc.theme.hero) next.theme.hero = structuredClone(doc.theme.hero);
-      for (const k of ["cardStyle", "cardTint", "cardTintColor", "motion"] as const) {
+      for (const k of [
+        "cardStyle",
+        "cardTint",
+        "cardTintColor",
+        "motion",
+        "neonEdges",
+        "chips",
+        "nameAccent",
+        "taglineDark",
+        "shine",
+      ] as const) {
         if (doc.theme[k] !== undefined)
           Object.assign(next.theme, { [k]: structuredClone(doc.theme[k]) });
       }

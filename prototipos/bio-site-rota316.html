@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rota 316 — protótipo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Exo+2:ital,wght@1,800&family=Fredoka:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Protótipo Rota 316 (referências do usuário, 2026-10-22): mesma estrutura do Park Vision
+         (modelo oficial, visual padrão D41), só cores e detalhes do ramo. Paleta tirada do logo e das
+         artes de referência: marinho #061A33, azul elétrico #1E6FFF, amarelo #F5C400, prata #C9CDD3.
+         Fundo: prototipos/ref/rota316-fundo.jpg. Sem halo, sem grade. */
+      :root {
+        --navy: #061a33;
+        --blue: #1e6fff;
+        --yellow: #f5c400;
+        --silver: #c9cdd3;
+        --ink: #ffffff;
+        --name-font: "Exo 2", "DM Sans", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "DM Sans", system-ui, sans-serif;
+        background: #2b2e36;
+        color: var(--ink);
+      }
+      .tools {
+        max-width: 430px;
+        margin: 0 auto;
+        padding: 16px 16px 4px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        font-size: 0.9rem;
+      }
+      .tools button {
+        font: inherit;
+        border: 1px solid #555;
+        background: #1b1d24;
+        color: #fff;
+        border-radius: 999px;
+        padding: 6px 14px;
+        cursor: pointer;
+      }
+      .tools button[aria-pressed="true"] {
+        background: #fff;
+        color: #111;
+      }
+
+      .phone {
+        position: relative;
+        max-width: 430px;
+        margin: 12px auto 40px;
+        overflow: clip;
+        border-radius: 28px;
+        padding-bottom: 96px;
+        background: var(--navy);
+      }
+      /* Fundo do ramo: fica parado enquanto a página rola. */
+      .sky {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        margin-bottom: -100vh;
+        background: var(--navy) url(ref/rota316-fundo.jpg) center top / cover no-repeat;
+        overflow: hidden;
+      }
+      .sky::after {
+        /* reflexo de luz passando devagar, como num capô encerado */
+        content: "";
+        position: absolute;
+        inset: -20% -60%;
+        background: linear-gradient(
+          115deg,
+          transparent 42%,
+          rgb(127 178 255 / 0.1) 50%,
+          transparent 58%
+        );
+        animation: shine 9s ease-in-out infinite;
+      }
+      @keyframes shine {
+        from {
+          transform: translateX(-35%);
+        }
+        to {
+          transform: translateX(35%);
+        }
+      }
+
+      /* Topo: sem foto da oficina ainda → logo grande, sem moldura (o escudo já é o desenho). */
+      header {
+        position: relative;
+        text-align: center;
+        padding: 28px 20px 6px;
+      }
+      .logo {
+        width: 210px;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+        filter: drop-shadow(0 10px 18px rgb(0 0 0 / 0.45));
+      }
+      h1 {
+        font-family: var(--name-font);
+        font-weight: 800;
+        font-style: italic;
+        font-size: 2.15rem;
+        margin: 8px 0 2px;
+        color: #fff;
+        letter-spacing: 0.02em;
+        text-shadow:
+          0 2px 0 var(--navy),
+          0 3px 12px rgb(0 0 0 / 0.5);
+      }
+      h1 span {
+        color: var(--yellow);
+      }
+      body[data-font="fredoka"] h1 {
+        font-style: normal;
+        font-weight: 700;
+      }
+      .slogan {
+        margin: 8px auto 14px;
+        max-width: 330px;
+        font-weight: 500;
+        line-height: 1.4;
+        color: #fff;
+        background: rgb(6 26 51 / 0.6);
+        border: 1px solid rgb(30 111 255 / 0.45);
+        backdrop-filter: blur(6px);
+        border-radius: 16px;
+        padding: 8px 14px;
+      }
+      .cats {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+        margin-bottom: 14px;
+        padding: 0;
+        list-style: none;
+      }
+      .cats li {
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--navy);
+        background: var(--yellow);
+        border-radius: 999px;
+        padding: 5px 11px;
+      }
+      .chips {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 0 0 22px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font: inherit;
+        font-weight: 700;
+        font-size: 0.92rem;
+        color: var(--navy);
+        background: #fff;
+        border: 0;
+        border-radius: 999px;
+        padding: 9px 16px;
+        box-shadow: 0 4px 12px rgb(0 0 0 / 0.3);
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .chip svg {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* Cartões — vidro neon (padrão), todos iguais, sem halo. A borda vai do azul elétrico ao
+         amarelo do logo, passando pela cor do ícone (no Park Vision: ciano → rosa). */
+      .cards {
+        list-style: none;
+        margin: 0;
+        padding: 0 16px;
+        display: grid;
+        gap: 14px;
+      }
+      .card {
+        --c: var(--blue);
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        min-height: 78px;
+        padding: 12px 18px 12px 12px;
+        border-radius: 999px;
+        font: inherit;
+        color: var(--ink);
+        text-align: left;
+        text-decoration: none;
+        cursor: pointer;
+        background:
+          linear-gradient(90deg, rgb(6 26 51 / 0.9), rgb(11 42 82 / 0.9)) padding-box,
+          linear-gradient(90deg, var(--blue), var(--c), var(--yellow)) border-box;
+        border: 2px solid transparent;
+        box-shadow:
+          inset 0 0 14px rgb(30 111 255 / 0.2),
+          0 8px 22px rgb(0 0 0 / 0.35);
+        backdrop-filter: blur(10px);
+        transition: transform 0.15s;
+      }
+      .card::before {
+        /* reflexo de vidro no canto */
+        content: "";
+        position: absolute;
+        top: 9px;
+        left: 30px;
+        width: 60%;
+        height: 10px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgb(255 255 255 / 0.2), transparent);
+        pointer-events: none;
+      }
+      .card:active {
+        transform: scale(0.98);
+      }
+      .card:focus-visible,
+      .chip:focus-visible,
+      .foot a:focus-visible {
+        outline: 3px solid var(--yellow);
+        outline-offset: 3px;
+      }
+      .card .t {
+        flex: 1;
+        display: grid;
+        gap: 2px;
+      }
+      .card strong {
+        font-size: 1.1rem;
+      }
+      .card small {
+        font-size: 0.88rem;
+        color: var(--silver);
+      }
+      .card .go {
+        font-size: 1.5rem;
+        opacity: 0.75;
+      }
+      .ico {
+        flex: none;
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(160deg, rgb(255 255 255 / 0.35), transparent 45%), var(--c);
+        box-shadow:
+          inset 0 -3px 0 rgb(0 0 0 / 0.18),
+          0 4px 10px rgb(0 0 0 / 0.25);
+      }
+      .ico svg {
+        width: 27px;
+        height: 27px;
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .ico.ig {
+        background:
+          linear-gradient(160deg, rgb(255 255 255 / 0.3), transparent 45%),
+          radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285aeb 90%);
+      }
+      .ico.map svg {
+        stroke: var(--navy); /* traço escuro: branco sobre amarelo não tem contraste */
+      }
+
+      /* Rodapé */
+      .about {
+        position: relative;
+        margin: 22px 16px 0;
+        padding: 18px 20px;
+        border-radius: 24px;
+        background: rgb(255 255 255 / 0.96);
+        color: var(--navy);
+      }
+      .about h2 {
+        font-family: var(--name-font);
+        font-style: italic;
+        margin: 0 0 6px;
+        font-size: 1.2rem;
+      }
+      body[data-font="fredoka"] .about h2 {
+        font-family: "Fredoka", sans-serif;
+        font-style: normal;
+      }
+      .about p {
+        margin: 0;
+        line-height: 1.5;
+      }
+      .foot {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        margin: 22px 0 0;
+      }
+      .foot a {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
+      }
+      .foot svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .sign {
+        position: relative;
+        text-align: center;
+        margin: 18px 0 0;
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        color: var(--navy);
+      }
+      .sign span {
+        background: rgb(255 255 255 / 0.85);
+        border-radius: 999px;
+        padding: 6px 14px;
+      }
+      .wa {
+        position: sticky;
+        float: right;
+        bottom: 18px;
+        margin: -70px 16px 0 0;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #25d366;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 6px 16px rgb(0 0 0 / 0.35);
+      }
+      .wa svg {
+        width: 30px;
+        height: 30px;
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2;
+      }
+      .note {
+        max-width: 430px;
+        margin: 0 auto 40px;
+        padding: 0 16px;
+        font-size: 0.92rem;
+        color: #d8dae0;
+        line-height: 1.5;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .sky::after {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body data-font="exo">
+    <div class="tools">
+      <b>Fonte do nome:</b>
+      <button type="button" data-f="exo" aria-pressed="true">Exo 2 (esportiva)</button>
+      <button type="button" data-f="fredoka" aria-pressed="false">
+        Fredoka (a do Park Vision)
+      </button>
+    </div>
+
+    <main class="phone">
+      <div class="sky" aria-hidden="true"></div>
+
+      <header>
+        <img class="logo" src="ref/rota316-logo.png" alt="Logo Rota 316 Oficina Mecânica" />
+        <h1>Rota <span>316</span></h1>
+        <p class="slogan">Seu carro em boas mãos</p>
+        <ul class="cats">
+          <li>Alinhamento</li>
+          <li>Balanceamento</li>
+          <li>Freios</li>
+          <li>E muito mais</li>
+        </ul>
+        <div class="chips">
+          <span class="chip"
+            ><svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21z" />
+              <circle cx="12" cy="9.5" r="2.5" /></svg
+            >Fortaleza/CE</span
+          ><button class="chip" type="button" id="share">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" /></svg
+            >Compartilhar
+          </button>
+        </div>
+      </header>
+
+      <ul class="cards">
+        <li>
+          <a
+            class="card"
+            style="--c: #1fa855"
+            href="https://wa.me/5585984050265?text=Oi%2C%20vim%20pelo%20Bio%20Site%2C%20gostaria%20de%20solicitar%20um%20or%C3%A7amento."
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="ico"
+              ><svg viewBox="0 0 24 24">
+                <path d="M3 21l1.6-5A8.5 8.5 0 1 1 8 19.5z" />
+                <path
+                  d="M9 9.5c.5 2.5 2.5 4.5 5 5l1.2-1.2 2 1-1 2C11 16 8 13 7.5 8.8l2-1 1 2z"
+                /></svg
+            ></span>
+            <span class="t"><strong>Pedir orçamento</strong><small>Pelo WhatsApp</small></span>
+            <span class="go" aria-hidden="true">›</span>
+          </a>
+        </li>
+        <li>
+          <a
+            class="card"
+            style="--c: #d6249f"
+            href="https://www.instagram.com/rota316oficinamecanica/"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="ico ig"
+              ><svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r=".6" /></svg
+            ></span>
+            <span class="t"><strong>Instagram</strong><small>Siga no Instagram</small></span>
+            <span class="go" aria-hidden="true">›</span>
+          </a>
+        </li>
+        <li>
+          <a
+            class="card"
+            style="--c: #f5c400"
+            href="https://www.google.com/maps/search/?api=1&query=Av.%20Luiz%20Vieira%2C%20400%2C%20Fortaleza%20-%20CE"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="ico map"
+              ><svg viewBox="0 0 24 24">
+                <path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21z" />
+                <circle cx="12" cy="9.5" r="2.5" /></svg
+            ></span>
+            <span class="t"
+              ><strong>Como chegar</strong><small>Av. Luiz Vieira, 400 (Perimetral)</small></span
+            >
+            <span class="go" aria-hidden="true">›</span>
+          </a>
+        </li>
+      </ul>
+
+      <section class="about">
+        <h2>Sobre a Rota 316</h2>
+        <p>
+          Oficina mecânica em Fortaleza/CE, na Av. Luiz Vieira, 400 (Perimetral). Alinhamento,
+          balanceamento, freios e muito mais. Seu carro em boas mãos.
+        </p>
+      </section>
+
+      <nav class="foot" aria-label="Redes">
+        <a
+          href="https://www.instagram.com/rota316oficinamecanica/"
+          aria-label="Instagram"
+          style="
+            background: radial-gradient(
+              circle at 30% 107%,
+              #fdf497 0%,
+              #fd5949 45%,
+              #d6249f 60%,
+              #285aeb 90%
+            );
+          "
+          ><svg viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <circle cx="12" cy="12" r="4" /></svg
+        ></a>
+        <a href="https://wa.me/5585984050265" aria-label="WhatsApp" style="background: #1fa855"
+          ><svg viewBox="0 0 24 24">
+            <path d="M3 21l1.6-5A8.5 8.5 0 1 1 8 19.5z" /></svg
+        ></a>
+      </nav>
+      <p class="sign"><span>ROTA 316 · FORTALEZA/CE</span></p>
+
+      <a
+        class="wa"
+        href="https://wa.me/5585984050265?text=Oi%2C%20vim%20pelo%20Bio%20Site%2C%20gostaria%20de%20solicitar%20um%20or%C3%A7amento."
+        aria-label="Conversar no WhatsApp"
+        ><svg viewBox="0 0 24 24">
+          <path d="M3 21l1.6-5A8.5 8.5 0 1 1 8 19.5z" />
+          <path d="M9 9.5c.5 2.5 2.5 4.5 5 5l1.2-1.2 2 1-1 2C11 16 8 13 7.5 8.8l2-1 1 2z" /></svg
+      ></a>
+    </main>
+
+    <p class="note">
+      <b>Protótipo Rota 316:</b> mesma estrutura do Park Vision, cores do logo. Sem foto da oficina
+      ainda, o logo grande abre a página. “Meus trabalhos” entra quando chegarem as fotos; “Avaliar
+      no Google” quando houver o link. Texto do “Sobre” provisório.
+    </p>
+
+    <script>
+      document.querySelectorAll("[data-f]").forEach((b) =>
+        b.addEventListener("click", () => {
+          document.body.dataset.font = b.dataset.f;
+          document.documentElement.style.setProperty(
+            "--name-font",
+            b.dataset.f === "fredoka" ? '"Fredoka", sans-serif' : '"Exo 2", "DM Sans", sans-serif',
+          );
+          document
+            .querySelectorAll("[data-f]")
+            .forEach((x) => x.setAttribute("aria-pressed", x === b));
+        }),
+      );
+      document.getElementById("share").addEventListener("click", () => {
+        if (navigator.share) navigator.share({ title: "Rota 316", url: location.href });
+      });
+    </script>
+  </body>
+</html>

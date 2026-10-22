@@ -18,6 +18,7 @@ export const ICONS = {
   tag: { label: "Preços", color: "#9b3fd1" },
   gift: { label: "Presente / encomenda", color: "#e0245e" },
   shield: { label: "Convênios / garantia", color: "#5552d6" },
+  wheel: { label: "Rodas / oficina", color: "#1e63e0" },
   delivery: { label: "Delivery", color: "#e8392f" },
   link: { label: "Link", color: "#1a6fe0" },
   star: { label: "Estrela", color: "#a86f00" },

@@ -14,6 +14,7 @@ import {
   collectImageRefs,
   glassTop,
   resolveLink,
+  splitNameAccent,
   standardCardBase,
   validateBio,
   wifiQrPayload,
@@ -443,5 +444,75 @@ describe("visual padrão (D41: cartões iguais, sem halo, fundo do ramo)", () =>
     const d = doc();
     link(d, "instagram").hideIcon = true;
     expect(validateBio(d).ok).toBe(true);
+  });
+});
+
+describe("detalhes por cliente no visual padrão (Rota 316, 2026-10-22)", () => {
+  const paths = (d: BioDocument) => {
+    const r = validateBio(d);
+    return r.ok ? [] : r.issues.map((i) => i.path);
+  };
+  const rota = () => {
+    const d = doc();
+    d.theme.cardStyle = "neon";
+    d.theme.colors.base = "#061a33";
+    d.theme.colors.ink = "#061a33";
+    return d;
+  };
+
+  it("borda neon, categorias, destaque do nome, slogan escuro, reflexo e logo solto: válidos", () => {
+    const d = rota();
+    d.theme.neonEdges = { start: "#1e6fff", end: "#f5c400" };
+    d.theme.chips = { bg: "#f5c400", fg: "#061a33" };
+    d.theme.nameAccent = "#f5c400";
+    d.theme.taglineDark = true;
+    d.theme.shine = true;
+    d.theme.fonts.display = "exo-2";
+    d.profile.logoFrame = "none";
+    const r = validateBio(d);
+    expect(r.ok ? [] : r.issues).toEqual([]);
+  });
+
+  it("recusa categorias sem contraste, destaque do nome apagado e vidro neon claro", () => {
+    const chips = rota();
+    chips.theme.chips = { bg: "#f5c400", fg: "#ffffff" };
+    expect(paths(chips)).toEqual(["theme.chips.fg"]);
+
+    const accent = rota();
+    accent.theme.nameAccent = "#0b2a52";
+    expect(paths(accent)).toEqual(["theme.nameAccent"]);
+
+    const light = rota();
+    light.theme.colors.base = "#5a6f8f";
+    light.theme.neonEdges = { start: "#ffffff", end: "#f5c400" };
+    expect(paths(light)).toContain("theme.neonEdges.start");
+  });
+
+  it("fonte em itálico (Exo 2) só nos títulos", () => {
+    const d = rota();
+    d.theme.fonts.body = "exo-2";
+    expect(paths(d)).toEqual(["theme.fonts.body"]);
+  });
+
+  it("destaque do nome vai na última palavra", () => {
+    expect(splitNameAccent("Rota 316")).toEqual(["Rota ", "316"]);
+    expect(splitNameAccent("Studio Lia Andrade")).toEqual(["Studio Lia ", "Andrade"]);
+    expect(splitNameAccent("Rota316")).toBeNull();
+  });
+
+  it("galeria em cartão aceita ícone próprio (roda para Meus serviços)", () => {
+    const d = rota();
+    d.blocks.push({
+      id: "servicos",
+      type: "gallery",
+      hidden: false,
+      title: "Meus serviços",
+      display: "card",
+      icon: "wheel",
+      images: [{ assetId: "11111111-1111-4111-8111-111111111111", alt: "Alinhamento" }],
+    });
+    expect(validateBio(d).ok).toBe(true);
+    Object.assign(d.blocks.at(-1)!, { icon: "foguete" });
+    expect(validateBio(d).ok).toBe(false);
   });
 });

@@ -7,9 +7,10 @@ const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 1100, height: 900 }, deviceScaleFactor: 2 });
 await p.goto(process.argv[2], { waitUntil: "networkidle" });
 const families = await p.evaluate(async () => {
-  const fams = [...new Set([...document.fonts].map((f) => f.family))].filter(
-    (f) => !/Fallback/i.test(f),
-  );
+  // Nomes com espaço ou número ("Exo 2") precisam de aspas no CSS.
+  const fams = [...new Set([...document.fonts].map((f) => f.family))]
+    .filter((f) => !/Fallback/i.test(f))
+    .map((f) => (/^["']/.test(f) ? f : `"${f}"`));
   const box = document.createElement("div");
   box.id = "specimen";
   box.style.cssText = "background:#fff;color:#111;padding:16px;position:relative;z-index:99";
