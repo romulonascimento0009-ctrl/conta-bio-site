@@ -65,6 +65,9 @@ export const TARGET_LABEL: Record<string, string> = {
   phone: "Telefone",
   maps: "Mapa / como chegar",
   url: "Link",
+  gallery: "Galeria (abrir fotos)",
+  pix: "Pix",
+  wifi: "Wi-Fi",
   fab: "Botão flutuante do WhatsApp",
   "social:instagram": "Rodapé: Instagram",
   "social:facebook": "Rodapé: Facebook",
@@ -83,8 +86,13 @@ export const TARGET_LABEL: Record<string, string> = {
 export function trackTargets(doc: BioDocument): Map<string, { target: string; label: string }> {
   const map = new Map<string, { target: string; label: string }>();
   for (const b of doc.blocks) {
-    if (b.type !== "link" || b.hidden || !resolveLink(b, doc.contact)) continue;
-    map.set(`b:${b.id}`, { target: b.action, label: b.title });
+    if (b.hidden) continue;
+    // Cartões que abrem um painel por cima (galeria, Pix, Wi-Fi) também contam o toque.
+    if (b.type === "link") {
+      if (resolveLink(b, doc.contact)) map.set(`b:${b.id}`, { target: b.action, label: b.title });
+    } else if (b.type === "gallery" || b.type === "pix" || b.type === "wifi") {
+      map.set(`b:${b.id}`, { target: b.type, label: b.title });
+    }
   }
   for (const icon of [
     "instagram",

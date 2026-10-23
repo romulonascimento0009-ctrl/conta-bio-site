@@ -111,7 +111,7 @@ export function applyQuickEdit(doc: BioDocument, q: QuickEdit): BioDocument {
             type: "wifi",
             hidden: false,
             title: "Wi-Fi",
-            showQr: true,
+            showQr: false,
             security: "WPA",
           }),
       network: q.wifiNetwork,

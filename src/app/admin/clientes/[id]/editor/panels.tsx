@@ -402,7 +402,9 @@ function blockLabel(b: Block): string {
           ? "Horários"
           : b.type === "gallery"
             ? "Galeria"
-            : "Texto";
+            : b.type === "pix"
+              ? "Pix"
+              : "Texto";
   const title = "title" in b && b.title ? b.title : "";
   return title && title !== kind ? `${title} · ${kind}` : kind;
 }
@@ -568,16 +570,43 @@ function BlockEditor({
           <TextField
             label="Senha"
             value={block.password}
-            hint="Fica visível para quem abrir o Bio Site. Vazia = rede aberta."
+            hint="Aparece quando tocam no cartão do Wi-Fi. Vazia = rede aberta."
             onChange={(v) => set({ password: v, security: v ? "WPA" : "nopass" }, "password")}
             maxLength={63}
           />
-          <Check
-            label="Mostrar QR code para conectar"
-            checked={block.showQr}
-            onChange={(v) => set({ showQr: v }, "showQr")}
-          />
           <IconColor icon="wifi" value={block.iconColor} set={set} />
+        </Section>
+      );
+    case "pix":
+      return (
+        <Section title="Pix">
+          <TextField
+            label="Título"
+            value={block.title}
+            onChange={(v) => set({ title: v }, "title")}
+            maxLength={40}
+          />
+          <TextField
+            label="Chave Pix"
+            value={block.key}
+            hint="CPF, CNPJ, e-mail, chave aleatória ou celular com +55 (ex.: +5585999998888)."
+            onChange={(v) => set({ key: v }, "key")}
+            maxLength={77}
+          />
+          <TextField
+            label="Nome do recebedor"
+            value={block.name}
+            hint="Como aparece no banco."
+            onChange={(v) => set({ name: v }, "name")}
+            maxLength={25}
+          />
+          <TextField
+            label="Cidade"
+            value={block.city}
+            onChange={(v) => set({ city: v }, "city")}
+            maxLength={15}
+          />
+          <IconColor icon="pix" value={block.iconColor} set={set} />
         </Section>
       );
     case "hours":

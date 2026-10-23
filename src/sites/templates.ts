@@ -98,7 +98,7 @@ function blocksFor(segment: SegmentId, b: Seed): Block[] {
       network: b.wifiNetwork,
       password: b.wifiPassword ?? "",
       security: b.wifiPassword ? "WPA" : "nopass",
-      showQr: true,
+      showQr: false,
     });
   }
   const rows = b.hours ? parseHours(b.hours) : [];

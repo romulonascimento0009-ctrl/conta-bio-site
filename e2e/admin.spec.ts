@@ -104,7 +104,7 @@ test("fluxo completo: cliente → briefing → Bio Site → edição rápida →
     "href",
     "https://instagram.com/doce.acao.oficial",
   );
-  await expect(page.getByRole("region", { name: "Wi-Fi" })).toContainText("DOCE-WIFI");
+  await expect(page.locator('button[data-block-id="wifi"]')).toContainText("DOCE-WIFI");
   await expect(page.getByRole("region", { name: "Avisos" })).toContainText("Bolo do dia");
   await expectNoA11yViolations(page);
 

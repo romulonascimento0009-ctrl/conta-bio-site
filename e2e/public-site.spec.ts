@@ -51,7 +51,7 @@ test.describe("Bio Site público", () => {
     );
   });
 
-  test("Wi-Fi: mostra rede e senha, copia a senha e exibe o QR code", async ({
+  test("Wi-Fi: cartão mostra só a rede; a senha aparece ao tocar, sem QR code", async ({
     page,
     context,
     browserName,
@@ -59,13 +59,16 @@ test.describe("Bio Site público", () => {
     test.skip(browserName !== "chromium", "permissão de área de transferência só no Chromium");
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.goto(PADARIA);
-    const wifi = page.getByRole("region", { name: "Wi-Fi" });
-    await expect(wifi).toContainText("FORNO-CLIENTES");
-    await wifi.getByRole("button", { name: "Copiar senha" }).click();
-    await expect(wifi.getByRole("button", { name: "Senha copiada" })).toBeVisible();
+    const card = page.locator('button[data-block-id="wifi"]');
+    await expect(card).toContainText("FORNO-CLIENTES");
+    await expect(page.getByText("paoquentinho")).toBeHidden();
+    await card.click();
+    const sheet = page.getByRole("dialog", { name: "Wi-Fi" });
+    await expect(sheet).toContainText("paoquentinho");
+    await sheet.getByRole("button", { name: "Copiar senha" }).click();
+    await expect(sheet.getByRole("button", { name: "Senha copiada" })).toBeVisible();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("paoquentinho");
-    await wifi.getByText("Conectar com QR code").click();
-    await expect(wifi.getByRole("img", { name: "QR code para conectar ao Wi-Fi" })).toBeVisible();
+    await expect(page.getByText("Conectar com QR code")).toHaveCount(0);
   });
 
   test("faixa de aviso acessível para leitores de tela", async ({ page }) => {

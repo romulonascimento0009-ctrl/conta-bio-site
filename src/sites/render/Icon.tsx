@@ -95,6 +95,12 @@ const PATHS: Record<IconId | UiIcon, React.ReactNode> = {
       <path d="M12 10.2V5.5M13.7 11.4l4.5-1.4M13.1 13.5l2.7 3.8M10.9 13.5l-2.7 3.8M10.3 11.4L5.8 10" />
     </g>
   ),
+  pix: (
+    <g {...stroke}>
+      <path d="M12 2.8l9.2 9.2-9.2 9.2L2.8 12z" />
+      <path d="M12 8.2l3.8 3.8-3.8 3.8L8.2 12z" />
+    </g>
+  ),
   delivery: (
     <g {...stroke}>
       <circle cx="5.5" cy="17" r="3" />

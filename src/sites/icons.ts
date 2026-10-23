@@ -27,6 +27,7 @@ export const ICONS = {
   facebook: { label: "Facebook", color: "#1877f2" },
   tiktok: { label: "TikTok", color: "#161823" },
   youtube: { label: "YouTube", color: "#e00000" },
+  pix: { label: "Pix", color: "#00897b" },
 } as const satisfies Record<string, { label: string; color: string; tile?: string }>;
 
 export type IconId = keyof typeof ICONS;

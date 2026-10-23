@@ -291,7 +291,7 @@ describe("applyOperation", () => {
 
   it("todos os blocos novos são válidos", () => {
     const d = doc();
-    for (const type of ["link", "wifi", "hours", "text"] as const) {
+    for (const type of ["link", "wifi", "hours", "text", "pix"] as const) {
       const b = newBlock(d, type)!;
       expect(validateBio(applyOperation(d, { type: "block-add", block: b })).ok).toBe(true);
     }

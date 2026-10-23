@@ -92,6 +92,10 @@ Formato: decisão · motivo · alternativas.
 
 **D44 — Efeitos "elétrico" no fundo (2026-10-22, Rota 316).** O usuário quis "um fundo muito show" (referência: posts de oficina com mármore escuro, raios e luzes neon). Opção `theme.effects: "electric"` do visual padrão: camada parada atrás do conteúdo com raios que piscam, três tubos de neon com ponto de luz correndo, rastros de luz, luz nas bordas, bolinhas de luz, engrenagens girando, faíscas, anel de luz atrás do logo sem moldura e entrada animada dos cartões. Cores da borda neon do cliente (`neonEdges`; sem ela, ciano/rosa). Só transform/opacity; parado para quem desligou as animações. Cartões continuam sem halo (D41). O fundo da Rota 316 é uma imagem só (arte de oficina enviada pelo usuário + véu escuro + fundo elétrico em "screen"), gerada fora do sistema. A arte tem marcas de terceiros (Moura, VW) — trocar por foto da própria oficina quando houver.
 
+**D45 — Pix, Wi-Fi em cartão e sem QR code (2026-10-23, Rota 316).** Bloco novo `pix` (chave, recebedor, cidade): no visual padrão é um cartão que abre a chave e "Copiar chave Pix"; o BR Code estático (`src/sites/pix.ts`, CRC conferido com o exemplo do Banco Central) continua disponível mas desligado. O usuário não quer QR code em nenhum site: `showQr` passou a ser falso por padrão no Wi-Fi e no Pix e saiu do editor. O Wi-Fi no visual padrão virou cartão: mostra só a rede; a senha aparece ao tocar.
+
+**D46 — Métricas contam todo cartão (2026-10-23).** Erro achado pelo usuário no Park Vision: toques em cartões que abrem um painel (galeria "Meus trabalhos") chegavam ao servidor e eram descartados, porque `trackTargets` só aceitava cartões de link. Agora aceita galeria, Pix e Wi-Fi. Proteção: `src/sites/render/tracking.test.ts` desenha um Bio Site com todos os tipos de bloco e falha se algum `data-track` da página não for aceito pelo servidor — tipo de cartão novo sem contagem não passa no `npm run check`. Toques anteriores a esta correção nesses cartões não foram gravados e não há como recuperar.
+
 ## Pendentes
 
 **P5b — Segundo fator (TOTP ou passkey).** Obrigatório antes do deploy (Fase 5). Plugins `twoFactor`/`passkey` do Better Auth.

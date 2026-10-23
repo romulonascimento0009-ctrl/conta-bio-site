@@ -77,6 +77,36 @@ describe("trackTargets", () => {
     const hidden = applyOperation(doc, { type: "block-toggle", id: "instagram" });
     expect(trackTargets(hidden).has("b:instagram")).toBe(false);
   });
+
+  it("conta também os cartões que abrem um painel (galeria, Pix, Wi-Fi)", () => {
+    const withPanels = {
+      ...doc,
+      blocks: [
+        ...doc.blocks,
+        {
+          id: "meus-trabalhos",
+          type: "gallery" as const,
+          hidden: false,
+          title: "Meus trabalhos",
+          display: "card" as const,
+          images: [{ assetId: "0b6c3f4e-8a51-4c43-9f1e-2d3c4b5a6f70", alt: "" }],
+        },
+        {
+          id: "pix",
+          type: "pix" as const,
+          hidden: false,
+          title: "Pagar com Pix",
+          key: "a@b.com",
+          name: "Forno",
+          city: "Campinas",
+          showQr: false,
+        },
+      ],
+    };
+    const t = trackTargets(withPanels);
+    expect(t.get("b:meus-trabalhos")).toEqual({ target: "gallery", label: "Meus trabalhos" });
+    expect(t.get("b:pix")).toEqual({ target: "pix", label: "Pagar com Pix" });
+  });
 });
 
 describe("eventos", () => {

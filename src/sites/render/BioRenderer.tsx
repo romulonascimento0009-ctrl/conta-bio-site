@@ -28,6 +28,7 @@ import { isItalicFont } from "@/sites/fonts";
 import { cardSubtitle, whatsappHref } from "@/sites/links";
 import { mixHex, rgbaCss } from "@/sites/color";
 import { PATTERNS } from "@/sites/patterns";
+import { pixPayload } from "@/sites/pix";
 import "./bio.css";
 import { CopyButton, SheetCard, ShareButton, Tracker } from "./client-buttons";
 import { ElectricFx } from "./ElectricFx";
@@ -293,7 +294,117 @@ function GalleryCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"gallery"> }) {
   );
 }
 
-function QrCode({ text }: { text: string }) {
+/** Dados do Pix: recebedor, chave, botões de copiar e QR "copia e cola" (sem valor). */
+function PixInfo({ block }: { block: BlockOf<"pix"> }) {
+  const payload = pixPayload(block);
+  return (
+    <div className="bio-pix">
+      <dl>
+        <dt>Recebedor</dt>
+        <dd>{block.name}</dd>
+        <dt>Chave Pix</dt>
+        <dd>{block.key}</dd>
+      </dl>
+      <CopyButton value={block.key} label="Copiar chave Pix" done="Chave copiada" icon="copy" />
+      {block.showQr && (
+        <>
+          <QrCode text={payload} label="QR code para pagar com Pix" />
+          <p>Abra o app do banco, escolha Pix e leia o QR code ou use o Pix copia e cola.</p>
+          <CopyButton
+            value={payload}
+            label="Copiar Pix copia e cola"
+            done="Código copiado"
+            icon="copy"
+            subtle
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Dados do Wi-Fi: rede, senha e botão de copiar (QR só se ligado em documentos antigos). */
+function WifiInfo({ block }: { block: BlockOf<"wifi"> }) {
+  const locked = block.security !== "nopass" && !!block.password;
+  return (
+    <div className="bio-pix">
+      <dl>
+        <dt>Rede</dt>
+        <dd>{block.network}</dd>
+        {locked && (
+          <>
+            <dt>Senha</dt>
+            <dd>{block.password}</dd>
+          </>
+        )}
+      </dl>
+      {locked ? (
+        <CopyButton value={block.password} label="Copiar senha" done="Senha copiada" />
+      ) : (
+        <p>Rede aberta, sem senha.</p>
+      )}
+      {block.showQr && (
+        <details className="bio-qr">
+          <summary>
+            <Icon name="qr" /> Conectar com QR code
+          </summary>
+          <QrCode text={wifiQrPayload(block)} label="QR code para conectar ao Wi-Fi" />
+          <p>Aponte a câmera do celular para conectar.</p>
+        </details>
+      )}
+    </div>
+  );
+}
+
+/** Wi-Fi no visual padrão: o cartão mostra só a rede; a senha aparece ao tocar. */
+function WifiCard({ block }: { block: BlockOf<"wifi"> }) {
+  return (
+    <li>
+      <SheetCard
+        {...stdCard(block.iconColor ?? SECTION_ICONS.wifi.color)}
+        track={`b:${block.id}`}
+        blockId={block.id}
+        title={block.title}
+        trigger={
+          <StdCardBody
+            icon="wifi"
+            iconColor={block.iconColor}
+            title={block.title}
+            subtitle={`Rede: ${block.network}`}
+          />
+        }
+      >
+        <WifiInfo block={block} />
+      </SheetCard>
+    </li>
+  );
+}
+
+/** Pix no visual padrão: cartão que abre os dados de pagamento por cima da página. */
+function PixCard({ block }: { block: BlockOf<"pix"> }) {
+  return (
+    <li>
+      <SheetCard
+        {...stdCard(block.iconColor ?? ICONS.pix.color)}
+        track={`b:${block.id}`}
+        blockId={block.id}
+        title={block.title}
+        trigger={
+          <StdCardBody
+            icon="pix"
+            iconColor={block.iconColor}
+            title={block.title}
+            subtitle="Toque para ver a chave"
+          />
+        }
+      >
+        <PixInfo block={block} />
+      </SheetCard>
+    </li>
+  );
+}
+
+function QrCode({ text, label }: { text: string; label: string }) {
   // Desenha o QR no servidor a partir da matriz de módulos (sem HTML externo).
   const qr = QRCode.create(text, { errorCorrectionLevel: "M" });
   const size = qr.modules.size;
@@ -306,7 +417,7 @@ function QrCode({ text }: { text: string }) {
       className="bio-qr-code"
       viewBox={`0 0 ${size + 4} ${size + 4}`}
       role="img"
-      aria-label="QR code para conectar ao Wi-Fi"
+      aria-label={label}
       shapeRendering="crispEdges"
     >
       <rect width="100%" height="100%" fill="#fff" />
@@ -325,28 +436,19 @@ function Panel({ block, ctx }: { block: Exclude<Block, BlockOf<"link">>; ctx: Ct
             <SectionIcon icon="wifi" color={block.iconColor} />
             {block.title}
           </h2>
-          <dl>
-            <dt>Rede</dt>
-            <dd>{block.network}</dd>
-            {block.security !== "nopass" && block.password && (
-              <>
-                <dt>Senha</dt>
-                <dd>{block.password}</dd>
-              </>
-            )}
-          </dl>
-          {block.security !== "nopass" && block.password && (
-            <CopyButton value={block.password} label="Copiar senha" done="Senha copiada" />
-          )}
-          {block.showQr && (
-            <details className="bio-qr">
-              <summary>
-                <Icon name="qr" /> Conectar com QR code
-              </summary>
-              <QrCode text={wifiQrPayload(block)} />
-              <p>Aponte a câmera do celular para conectar.</p>
-            </details>
-          )}
+          <WifiInfo block={block} />
+        </section>
+      );
+    case "pix":
+      return (
+        <section className="bio-panel bio-wifi" aria-labelledby={titleId} data-block-id={block.id}>
+          <h2 id={titleId}>
+            <span {...tileProps("pix", "bio-hico", block.iconColor)}>
+              <Icon name="pix" />
+            </span>
+            {block.title}
+          </h2>
+          <PixInfo block={block} />
         </section>
       );
     case "hours":
@@ -403,13 +505,17 @@ function Panel({ block, ctx }: { block: Exclude<Block, BlockOf<"link">>; ctx: Ct
 
 /** Agrupa cartões consecutivos numa lista e intercala os painéis, mantendo a ordem do documento. */
 function Blocks({ ctx }: { ctx: Ctx }) {
-  type CardBlock = BlockOf<"link"> | BlockOf<"gallery">;
+  type CardBlock = BlockOf<"link"> | BlockOf<"gallery"> | BlockOf<"pix"> | BlockOf<"wifi">;
   const groups: (CardBlock[] | Exclude<Block, BlockOf<"link">>)[] = [];
   // Galeria em cartão só no visual padrão; nos estilos antigos continua como painel.
   const std = isStandardStyle(ctx.doc.theme.cardStyle);
   for (const b of ctx.doc.blocks) {
     if (b.hidden) continue;
-    if (b.type === "link" || (std && b.type === "gallery" && b.display === "card")) {
+    if (
+      b.type === "link" ||
+      (std && b.type === "gallery" && b.display === "card") ||
+      (std && (b.type === "pix" || b.type === "wifi"))
+    ) {
       const last = groups.at(-1);
       if (Array.isArray(last)) last.push(b);
       else groups.push([b]);
@@ -423,6 +529,10 @@ function Blocks({ ctx }: { ctx: Ctx }) {
         {g.map((b) =>
           b.type === "link" ? (
             <LinkCard key={b.id} ctx={ctx} block={b} />
+          ) : b.type === "pix" ? (
+            <PixCard key={b.id} block={b} />
+          ) : b.type === "wifi" ? (
+            <WifiCard key={b.id} block={b} />
           ) : (
             <GalleryCard key={b.id} ctx={ctx} block={b} />
           ),

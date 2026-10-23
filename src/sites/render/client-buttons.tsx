@@ -28,7 +28,20 @@ export function ShareButton({ title }: { title: string }) {
   );
 }
 
-export function CopyButton({ value, label, done }: { value: string; label: string; done: string }) {
+export function CopyButton({
+  value,
+  label,
+  done,
+  icon = "wifi",
+  subtle,
+}: {
+  value: string;
+  label: string;
+  done: string;
+  icon?: "wifi" | "copy";
+  /** Botão secundário (contorno), abaixo de um principal. */
+  subtle?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
   async function copy() {
     await navigator.clipboard.writeText(value);
@@ -36,8 +49,8 @@ export function CopyButton({ value, label, done }: { value: string; label: strin
     setTimeout(() => setCopied(false), 2000);
   }
   return (
-    <button type="button" className="bio-copy" onClick={copy}>
-      <Icon name="wifi" />
+    <button type="button" className={subtle ? "bio-copy subtle" : "bio-copy"} onClick={copy}>
+      <Icon name={icon} />
       <span aria-live="polite">{copied ? done : label}</span>
     </button>
   );

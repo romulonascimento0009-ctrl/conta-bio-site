@@ -1570,3 +1570,48 @@ button.bio-tag {
     transition: none;
   }
 }
+
+/* Pix: no painel claro usa o quadro do Wi-Fi; no painel que abre por cima, versão escura. */
+.bio-pix {
+  display: grid;
+  gap: 10px;
+  text-align: center;
+}
+.bio-pix dl {
+  margin: 0;
+}
+.bio-sheet .bio-pix dl {
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.07);
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+}
+.bio-sheet .bio-pix dt {
+  font-size: 0.78rem;
+  color: rgb(255 255 255 / 0.78);
+}
+.bio-sheet .bio-pix dd {
+  margin: 0 0 6px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+.bio-pix svg.bio-qr-code {
+  display: block;
+  width: 200px;
+  height: 200px;
+  margin: 6px auto 0;
+  border-radius: 12px;
+}
+.bio-pix p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+.bio-copy.subtle {
+  background: transparent;
+  border: 2px solid currentColor;
+  color: inherit;
+}

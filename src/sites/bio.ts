@@ -331,7 +331,22 @@ export const wifiBlock = z
     network: text(32),
     password: z.string().max(63).default(""),
     security: z.enum(["WPA", "WEP", "nopass"]).default("WPA"),
-    showQr: z.boolean().default(true),
+    showQr: z.boolean().default(false),
+    ...iconColor,
+  })
+  .superRefine((b, ctx) => checkIconColor(ctx, b.iconColor));
+
+/** Pagamento por Pix: chave, recebedor e QR "copia e cola" sem valor (src/sites/pix.ts). */
+export const pixBlock = z
+  .object({
+    ...blockBase,
+    type: z.literal("pix"),
+    title: text(40).default("Pagar com Pix"),
+    key: text(77),
+    /** Nome do recebedor como aparece no banco. */
+    name: text(25),
+    city: text(15),
+    showQr: z.boolean().default(false),
     ...iconColor,
   })
   .superRefine((b, ctx) => checkIconColor(ctx, b.iconColor));
@@ -379,6 +394,7 @@ export const anyBlock = z.discriminatedUnion("type", [
   hoursBlock,
   galleryBlock,
   textBlock,
+  pixBlock,
 ]);
 export type Block = z.infer<typeof anyBlock>;
 export type BlockOf<T extends Block["type"]> = Extract<Block, { type: T }>;

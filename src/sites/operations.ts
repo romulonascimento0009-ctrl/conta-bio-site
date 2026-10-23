@@ -156,6 +156,7 @@ export const NEW_BLOCK_TYPES = {
   hours: "Horários",
   gallery: "Galeria de fotos",
   text: "Texto",
+  pix: "Pix",
 } as const;
 export type NewBlockType = keyof typeof NEW_BLOCK_TYPES;
 
@@ -185,7 +186,18 @@ export function newBlock(
         network: "MINHA-REDE",
         password: "",
         security: "nopass",
-        showQr: true,
+        showQr: false,
+      };
+    case "pix":
+      return {
+        id: uniqueBlockId(doc, "pix"),
+        type: "pix",
+        hidden: false,
+        title: "Pagar com Pix",
+        key: "sua-chave@email.com",
+        name: doc.profile.name.slice(0, 25),
+        city: (doc.profile.city?.split("/")[0] || "Cidade").slice(0, 15),
+        showQr: false,
       };
     case "hours":
       return {
