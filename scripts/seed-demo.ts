@@ -25,7 +25,8 @@ type Demo = {
   gallery: string;
   /** Topo com "foto da fachada" (desenho gerado) em vez do fundo desfocado. */
   facade?: boolean;
-  extra?: (doc: BioDocument) => void;
+  /** Ajustes finais; recebe as fotos da galeria (o salão também as usa no catálogo). */
+  extra?: (doc: BioDocument, images: ImageRef[]) => void;
 };
 
 const DEMOS: Demo[] = [
@@ -73,6 +74,32 @@ const DEMOS: Demo[] = [
     },
     ticker: ["Agenda aberta para novembro", "Consultoria de cachos"],
     gallery: "Antes e depois",
+    // Catálogo com carrinho (D48): duas categorias, uma com preço e outra "Preço no WhatsApp".
+    extra: (d, images) => {
+      d.blocks.unshift({
+        id: "catalogo",
+        type: "catalog",
+        hidden: false,
+        title: "Nossos produtos",
+        subtitle: "Toque numa categoria, escolha os produtos e envie o pedido pelo WhatsApp.",
+        categories: [
+          {
+            id: "c1",
+            name: "Cachos",
+            tag: "Mais vendidos",
+            products: [
+              { id: "p1", name: "Creme de pentear", priceCents: 4990, image: images[0] },
+              { id: "p2", name: "Gelatina modeladora", priceCents: 3990, image: images[1] },
+            ],
+          },
+          {
+            id: "c2",
+            name: "Coloração",
+            products: [{ id: "p1", name: "Tonalizante", image: images[2] }],
+          },
+        ],
+      });
+    },
   },
   {
     slug: "demo-clinica",
@@ -247,7 +274,7 @@ async function main() {
       images,
     });
     doc.ticker = { enabled: true, items: demo.ticker };
-    demo.extra?.(doc);
+    demo.extra?.(doc, images);
 
     const result = validateBio(doc);
     if (!result.ok) throw new Error(`${demo.slug}: ${JSON.stringify(result.issues, null, 2)}`);

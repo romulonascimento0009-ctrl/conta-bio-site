@@ -49,6 +49,21 @@ function fullDoc(): BioDocument {
       city: "Fortaleza",
       showQr: false,
     },
+    {
+      id: "catalogo",
+      type: "catalog",
+      hidden: false,
+      title: "Nossos produtos",
+      categories: [
+        {
+          id: "c1",
+          name: "Peças",
+          products: [
+            { id: "p1", name: "Filtro", priceCents: 3990, image: { assetId: IMG, alt: "" } },
+          ],
+        },
+      ],
+    },
   );
   return doc;
 }
@@ -69,6 +84,10 @@ describe("métricas: todo toque da página é aceito pelo servidor", () => {
     expect(keys).toContain("b:meus-servicos");
     expect(keys).toContain("b:pix");
     expect(keys).toContain("b:wifi");
+    expect(keys).toContain("k:c1");
+    // Adicionar e enviar só aparecem no navegador (painel aberto / pedido com itens).
+    expect(accepted.has("p:c1:p1")).toBe(true);
+    expect(accepted.has("order")).toBe(true);
     // Uma chave desenhada mas recusada no servidor = toque perdido nas métricas.
     expect(keys.filter((k) => !accepted.has(k))).toEqual([]);
   });

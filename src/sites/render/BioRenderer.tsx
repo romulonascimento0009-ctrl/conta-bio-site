@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { AssetInfo } from "@/data/assets";
 import {
   glassTop,
@@ -7,6 +7,7 @@ import {
   isStandardStyle,
   neonGlass,
   resolveLink,
+  satinCard,
   splitNameAccent,
   standardCardBase,
   veilAlphas,
@@ -32,6 +33,8 @@ import { pixPayload } from "@/sites/pix";
 import "./bio.css";
 import { CopyButton, SheetCard, ShareButton, Tracker } from "./client-buttons";
 import { ElectricFx } from "./ElectricFx";
+import { Catalog, type CatalogImage, type CatalogView } from "./Catalog";
+import { GlitterFx } from "./GlitterFx";
 import { loadedFont } from "./fonts";
 import { Icon } from "./Icon";
 import { mediaUrl } from "./media";
@@ -42,7 +45,8 @@ const RADIUS = {
   pill: { card: "999px", ico: "50%", panel: "26px" },
 } as const;
 
-type Ctx = { doc: BioDocument; assets: Map<string, AssetInfo> };
+/** `cartKey`: separa o pedido guardado no navegador por Bio Site (e a prévia do publicado). */
+type Ctx = { doc: BioDocument; assets: Map<string, AssetInfo>; cartKey: string };
 
 function Img({
   ctx,
@@ -118,8 +122,11 @@ function StdCardBody({
   badge,
   title,
   subtitle,
+  photo,
 }: {
   icon: IconId | SectionIconId;
+  /** Foto no lugar do ícone (galeria com "Usar a primeira foto como ícone"). */
+  photo?: ReactNode;
   iconColor?: string;
   hideIcon?: boolean;
   tag?: string;
@@ -130,11 +137,14 @@ function StdCardBody({
   return (
     <>
       {tag && <span className="bio-corner">{tag}</span>}
-      {!hideIcon && (
-        <span {...tileProps(icon, "bio-ico", iconColor)}>
-          <Icon name={icon} />
-        </span>
-      )}
+      {!hideIcon &&
+        (photo ? (
+          <span className="bio-ico photo">{photo}</span>
+        ) : (
+          <span {...tileProps(icon, "bio-ico", iconColor)}>
+            <Icon name={icon} />
+          </span>
+        ))}
       <span className="bio-txt">
         {badge && <span className="bio-badge">{badge}</span>}
         <strong>{title}</strong>
@@ -266,6 +276,9 @@ function GalleryCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"gallery"> }) {
         trigger={
           <StdCardBody
             icon={block.icon ?? "photos"}
+            photo={
+              block.iconPhoto ? <Img ctx={ctx} image={images[0]} sizes="54px" alt="" /> : undefined
+            }
             iconColor={block.iconColor}
             hideIcon={block.hideIcon}
             title={block.title}
@@ -304,6 +317,12 @@ function PixInfo({ block }: { block: BlockOf<"pix"> }) {
         <dd>{block.name}</dd>
         <dt>Chave Pix</dt>
         <dd>{block.key}</dd>
+        {block.bank && (
+          <>
+            <dt>Banco</dt>
+            <dd>{block.bank}</dd>
+          </>
+        )}
       </dl>
       <CopyButton value={block.key} label="Copiar chave Pix" done="Chave copiada" icon="copy" />
       {block.showQr && (
@@ -487,6 +506,8 @@ function Panel({ block, ctx }: { block: Exclude<Block, BlockOf<"link">>; ctx: Ct
         </section>
       );
     }
+    case "catalog":
+      return <CatalogBlock ctx={ctx} block={block} />;
     case "text":
       return (
         <section
@@ -501,6 +522,49 @@ function Panel({ block, ctx }: { block: Exclude<Block, BlockOf<"link">>; ctx: Ct
         </section>
       );
   }
+}
+
+/** Variantes de uma imagem do cliente para o catálogo (componente do navegador). */
+function catalogImage(ctx: Ctx, image: ImageRef | undefined, alt: string): CatalogImage | null {
+  const info = image && ctx.assets.get(image.assetId);
+  if (!image || !info) return null;
+  const fallback = info.variants.find((w) => w >= 480) ?? info.variants.at(-1)!;
+  return {
+    src: mediaUrl(info.id, fallback),
+    srcSet: info.variants.map((w) => `${mediaUrl(info.id, w)} ${w}w`).join(", "),
+    width: info.width,
+    height: info.height,
+    alt,
+  };
+}
+
+/** Catálogo com carrinho: os dados vão prontos para o componente do navegador. */
+function CatalogBlock({ ctx, block }: { ctx: Ctx; block: BlockOf<"catalog"> }) {
+  const { doc } = ctx;
+  if (!doc.contact.whatsapp) return null;
+  const categories: CatalogView[] = block.categories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    tag: c.tag,
+    cover: catalogImage(ctx, c.cover ?? c.products[0].image, ""),
+    products: c.products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      priceCents: p.priceCents,
+      image: catalogImage(ctx, p.image, p.image.alt || p.name),
+    })),
+  }));
+  return (
+    <Catalog
+      blockId={block.id}
+      title={block.title}
+      subtitle={block.subtitle}
+      categories={categories}
+      whatsapp={doc.contact.whatsapp}
+      intro={`Oi! Vim pelo Bio Site da ${doc.profile.name} e quero fazer este pedido:`}
+      storageKey={`bio-pedido:${ctx.cartKey}`}
+    />
+  );
 }
 
 /** Agrupa cartões consecutivos numa lista e intercala os painéis, mantendo a ordem do documento. */
@@ -584,7 +648,7 @@ export function BioRenderer({
   /** Só no endereço público: registra visitas e cliques (métricas). */
   trackSlug?: string;
 }) {
-  const ctx: Ctx = { doc, assets };
+  const ctx: Ctx = { doc, assets, cartKey: trackSlug ?? `previa:${doc.profile.name}` };
   const { colors, fonts, radius, pattern } = doc.theme;
   const ticker = doc.ticker.colors ?? doc.tickerTheme;
   const hero = doc.theme.hero ?? HERO_DEFAULTS;
@@ -632,6 +696,8 @@ export function BioRenderer({
       "--neon-inset": rgbaCss(th.neonEdges.start, 0.2),
     });
   }
+  if (th.cardStyle === "satin") style["--satin"] = satinCard(colors.base);
+  if (th.cardStyle === "deep") style["--card-text"] = th.cardText ?? "#ffffff";
   if (th.chips) Object.assign(style, { "--chip-bg": th.chips.bg, "--chip-fg": th.chips.fg });
   if (th.nameAccent) style["--name-accent"] = th.nameAccent;
 
@@ -663,6 +729,11 @@ export function BioRenderer({
   const std = isStandardStyle(doc.theme.cardStyle);
   const logoFree = std && doc.profile.logoFrame === "none" && !!doc.profile.logo;
   const electric = std && th.effects === "electric";
+  const glitter = std && th.effects === "glitter";
+  // Fundo claro: topo com texto na cor dos painéis (cetim sempre; os demais quando marcado).
+  const lightPage = std && (th.cardStyle === "satin" || !!th.lightPage);
+  // Logo que já traz o nome e o slogan: os textos saem da tela (ficam para leitores e buscas).
+  const logoName = !!doc.profile.logoHasName && !!doc.profile.logo;
   // Destaque do nome: última palavra na cor escolhida ("Rota 316").
   const nameParts = std && th.nameAccent ? splitNameAccent(doc.profile.name) : null;
   // Fundo do ramo (visual padrão): imagem nítida, parada enquanto a página rola.
@@ -680,7 +751,7 @@ export function BioRenderer({
 
   return (
     <div
-      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}${std ? ` bio--std bio--${doc.theme.cardStyle}` : ""}${page ? " bio--page" : ""}${logoFree ? " bio--logo-free" : ""}${std && th.taglineDark ? " bio--tagline-dark" : ""}${electric ? " bio--fx-electric" : ""}`}
+      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}${std ? ` bio--std bio--${doc.theme.cardStyle}` : ""}${page ? " bio--page" : ""}${logoFree ? " bio--logo-free" : ""}${std && th.taglineDark ? " bio--tagline-dark" : ""}${electric ? " bio--fx-electric" : ""}${glitter ? " bio--fx-glitter" : ""}${lightPage ? " bio--light-page" : ""}${logoName ? " bio--logo-name" : ""}`}
       style={style as CSSProperties}
     >
       <div className="bio-photo" aria-hidden="true">
@@ -694,6 +765,12 @@ export function BioRenderer({
       {motion && <Aurora />}
       {std && th.shine && <div className="bio-shine" aria-hidden="true" />}
       {electric && <ElectricFx />}
+      {glitter && (
+        <GlitterFx
+          colors={th.neonEdges ? [th.neonEdges.start, th.neonEdges.end] : [colors.accent]}
+          outline={colors.ink}
+        />
+      )}
 
       <main className="bio-main">
         {cover && (
@@ -703,19 +780,22 @@ export function BioRenderer({
         )}
         <header className="bio-hero" data-edit="profile">
           <div className="bio-logo" aria-hidden={doc.profile.logo ? undefined : "true"}>
-            {electric && logoFree && <span className="bio-logo-ring" aria-hidden="true" />}
+            {((electric && logoFree) || (glitter && !logoFree)) && (
+              <span className="bio-logo-ring" aria-hidden="true" />
+            )}
             {doc.profile.logo && assets.has(doc.profile.logo.assetId) ? (
               <Img
                 ctx={ctx}
                 image={doc.profile.logo}
-                sizes={logoFree ? "220px" : "108px"}
+                sizes={logoName ? "320px" : logoFree ? "220px" : "108px"}
                 priority
+                alt={logoName ? "" : undefined}
               />
             ) : (
               initials(doc.profile.name)
             )}
           </div>
-          <h1 className="bio-name">
+          <h1 className={logoName ? "bio-name bio-sr" : "bio-name"}>
             {nameParts ? (
               <>
                 {nameParts[0]}
@@ -725,7 +805,9 @@ export function BioRenderer({
               doc.profile.name
             )}
           </h1>
-          {doc.profile.tagline && <p className="bio-tagline">{doc.profile.tagline}</p>}
+          {doc.profile.tagline && (
+            <p className={logoName ? "bio-tagline bio-sr" : "bio-tagline"}>{doc.profile.tagline}</p>
+          )}
           {doc.profile.categories.length > 0 && (
             <ul className="bio-chips" aria-label="Categorias">
               {doc.profile.categories.map((cat) => (

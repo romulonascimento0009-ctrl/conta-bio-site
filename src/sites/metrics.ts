@@ -69,6 +69,9 @@ export const TARGET_LABEL: Record<string, string> = {
   pix: "Pix",
   wifi: "Wi-Fi",
   fab: "Botão flutuante do WhatsApp",
+  catalog: "Catálogo: abriu categoria",
+  "catalog:add": "Catálogo: adicionou ao pedido",
+  "catalog:order": "Catálogo: pedido enviado pelo WhatsApp",
   "social:instagram": "Rodapé: Instagram",
   "social:facebook": "Rodapé: Facebook",
   "social:tiktok": "Rodapé: TikTok",
@@ -92,6 +95,14 @@ export function trackTargets(doc: BioDocument): Map<string, { target: string; la
       if (resolveLink(b, doc.contact)) map.set(`b:${b.id}`, { target: b.action, label: b.title });
     } else if (b.type === "gallery" || b.type === "pix" || b.type === "wifi") {
       map.set(`b:${b.id}`, { target: b.type, label: b.title });
+    } else if (b.type === "catalog") {
+      // Catálogo: abrir categoria, adicionar cada produto (só o primeiro toque) e enviar o pedido.
+      for (const c of b.categories) {
+        map.set(`k:${c.id}`, { target: "catalog", label: c.name });
+        for (const p of c.products)
+          map.set(`p:${c.id}:${p.id}`, { target: "catalog:add", label: `${p.name} (${c.name})` });
+      }
+      map.set("order", { target: "catalog:order", label: TARGET_LABEL["catalog:order"] });
     }
   }
   for (const icon of [

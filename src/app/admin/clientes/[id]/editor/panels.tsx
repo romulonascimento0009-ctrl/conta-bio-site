@@ -13,13 +13,17 @@ import {
 import {
   HERO_DEFAULTS,
   isStandardStyle,
+  MAX_CATALOG_CATEGORIES,
+  MAX_CATALOG_PRODUCTS,
   resolveLink,
   type BioDocument,
+  type CatalogCategory,
   type Block,
   type BlockOf,
   type Hero,
   type LinkAction,
 } from "@/sites/bio";
+import { formatPrice, nextItemId, parsePrice } from "@/sites/catalog";
 import { FONT_IDS, FONTS, isItalicFont } from "@/sites/fonts";
 import { customIconStart, ICON_IDS, ICONS, type IconId, type SectionIconId } from "@/sites/icons";
 import { NEW_BLOCK_TYPES, newBlock, type NewBlockType } from "@/sites/operations";
@@ -404,7 +408,9 @@ function blockLabel(b: Block): string {
             ? "Galeria"
             : b.type === "pix"
               ? "Pix"
-              : "Texto";
+              : b.type === "catalog"
+                ? "Catálogo"
+                : "Texto";
   const title = "title" in b && b.title ? b.title : "";
   return title && title !== kind ? `${title} · ${kind}` : kind;
 }
@@ -514,12 +520,18 @@ export function BlocksPanel({
         <button
           type="button"
           onClick={add}
-          disabled={newType === "gallery" && !assets.length}
+          disabled={
+            ((newType === "gallery" || newType === "catalog") && !assets.length) ||
+            (newType === "catalog" && doc.blocks.some((b) => b.type === "catalog"))
+          }
           className="rounded-md border border-border bg-white px-4 py-2 text-sm font-medium disabled:opacity-50"
         >
           Adicionar
         </button>
-        {newType === "gallery" && !assets.length && (
+        {newType === "catalog" && doc.blocks.some((b) => b.type === "catalog") && (
+          <p className="text-xs text-muted">Este Bio Site já tem um catálogo.</p>
+        )}
+        {(newType === "gallery" || newType === "catalog") && !assets.length && (
           <p className="text-xs text-muted">Envie imagens antes.</p>
         )}
       </div>
@@ -598,7 +610,15 @@ function BlockEditor({
             value={block.name}
             hint="Como aparece no banco."
             onChange={(v) => set({ name: v }, "name")}
-            maxLength={25}
+            maxLength={60}
+          />
+          <TextField
+            label="Banco (opcional)"
+            value={block.bank ?? ""}
+            placeholder="Ex.: CloudWalk Meio de Pagamentos"
+            hint="Aparece junto da chave, para quem paga conferir o destino."
+            onChange={(v) => set({ bank: v }, "bank")}
+            maxLength={40}
           />
           <TextField
             label="Cidade"
@@ -703,6 +723,13 @@ function BlockEditor({
                 onChange={(v) => set({ hideIcon: v || undefined }, "hideIcon")}
               />
               {!block.hideIcon && (
+                <Check
+                  label="Usar a primeira foto como ícone"
+                  checked={!!block.iconPhoto}
+                  onChange={(v) => set({ iconPhoto: v || undefined }, "iconPhoto")}
+                />
+              )}
+              {!block.hideIcon && !block.iconPhoto && (
                 <Select
                   label="Ícone do cartão"
                   value={block.icon ?? "photos"}
@@ -766,6 +793,8 @@ function BlockEditor({
           <IconColor icon="photos" value={block.iconColor} set={set} />
         </Section>
       );
+    case "catalog":
+      return <CatalogEditor block={block} assets={assets} set={set} />;
     case "text":
       return (
         <Section title="Texto">
@@ -786,6 +815,282 @@ function BlockEditor({
         </Section>
       );
   }
+}
+
+/* ---------- Catálogo ---------- */
+
+/** Remove chaves vazias (etiqueta apagada, sem foto de capa, sem preço). */
+function clean<T extends object>(obj: T): T {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined && v !== ""),
+  ) as T;
+}
+
+function moved<T>(list: T[], i: number, delta: -1 | 1): T[] {
+  const j = i + delta;
+  if (j < 0 || j >= list.length) return list;
+  const next = [...list];
+  [next[i], next[j]] = [next[j], next[i]];
+  return next;
+}
+
+/** Preço digitado ("29,90"); confere ao sair do campo. Vazio = "Preço no WhatsApp". */
+function PriceField({
+  label,
+  cents,
+  onChange,
+}: {
+  label: string;
+  cents: number | undefined;
+  onChange: (cents: number | undefined) => void;
+}) {
+  const [text, setText] = useState(formatPrice(cents));
+  const [error, setError] = useState(false);
+  return (
+    <div className="grid gap-1">
+      <TextField
+        label={label}
+        value={text}
+        placeholder="Ex.: 29,90 (vazio = preço no WhatsApp)"
+        onChange={setText}
+        onBlur={() => {
+          const v = parsePrice(text);
+          setError(v === null);
+          if (v === null) return;
+          onChange(v);
+          setText(formatPrice(v));
+        }}
+        maxLength={14}
+      />
+      {error && (
+        <p role="alert" className="text-xs text-danger">
+          Preço inválido. Use só números, ex.: 29,90.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CatalogEditor({
+  block,
+  assets,
+  set,
+}: {
+  block: BlockOf<"catalog">;
+  assets: EditorAsset[];
+  set: (patch: Record<string, unknown>, field: string) => void;
+}) {
+  const cats = block.categories;
+  const setCats = (categories: CatalogCategory[], field: string) =>
+    set({ categories }, `categories.${field}`);
+  const updCat = (i: number, patch: Partial<CatalogCategory>, field: string) =>
+    setCats(
+      cats.map((c, j) => (j === i ? clean({ ...c, ...patch }) : c)),
+      `${i}.${field}`,
+    );
+  const ref = (id: string | undefined) => {
+    const a = id ? assets.find((x) => x.id === id) : undefined;
+    return a ? { assetId: a.id, alt: a.alt } : undefined;
+  };
+  const first = assets[0] && { assetId: assets[0].id, alt: assets[0].alt };
+
+  return (
+    <Section title="Catálogo de produtos">
+      <TextField
+        label="Título da vitrine"
+        value={block.title}
+        onChange={(v) => set({ title: v }, "title")}
+        maxLength={40}
+      />
+      <TextField
+        label="Frase de ajuda (opcional)"
+        value={block.subtitle ?? ""}
+        onChange={(v) => set({ subtitle: v || undefined }, "subtitle")}
+        maxLength={120}
+      />
+      <p className="text-xs text-muted">
+        Quem visita escolhe produtos de várias categorias e envia o pedido inteiro pelo WhatsApp
+        (Contato). Até {MAX_CATALOG_CATEGORIES} categorias com {MAX_CATALOG_PRODUCTS} produtos cada.
+      </p>
+      {cats.map((c, i) => (
+        <details key={c.id} open={i === 0} className="rounded-md border border-border p-3">
+          <summary className="cursor-pointer text-sm font-semibold">
+            {c.name} · {c.products.length} {c.products.length === 1 ? "produto" : "produtos"}
+          </summary>
+          <div className="mt-3 grid gap-3">
+            <TextField
+              label="Nome da categoria"
+              value={c.name}
+              onChange={(v) => updCat(i, { name: v }, "name")}
+              maxLength={40}
+            />
+            <TextField
+              label="Etiqueta (opcional)"
+              value={c.tag ?? ""}
+              placeholder="Ex.: Mais vendidos, Novidade"
+              onChange={(v) => updCat(i, { tag: v }, "tag")}
+              maxLength={20}
+            />
+            <ImagePicker
+              label="Foto da categoria (Nenhuma = foto do 1º produto)"
+              assets={assets}
+              value={c.cover?.assetId}
+              onChange={(id) => updCat(i, { cover: ref(id) }, "cover")}
+            />
+            <div className="flex flex-wrap gap-2 text-sm">
+              <button
+                type="button"
+                disabled={i === 0}
+                onClick={() => setCats(moved(cats, i, -1), "order")}
+                className="rounded border border-border px-2 py-1 disabled:opacity-30"
+              >
+                ↑ Subir categoria
+              </button>
+              <button
+                type="button"
+                disabled={i === cats.length - 1}
+                onClick={() => setCats(moved(cats, i, 1), "order")}
+                className="rounded border border-border px-2 py-1 disabled:opacity-30"
+              >
+                ↓ Descer
+              </button>
+              <button
+                type="button"
+                disabled={cats.length === 1}
+                onClick={() =>
+                  setCats(
+                    cats.filter((_, j) => j !== i),
+                    "remove",
+                  )
+                }
+                className="rounded px-2 py-1 text-danger disabled:opacity-30"
+              >
+                Remover categoria
+              </button>
+            </div>
+
+            <ol className="grid gap-3">
+              {c.products.map((p, k) => {
+                const updProd = (patch: Partial<(typeof c.products)[number]>, field: string) =>
+                  updCat(
+                    i,
+                    {
+                      products: c.products.map((x, m) => (m === k ? clean({ ...x, ...patch }) : x)),
+                    },
+                    `products.${k}.${field}`,
+                  );
+                return (
+                  <li key={p.id} className="grid gap-2 rounded-md bg-slate-50 p-2">
+                    <ImagePicker
+                      label={`Produto ${k + 1} — foto`}
+                      assets={assets}
+                      value={p.image.assetId}
+                      onChange={(id) => {
+                        const img = ref(id);
+                        if (img) updProd({ image: img }, "image");
+                      }}
+                    />
+                    <TextField
+                      label={`Produto ${k + 1} — nome`}
+                      value={p.name}
+                      onChange={(v) => updProd({ name: v }, "name")}
+                      maxLength={60}
+                    />
+                    <PriceField
+                      label={`Produto ${k + 1} — preço (R$)`}
+                      cents={p.priceCents}
+                      onChange={(v) => updProd({ priceCents: v }, "price")}
+                    />
+                    <div className="flex flex-wrap gap-2 text-sm">
+                      <button
+                        type="button"
+                        disabled={k === 0}
+                        aria-label={`Subir ${p.name}`}
+                        onClick={() => updCat(i, { products: moved(c.products, k, -1) }, "order")}
+                        className="rounded border border-border px-2 py-1 disabled:opacity-30"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        disabled={k === c.products.length - 1}
+                        aria-label={`Descer ${p.name}`}
+                        onClick={() => updCat(i, { products: moved(c.products, k, 1) }, "order")}
+                        className="rounded border border-border px-2 py-1 disabled:opacity-30"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        disabled={c.products.length === 1}
+                        onClick={() =>
+                          updCat(i, { products: c.products.filter((_, m) => m !== k) }, "remove")
+                        }
+                        className="rounded px-2 py-1 text-danger disabled:opacity-30"
+                      >
+                        Remover produto
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+            <button
+              type="button"
+              disabled={!first || c.products.length >= MAX_CATALOG_PRODUCTS}
+              onClick={() =>
+                first &&
+                updCat(
+                  i,
+                  {
+                    products: [
+                      ...c.products,
+                      {
+                        id: nextItemId(
+                          c.products.map((x) => x.id),
+                          "p",
+                        ),
+                        name: "Produto",
+                        image: first,
+                      },
+                    ],
+                  },
+                  "add",
+                )
+              }
+              className="justify-self-start rounded-md border border-border bg-white px-3 py-2 text-sm font-medium disabled:opacity-50"
+            >
+              + Adicionar produto ({c.products.length}/{MAX_CATALOG_PRODUCTS})
+            </button>
+          </div>
+        </details>
+      ))}
+      <button
+        type="button"
+        disabled={!first || cats.length >= MAX_CATALOG_CATEGORIES}
+        onClick={() =>
+          first &&
+          setCats(
+            [
+              ...cats,
+              {
+                id: nextItemId(
+                  cats.map((x) => x.id),
+                  "c",
+                ),
+                name: "Nova categoria",
+                products: [{ id: "p1", name: "Produto", image: first }],
+              },
+            ],
+            "add",
+          )
+        }
+        className="justify-self-start rounded-md border border-border bg-white px-4 py-2 text-sm font-medium disabled:opacity-50"
+      >
+        + Adicionar categoria
+      </button>
+    </Section>
+  );
 }
 
 function LinkEditor({
@@ -1039,6 +1344,13 @@ export function ProfilePanel({
               { value: "none", label: "Sem moldura, maior (logo sem fundo, ex.: escudo)" },
             ]}
             onChange={(v) => set({ logoFrame: v === "circle" ? undefined : v }, "logoFrame")}
+          />
+        )}
+        {p.logo && (
+          <Check
+            label="O logo já tem o nome e o slogan (esconde os textos repetidos)"
+            checked={!!p.logoHasName}
+            onChange={(v) => set({ logoHasName: v || undefined }, "logoHasName")}
           />
         )}
         <ImagePicker
@@ -1418,10 +1730,28 @@ function StandardDetails({ doc, dispatch }: { doc: BioDocument; dispatch: Dispat
   return (
     <div className="grid gap-3 rounded-md border border-border p-3">
       <h3 className="text-sm font-semibold">Detalhes do visual padrão</h3>
-      {th.cardStyle === "neon" && (
+      {th.cardStyle === "deep" && (
+        <ColorField
+          label="Cor do texto dos cartões"
+          value={th.cardText ?? "#ffffff"}
+          onChange={(v) => theme({ cardText: v }, "theme.cardText")}
+        />
+      )}
+      {th.cardStyle !== "satin" && (
+        <Check
+          label="Fundo da página claro (nome e slogan na cor do texto dos painéis)"
+          checked={!!th.lightPage}
+          onChange={(on) => theme({ lightPage: on || undefined })}
+        />
+      )}
+      {(th.cardStyle === "neon" || th.cardStyle === "satin" || th.cardStyle === "deep") && (
         <>
           <Check
-            label="Borda neon nas cores do cliente"
+            label={
+              th.cardStyle === "neon"
+                ? "Borda neon nas cores do cliente"
+                : "Borda nas cores do cliente"
+            }
             checked={!!th.neonEdges}
             onChange={(on) =>
               theme({ neonEdges: on ? { start: "#1e6fff", end: "#f5c400" } : undefined })
@@ -1494,6 +1824,7 @@ function StandardDetails({ doc, dispatch }: { doc: BioDocument; dispatch: Dispat
         options={[
           { value: "none", label: "Nenhum" },
           { value: "electric", label: "Elétrico (raios, neon, engrenagens, faíscas)" },
+          { value: "glitter", label: "Glitter (brilho caindo, pétalas, anel no logo)" },
         ]}
         onChange={(v) => theme({ effects: v === "none" ? undefined : v })}
       />
@@ -1501,6 +1832,12 @@ function StandardDetails({ doc, dispatch }: { doc: BioDocument; dispatch: Dispat
         <p className="text-xs text-muted">
           As luzes usam as cores da borda neon (acima). Com o logo sem moldura, ganha um anel de luz
           girando. Ficam parados para quem desligou as animações no celular.
+        </p>
+      )}
+      {th.effects === "glitter" && (
+        <p className="text-xs text-muted">
+          O glitter usa as cores da borda e a cor do texto dos painéis; o logo ganha um anel de
+          brilho girando. Fica parado para quem desligou as animações no celular.
         </p>
       )}
     </div>
@@ -1550,6 +1887,8 @@ export function LookPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Dispa
             { value: "neon", label: "Padrão — Vidro neon" },
             { value: "tint", label: "Padrão — Cor do ícone" },
             { value: "dark", label: "Padrão — Escuro" },
+            { value: "satin", label: "Padrão — Cetim (claro, texto na cor dos painéis)" },
+            { value: "deep", label: "Padrão — Cor dos cartões (degradê do tema, texto à escolha)" },
             { value: "theme", label: "Antigo — Cor do tema" },
             { value: "light", label: "Antigo — Claros" },
             { value: "glass", label: "Antigo — Futurista" },

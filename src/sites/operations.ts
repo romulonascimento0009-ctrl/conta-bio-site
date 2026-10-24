@@ -157,6 +157,7 @@ export const NEW_BLOCK_TYPES = {
   gallery: "Galeria de fotos",
   text: "Texto",
   pix: "Pix",
+  catalog: "Catálogo de produtos (pedido pelo WhatsApp)",
 } as const;
 export type NewBlockType = keyof typeof NEW_BLOCK_TYPES;
 
@@ -215,6 +216,24 @@ export function newBlock(
             hidden: false,
             title: "Galeria",
             images: [firstImage],
+          }
+        : null;
+    case "catalog":
+      // Um catálogo por Bio Site; começa com uma categoria e um produto (a primeira imagem).
+      return firstImage && !doc.blocks.some((b) => b.type === "catalog")
+        ? {
+            id: uniqueBlockId(doc, "catalogo"),
+            type: "catalog",
+            hidden: false,
+            title: "Nossos produtos",
+            subtitle: "Toque numa categoria, escolha os produtos e envie o pedido pelo WhatsApp.",
+            categories: [
+              {
+                id: "c1",
+                name: "Categoria",
+                products: [{ id: "p1", name: "Produto", image: firstImage }],
+              },
+            ],
           }
         : null;
     case "text":

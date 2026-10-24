@@ -30,6 +30,7 @@ import {
   SECTION_ICONS,
 } from "./icons";
 import { cardSubtitle, isSafeHref } from "./links";
+import { pixPayload } from "./pix";
 import { applyQuickEdit, quickEditSchema, quickValuesFrom } from "./quick-edit";
 import { applyStandardLook, createBioDocument } from "./templates";
 import { THEME_IDS, THEMES } from "./themes";
@@ -521,5 +522,69 @@ describe("detalhes por cliente no visual padrão (Rota 316, 2026-10-22)", () => 
     expect(validateBio(d).ok).toBe(true);
     Object.assign(d.blocks.at(-1)!, { icon: "foguete" });
     expect(validateBio(d).ok).toBe(false);
+  });
+});
+
+describe("cetim, glitter, foto no ícone e banco do Pix (Mage Beauty, 2026-10-24)", () => {
+  const paths = (d: BioDocument) => {
+    const r = validateBio(d);
+    return r.ok ? [] : r.issues.map((i) => i.path);
+  };
+  const mage = () => {
+    const d = doc();
+    d.theme.cardStyle = "satin";
+    d.theme.colors.base = "#e0c7b1";
+    d.theme.colors.ink = "#8a6420";
+    d.theme.colors.inkMuted = "#8a6420";
+    d.theme.colors.accent = "#5e4310";
+    d.theme.neonEdges = { start: "#c99a78", end: "#e9c29e" };
+    d.theme.effects = "glitter";
+    return d;
+  };
+
+  it("cartões cetim com texto dourado, borda clara e glitter: válidos", () => {
+    const r = validateBio(mage());
+    expect(r.ok ? [] : r.issues).toEqual([]);
+  });
+
+  it("recusa texto claro demais sobre o cetim e o nome sumindo no fundo", () => {
+    const d = mage();
+    d.theme.colors.inkMuted = "#c9a24a";
+    expect([...new Set(paths(d))]).toEqual(["theme.colors.inkMuted"]);
+    const ink = mage();
+    ink.theme.colors.base = "#8f7a66";
+    expect(paths(ink)).toContain("theme.colors.ink");
+  });
+
+  it("galeria em cartão pode usar a primeira foto como ícone", () => {
+    const d = mage();
+    d.blocks.push({
+      id: "maquiagens",
+      type: "gallery",
+      hidden: false,
+      title: "Maquiagens",
+      display: "card",
+      iconPhoto: true,
+      images: [{ assetId: "11111111-1111-4111-8111-111111111111", alt: "Batom e pincéis" }],
+    });
+    expect(validateBio(d).ok).toBe(true);
+  });
+
+  it("Pix com nome completo do recebedor e banco; o QR corta o nome em 25 letras", () => {
+    const d = mage();
+    const pix: BlockOf<"pix"> = {
+      id: "pix",
+      type: "pix",
+      hidden: false,
+      title: "Pagar com Pix",
+      key: "+5585998389076",
+      name: "Maria Ingrid Galdino do Nascimento",
+      city: "Fortaleza",
+      bank: "CloudWalk Meio de Pagamentos",
+      showQr: false,
+    };
+    d.blocks.push(pix);
+    expect(validateBio(d).ok).toBe(true);
+    expect(pixPayload(pix)).toContain("5925MARIA INGRID GALDINO DO N");
   });
 });

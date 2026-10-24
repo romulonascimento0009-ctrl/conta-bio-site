@@ -72,14 +72,24 @@ export const veilAlphas = (h: Hero) => [
   Math.min(0.95, (h.veilOpacity / 100) * 1.3),
 ];
 
-export const CARD_STYLES = ["theme", "light", "glass", "neon", "tint", "dark"] as const;
+export const CARD_STYLES = [
+  "theme",
+  "light",
+  "glass",
+  "neon",
+  "tint",
+  "dark",
+  "satin",
+  "deep",
+] as const;
 export type CardStyle = (typeof CARD_STYLES)[number];
 /**
  * Visual padrão (referências do usuário, 2026-10-20 — D41): todos os cartões iguais e sem halo,
- * fundo do ramo, topo legível sobre qualquer fundo. Três estilos de cartão: vidro neon (ref. 2),
- * cor do ícone (ref. 3) e escuro (ref. 1).
+ * fundo do ramo, topo legível sobre qualquer fundo. Estilos de cartão: vidro neon (ref. 2),
+ * cor do ícone (ref. 3), escuro (ref. 1), cetim (claro, texto na cor dos painéis) e cor dos
+ * cartões (degradê "Cartões" do tema com texto em cor própria — Mage Beauty, cacau e dourado).
  */
-export const STANDARD_CARD_STYLES = ["neon", "tint", "dark"] as const;
+export const STANDARD_CARD_STYLES = ["neon", "tint", "dark", "satin", "deep"] as const;
 export const isStandardStyle = (s: CardStyle | undefined) =>
   (STANDARD_CARD_STYLES as readonly (CardStyle | undefined)[]).includes(s);
 /** Base dos cartões do visual padrão: a cor do texto dos painéis puxada para o grafite. */
@@ -90,6 +100,8 @@ export const GLASS_TINT = 0.12;
 export const GLASS_DARK = "#262a38";
 export const GLASS_COLOR_MIX = 0.42;
 export const glassTop = (color: string) => mixHex(GLASS_DARK, color, GLASS_COLOR_MIX);
+/** Cetim: cartão creme (fundo da página bem clareado); o texto usa a cor dos painéis. */
+export const satinCard = (base: string) => mixHex(base, WHITE, 0.8);
 /** Vidro neon com cores próprias: do fundo da página até ele levemente tingido pela borda. */
 export const neonGlass = (base: string, edge: string): [string, string] => [
   base,
@@ -142,8 +154,14 @@ export const themeSchema = z
      * Visual padrão: efeitos animados atrás do conteúdo. "electric" = raios, tubos e rastros de neon,
      * luz nas bordas, engrenagens, faíscas, anel no logo solto e entrada dos cartões (Rota 316).
      * Cores da borda neon (`neonEdges`). Parados para quem desligou as animações.
+     * "glitter" = glitter caindo e cintilando, pétalas, anel no logo e entrada dos cartões
+     * (Mage Beauty); glitter nas cores da borda, contornado na cor do texto dos painéis.
      */
-    effects: z.enum(["electric"]).optional(),
+    effects: z.enum(["electric", "glitter"]).optional(),
+    /** Cor dos cartões: cor do texto (ausente = branco), sobre o degradê cardTop → cardBottom. */
+    cardText: hex.optional(),
+    /** Visual padrão sobre fundo claro: topo com texto na cor dos painéis (o cetim já é assim). */
+    lightPage: z.boolean().optional(),
   })
   .superRefine((t, ctx) => {
     const c = t.colors;
@@ -171,7 +189,26 @@ export const themeSchema = z
         "do texto branco sobre a cor dos cartões",
       );
     }
-    if (isStandardStyle(t.cardStyle)) {
+    if (t.cardStyle === "satin" || (isStandardStyle(t.cardStyle) && t.lightPage)) {
+      // Nome grande direto sobre o fundo claro da página, na cor do texto dos painéis.
+      checkContrast(
+        ctx,
+        ["colors", "ink"],
+        c.ink,
+        c.base,
+        "do nome sobre o fundo da página",
+        MIN_GRAPHIC_CONTRAST,
+      );
+    }
+    if (t.cardStyle === "satin") {
+      const card = satinCard(c.base);
+      checkContrast(ctx, ["colors", "ink"], c.ink, card, "do texto sobre os cartões cetim");
+      checkContrast(ctx, ["colors", "inkMuted"], c.inkMuted, card, "do subtítulo sobre o cetim");
+    } else if (t.cardStyle === "deep") {
+      const fg = t.cardText ?? WHITE;
+      checkContrast(ctx, ["cardText"], fg, c.cardTop, "do texto sobre os cartões (topo)");
+      checkContrast(ctx, ["cardText"], fg, c.cardBottom, "do texto sobre os cartões (base)");
+    } else if (isStandardStyle(t.cardStyle)) {
       checkContrast(
         ctx,
         ["colors", "ink"],
@@ -187,7 +224,8 @@ export const themeSchema = z
         message: `${FONTS[t.fonts.body].label} é só para títulos`,
       });
     }
-    if (t.neonEdges) {
+    // No cetim o texto é escuro sobre creme (conferido acima); a borda é só enfeite.
+    if (t.neonEdges && t.cardStyle !== "satin" && t.cardStyle !== "deep") {
       checkContrast(
         ctx,
         ["neonEdges", "start"],
@@ -343,9 +381,11 @@ export const pixBlock = z
     type: z.literal("pix"),
     title: text(40).default("Pagar com Pix"),
     key: text(77),
-    /** Nome do recebedor como aparece no banco. */
-    name: text(25),
+    /** Nome do recebedor como aparece no banco (o QR usa só as 25 primeiras letras). */
+    name: text(60),
     city: text(15),
+    /** Banco de destino, só para conferência de quem paga (ex.: "CloudWalk"). */
+    bank: optText(40),
     showQr: z.boolean().default(false),
     ...iconColor,
   })
@@ -377,9 +417,62 @@ export const galleryBlock = z
     hideIcon: z.boolean().optional(),
     /** Só no cartão: ícone (ausente = fotos), ex.: roda para "Meus serviços" de oficina. */
     icon: z.enum(ICON_IDS).optional(),
+    /** Só no cartão: a primeira foto vira o ícone (ex.: "Maquiagens", "Acessórios"). */
+    iconPhoto: z.boolean().optional(),
     ...iconColor,
   })
   .superRefine((b, ctx) => checkIconColor(ctx, b.iconColor));
+
+/**
+ * Catálogo com carrinho (Mage Beauty, 2026-10-24): categorias com até 10 produtos em estoque.
+ * Quem visita escolhe produtos de várias categorias e envia o pedido inteiro pelo WhatsApp do
+ * cliente (nada é pago no site). Preço opcional, em centavos; sem preço = "Preço no WhatsApp".
+ */
+export const MAX_CATALOG_CATEGORIES = 12;
+export const MAX_CATALOG_PRODUCTS = 10;
+const itemId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,19}$/);
+export const catalogProduct = z.object({
+  id: itemId,
+  name: text(60),
+  priceCents: z.int().min(0).max(10_000_000).optional(),
+  image: imageRef,
+});
+export const catalogCategory = z.object({
+  id: itemId,
+  name: text(40),
+  /** Etiqueta no canto da foto (ex.: "Mais vendidos", "Novidade"). */
+  tag: optText(20),
+  /** Foto da categoria na vitrine; ausente = foto do primeiro produto. */
+  cover: imageRef.optional(),
+  products: z.array(catalogProduct).min(1).max(MAX_CATALOG_PRODUCTS),
+});
+export type CatalogCategory = z.infer<typeof catalogCategory>;
+export const catalogBlock = z
+  .object({
+    ...blockBase,
+    type: z.literal("catalog"),
+    title: text(40).default("Nossos produtos"),
+    subtitle: optText(120),
+    categories: z.array(catalogCategory).min(1).max(MAX_CATALOG_CATEGORIES),
+  })
+  .superRefine((b, ctx) => {
+    const cats = new Set<string>();
+    b.categories.forEach((c, i) => {
+      if (cats.has(c.id))
+        ctx.addIssue({ code: "custom", path: ["categories", i, "id"], message: "id repetido" });
+      cats.add(c.id);
+      const prods = new Set<string>();
+      c.products.forEach((p, j) => {
+        if (prods.has(p.id))
+          ctx.addIssue({
+            code: "custom",
+            path: ["categories", i, "products", j, "id"],
+            message: "id repetido",
+          });
+        prods.add(p.id);
+      });
+    });
+  });
 
 export const textBlock = z.object({
   ...blockBase,
@@ -395,6 +488,7 @@ export const anyBlock = z.discriminatedUnion("type", [
   galleryBlock,
   textBlock,
   pixBlock,
+  catalogBlock,
 ]);
 export type Block = z.infer<typeof anyBlock>;
 export type BlockOf<T extends Block["type"]> = Extract<Block, { type: T }>;
@@ -439,6 +533,8 @@ export const bioDocumentSchema = z
       logoFrame: z.enum(["circle", "none"]).optional(),
       /** Fundo da página conforme o ramo (ex.: céu com arco-íris), parado enquanto a página rola. */
       pageBackground: imageRef.optional(),
+      /** O logo já traz o nome e o slogan: escondidos na tela (ficam para leitores de tela e buscas). */
+      logoHasName: z.boolean().optional(),
     }),
     contact: contactSchema,
     ticker: tickerSchema,
@@ -478,6 +574,17 @@ export const bioDocumentSchema = z
           );
       });
     }
+    const catalogs = doc.blocks.filter((b) => b.type === "catalog");
+    if (catalogs.length > 1) {
+      ctx.addIssue({ code: "custom", path: ["blocks"], message: "só um catálogo por Bio Site" });
+    }
+    if (catalogs.length && !doc.contact.whatsapp) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["contact", "whatsapp"],
+        message: "o catálogo envia o pedido pelo WhatsApp: preencha o WhatsApp em Contato",
+      });
+    }
     const seen = new Set<string>();
     doc.blocks.forEach((b, i) => {
       if (seen.has(b.id)) {
@@ -512,7 +619,14 @@ export function collectImageRefs(doc: BioDocument): ImageRef[] {
   if (doc.profile.logo) refs.push(doc.profile.logo);
   if (doc.profile.background) refs.push(doc.profile.background);
   if (doc.profile.pageBackground) refs.push(doc.profile.pageBackground);
-  for (const b of doc.blocks) if (b.type === "gallery") refs.push(...b.images);
+  for (const b of doc.blocks) {
+    if (b.type === "gallery") refs.push(...b.images);
+    if (b.type === "catalog")
+      for (const c of b.categories) {
+        if (c.cover) refs.push(c.cover);
+        refs.push(...c.products.map((p) => p.image));
+      }
+  }
   return refs;
 }
 
