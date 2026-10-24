@@ -160,8 +160,8 @@ export function Catalog({
       const price = prod.priceCents !== undefined ? ` — ${money(prod.priceCents * cart[k])}` : "";
       return `• ${cart[k]}x ${prod.name} (${cat.name})${price}`;
     }),
-    "",
-    priced ? `Total: ${money(total)}` : "Pode me passar os valores?",
+    // Total só quando todos têm preço (sem preço, ele está na descrição da foto).
+    ...(priced ? ["", `Total: ${money(total)}`] : []),
     // O WhatsApp não aceita anexo por link: as fotos vão numa página do pedido, com prévia.
     ...(orderBase
       ? [
@@ -176,7 +176,7 @@ export function Catalog({
       : []),
   ].join("\n");
 
-  const summary = priced ? money(total) : "Valores confirmados no WhatsApp";
+  const summary = priced ? money(total) : `${count} ${count === 1 ? "item" : "itens"}`;
   const cartBar = (inSheet: boolean) =>
     count > 0 && (
       <button
@@ -258,10 +258,8 @@ export function Catalog({
                   <Pic image={p.image} sizes="(max-width: 480px) 50vw, 220px" />
                   <span className="bio-prod-info">
                     <strong>{p.name}</strong>
-                    {p.priceCents !== undefined ? (
+                    {p.priceCents !== undefined && (
                       <span className="bio-prod-price">{money(p.priceCents)}</span>
-                    ) : (
-                      <span className="bio-prod-price ask">Preço no WhatsApp</span>
                     )}
                   </span>
                   <span className="bio-prod-act">
@@ -321,10 +319,12 @@ export function Catalog({
                   );
                 })}
               </ul>
-              <p className="bio-cart-total">
-                <span>Total</span>
-                <span>{priced ? money(total) : "a confirmar"}</span>
-              </p>
+              {priced && (
+                <p className="bio-cart-total">
+                  <span>Total</span>
+                  <span>{money(total)}</span>
+                </p>
+              )}
               <a
                 className="bio-send"
                 href={whatsappHref(whatsapp, message)}

@@ -426,7 +426,8 @@ export const galleryBlock = z
 /**
  * Catálogo com carrinho (Mage Beauty, 2026-10-24): categorias com até 10 produtos em estoque.
  * Quem visita escolhe produtos de várias categorias e envia o pedido inteiro pelo WhatsApp do
- * cliente (nada é pago no site). Preço opcional, em centavos; sem preço = "Preço no WhatsApp".
+ * cliente (nada é pago no site). Preço opcional, em centavos; sem preço, nada aparece (o cliente
+ * põe o preço na descrição da foto) e o pedido sai sem total.
  */
 export const MAX_CATALOG_CATEGORIES = 12;
 export const MAX_CATALOG_PRODUCTS = 10;

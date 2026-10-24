@@ -116,10 +116,12 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/[s
           );
         })}
       </ol>
-      <p className="pedido-total">
-        <span>Total</span>
-        <span>{total === null ? "a confirmar" : money(total)}</span>
-      </p>
+      {total !== null && (
+        <p className="pedido-total">
+          <span>Total</span>
+          <span>{money(total)}</span>
+        </p>
+      )}
       <a className="pedido-site" href={`/${slug}`}>
         Ver o Bio Site da {doc.profile.name}
       </a>

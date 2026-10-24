@@ -55,7 +55,7 @@ export function decodeOrder(block: BlockOf<"catalog">, param: string | undefined
   return lines;
 }
 
-/** Total em centavos, ou `null` se algum item não tiver preço ("a confirmar"). */
+/** Total em centavos, ou `null` se algum item não tiver preço (o total não aparece). */
 export function orderTotal(lines: { prod: { priceCents?: number }; qty: number }[]): number | null {
   if (lines.some((l) => l.prod.priceCents === undefined)) return null;
   return lines.reduce((s, l) => s + l.prod.priceCents! * l.qty, 0);

@@ -834,7 +834,7 @@ function moved<T>(list: T[], i: number, delta: -1 | 1): T[] {
   return next;
 }
 
-/** Preço digitado ("29,90"); confere ao sair do campo. Vazio = "Preço no WhatsApp". */
+/** Preço digitado ("29,90"); confere ao sair do campo. Vazio = sem preço na tela nem total. */
 function PriceField({
   label,
   cents,
@@ -851,7 +851,7 @@ function PriceField({
       <TextField
         label={label}
         value={text}
-        placeholder="Ex.: 29,90 (vazio = preço no WhatsApp)"
+        placeholder="Ex.: 29,90 (opcional)"
         onChange={setText}
         onBlur={() => {
           const v = parsePrice(text);

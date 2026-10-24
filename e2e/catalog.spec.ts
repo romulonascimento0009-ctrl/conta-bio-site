@@ -36,7 +36,10 @@ test.describe("Catálogo com carrinho", () => {
 
     await shop.getByRole("button", { name: /Coloração/ }).click();
     const cor = page.getByRole("dialog", { name: "Coloração" });
-    await expect(cor).toContainText("Preço no WhatsApp");
+    // Sem preço cadastrado (o preço vai na descrição da foto): nenhum aviso de preço.
+    const tonalizante = cor.getByRole("listitem").filter({ hasText: "Tonalizante" });
+    await expect(tonalizante).not.toContainText("R$");
+    await expect(tonalizante).not.toContainText("WhatsApp");
     await cor.getByRole("button", { name: "Adicionar" }).click();
     await cor.getByRole("button", { name: "Fechar" }).click();
 
@@ -44,14 +47,14 @@ test.describe("Catálogo com carrinho", () => {
     await expect(shop.getByRole("button", { name: /Cachos/ })).toContainText("2");
     const bar = page.getByRole("button", { name: /Seu pedido/ });
     await expect(bar).toContainText("3");
-    await expect(bar).toContainText("Valores confirmados no WhatsApp");
+    await expect(bar).toContainText("3 itens");
     await expect(page.getByRole("link", { name: "Conversar no WhatsApp" })).toBeHidden();
 
     await bar.click();
     const pedido = page.getByRole("dialog", { name: "Seu pedido" });
     await expect(pedido).toContainText("Creme de pentear");
     await expect(pedido).toContainText("Tonalizante");
-    await expect(pedido).toContainText("a confirmar");
+    await expect(pedido).not.toContainText("Total");
     const send = pedido.getByRole("link", { name: /Enviar pedido pelo WhatsApp/ });
     const href = (await send.getAttribute("href")) ?? "";
     expect(href.startsWith("https://wa.me/5581988887777?text=")).toBe(true);
@@ -59,7 +62,8 @@ test.describe("Catálogo com carrinho", () => {
     expect(msg).toContain("Oi! Vim pelo Bio Site da Studio Lia Andrade e quero fazer este pedido:");
     expect(msg).toContain("• 2x Creme de pentear (Cachos) — R$ 99,80");
     expect(msg).toContain("• 1x Tonalizante (Coloração)");
-    expect(msg).toContain("Pode me passar os valores?");
+    expect(msg).not.toContain("Pode me passar os valores?");
+    expect(msg).not.toContain("Total");
     // Fotos do pedido (D49): link para a página com as fotos (o WhatsApp não aceita anexo por link).
     expect(msg).toMatch(
       /📷 Fotos do pedido: http:\/\/[^/]+\/demo-salao\/pedido\?i=c1\.p1\.2_c2\.p1\.1$/,
@@ -112,7 +116,7 @@ test.describe("Catálogo com carrinho", () => {
     await expect(itens).toHaveCount(2);
     await expect(itens.first()).toContainText("2x Creme de pentear");
     expect(plain(await itens.first().innerText())).toContain("R$ 99,80");
-    await expect(page.getByText("a confirmar")).toBeVisible();
+    await expect(page.getByText("Total")).toHaveCount(0);
     const loaded = await page
       .locator("li img")
       .evaluateAll((imgs) =>
