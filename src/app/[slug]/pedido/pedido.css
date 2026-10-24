@@ -1,0 +1,88 @@
+/* Página "Fotos do pedido" (D49): nas cores dos cartões do cliente, celular primeiro. */
+.pedido {
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+  background: var(--base);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+.pedido header {
+  margin-bottom: 18px;
+  padding: 18px;
+  border-radius: 24px;
+  text-align: center;
+  background: linear-gradient(180deg, var(--top), var(--bottom));
+}
+/* Logo sobre a cor de fundo do site (onde ele normalmente aparece), legível em cartão escuro. */
+.pedido-logo {
+  display: block;
+  width: 150px;
+  height: auto;
+  margin: 0 auto 12px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  background: var(--base);
+}
+.pedido h1 {
+  margin: 0;
+  font: 600 1.6rem/1.2 var(--font-display);
+}
+.pedido header p {
+  margin: 6px 0 0;
+}
+.pedido-itens {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pedido-itens li {
+  overflow: hidden;
+  border-radius: 22px;
+  background: linear-gradient(180deg, var(--top), var(--bottom));
+}
+.pedido-itens img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: #fff;
+}
+.pedido-itens div {
+  display: grid;
+  gap: 2px;
+  padding: 12px 16px 16px;
+}
+.pedido-itens strong {
+  font-size: 1.15rem;
+}
+.pedido-preco {
+  font-weight: 800;
+}
+.pedido-total {
+  display: flex;
+  justify-content: space-between;
+  margin: 16px 0;
+  padding: 14px 18px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  background: var(--bottom);
+}
+.pedido-site {
+  display: block;
+  padding: 14px;
+  border-radius: 999px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--top);
+}
+.pedido-site:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 3px;
+}

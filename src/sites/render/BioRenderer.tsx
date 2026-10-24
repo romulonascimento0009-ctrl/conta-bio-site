@@ -46,7 +46,13 @@ const RADIUS = {
 } as const;
 
 /** `cartKey`: separa o pedido guardado no navegador por Bio Site (e a prévia do publicado). */
-type Ctx = { doc: BioDocument; assets: Map<string, AssetInfo>; cartKey: string };
+type Ctx = {
+  doc: BioDocument;
+  assets: Map<string, AssetInfo>;
+  cartKey: string;
+  /** Página "Fotos do pedido" do catálogo (só no endereço público). */
+  orderBase?: string;
+};
 
 function Img({
   ctx,
@@ -563,6 +569,7 @@ function CatalogBlock({ ctx, block }: { ctx: Ctx; block: BlockOf<"catalog"> }) {
       whatsapp={doc.contact.whatsapp}
       intro={`Oi! Vim pelo Bio Site da ${doc.profile.name} e quero fazer este pedido:`}
       storageKey={`bio-pedido:${ctx.cartKey}`}
+      orderBase={ctx.orderBase}
     />
   );
 }
@@ -641,14 +648,22 @@ export function BioRenderer({
   assets,
   embedded = false,
   trackSlug,
+  publicUrl,
 }: {
   doc: BioDocument;
   assets: Map<string, AssetInfo>;
   embedded?: boolean;
   /** Só no endereço público: registra visitas e cliques (métricas). */
   trackSlug?: string;
+  /** Endereço público do sistema (PUBLIC_URL), para o link "Fotos do pedido" do catálogo. */
+  publicUrl?: string;
 }) {
-  const ctx: Ctx = { doc, assets, cartKey: trackSlug ?? `previa:${doc.profile.name}` };
+  const ctx: Ctx = {
+    doc,
+    assets,
+    cartKey: trackSlug ?? `previa:${doc.profile.name}`,
+    orderBase: trackSlug && publicUrl ? `${publicUrl}/${trackSlug}/pedido` : undefined,
+  };
   const { colors, fonts, radius, pattern } = doc.theme;
   const ticker = doc.ticker.colors ?? doc.tickerTheme;
   const hero = doc.theme.hero ?? HERO_DEFAULTS;

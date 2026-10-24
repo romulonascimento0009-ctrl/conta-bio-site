@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
+import { encodeOrder } from "@/sites/catalog";
 import { whatsappHref } from "@/sites/links";
 import { Icon } from "./Icon";
 
@@ -71,6 +72,7 @@ export function Catalog({
   whatsapp,
   intro,
   storageKey,
+  orderBase,
 }: {
   blockId: string;
   title: string;
@@ -80,6 +82,8 @@ export function Catalog({
   /** Primeira linha da mensagem (ex.: "Oi! Vim pelo Bio Site da Loja e quero fazer este pedido:"). */
   intro: string;
   storageKey: string;
+  /** Endereço da página "Fotos do pedido" (só no site publicado; ausente na prévia). */
+  orderBase?: string;
 }) {
   const rootRef = useRef<HTMLElement>(null);
   const catRef = useRef<HTMLDialogElement>(null);
@@ -158,6 +162,18 @@ export function Catalog({
     }),
     "",
     priced ? `Total: ${money(total)}` : "Pode me passar os valores?",
+    // O WhatsApp não aceita anexo por link: as fotos vão numa página do pedido, com prévia.
+    ...(orderBase
+      ? [
+          "",
+          `📷 Fotos do pedido: ${orderBase}?i=${encodeOrder(
+            keys.map((k) => {
+              const [cat, prod] = k.split(":");
+              return { cat, prod, qty: cart[k] };
+            }),
+          )}`,
+        ]
+      : []),
   ].join("\n");
 
   const summary = priced ? money(total) : "Valores confirmados no WhatsApp";

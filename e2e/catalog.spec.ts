@@ -60,6 +60,10 @@ test.describe("Catálogo com carrinho", () => {
     expect(msg).toContain("• 2x Creme de pentear (Cachos) — R$ 99,80");
     expect(msg).toContain("• 1x Tonalizante (Coloração)");
     expect(msg).toContain("Pode me passar os valores?");
+    // Fotos do pedido (D49): link para a página com as fotos (o WhatsApp não aceita anexo por link).
+    expect(msg).toMatch(
+      /📷 Fotos do pedido: http:\/\/[^/]+\/demo-salao\/pedido\?i=c1\.p1\.2_c2\.p1\.1$/,
+    );
     await expect(send).toHaveAttribute("target", "_blank");
 
     const axe = await new AxeBuilder({ page })
@@ -96,5 +100,41 @@ test.describe("Catálogo com carrinho", () => {
       () => document.documentElement.scrollWidth - window.innerWidth,
     );
     expect(overflow).toBeLessThanOrEqual(0);
+  });
+
+  test("link Fotos do pedido abre as fotos e tem prévia em JPEG para o WhatsApp", async ({
+    page,
+    request,
+  }) => {
+    await page.goto("/demo-salao/pedido?i=c1.p1.2_c2.p1.1_c9.p9.1");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pedido · Studio Lia Andrade");
+    const itens = page.getByRole("listitem");
+    await expect(itens).toHaveCount(2);
+    await expect(itens.first()).toContainText("2x Creme de pentear");
+    expect(plain(await itens.first().innerText())).toContain("R$ 99,80");
+    await expect(page.getByText("a confirmar")).toBeVisible();
+    const loaded = await page
+      .locator("li img")
+      .evaluateAll((imgs) =>
+        imgs.every(
+          (i) => (i as HTMLImageElement).complete && (i as HTMLImageElement).naturalWidth > 0,
+        ),
+      );
+    expect(loaded).toBe(true);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+
+    const og = await page.locator('meta[property="og:image"]').getAttribute("content");
+    expect(og).toContain("/demo-salao/pedido/imagem?i=");
+    const img = await request.get(new URL(og!).pathname + new URL(og!).search);
+    expect(img.status()).toBe(200);
+    expect(img.headers()["content-type"]).toBe("image/jpeg");
+
+    const axe = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(axe.violations).toEqual([]);
+
+    expect((await page.goto("/demo-salao/pedido?i=lixo"))?.status()).toBe(404);
+    expect((await request.get("/demo-salao/pedido/imagem?i=lixo")).status()).toBe(404);
   });
 });
