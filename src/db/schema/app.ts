@@ -92,6 +92,32 @@ export const assets = pgTable(
 );
 
 /**
+ * Vídeos enviados (D50). O arquivo vai como chegou, em partes de até 3 MB
+ * (`clients/<clientId>/videos/<id>/<n>.part`), porque cada envio passa por uma função com limite
+ * de tamanho; a capa é uma imagem comum (`assets`), tirada do vídeo no navegador.
+ * `parts` = 0 enquanto o envio não termina (não aparece no editor nem no site).
+ */
+export const videos = pgTable(
+  "videos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: uuid("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    originalName: text("original_name").notNull(),
+    mime: text("mime").notNull(),
+    bytes: integer("bytes").notNull(),
+    parts: integer("parts").notNull().default(0),
+    width: integer("width").notNull(),
+    height: integer("height").notNull(),
+    durationMs: integer("duration_ms").notNull(),
+    posterAssetId: uuid("poster_asset_id").references(() => assets.id, { onDelete: "set null" }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [index("videos_client_id_idx").on(t.clientId)],
+);
+
+/**
  * Papel de cada usuário. Sem linha aqui = sem acesso (padrão negar).
  * Operador: todos os clientes. Cliente: só o próprio (`client_id`).
  */

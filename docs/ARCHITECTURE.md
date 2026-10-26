@@ -5,7 +5,7 @@ Status: **aprovada em 2026-10-13**; produto redefinido para Bio Sites (D19). Imp
 ## Mapa do código
 
 - `src/lib/env.ts` — variáveis de ambiente validadas (Zod), lidas sob demanda. `src/lib/public-url.ts` — `<PUBLIC_URL>/<slug>`.
-- `src/db/` — conexão Drizzle (Postgres via `DATABASE_URL`, senão PGlite em `PGLITE_DIR`) e schema (`auth.ts` gerado; `app.ts`: clients, briefings, sites, site_versions, assets). Migrações SQL em `drizzle/`.
+- `src/db/` — conexão Drizzle (Postgres via `DATABASE_URL`, senão PGlite em `PGLITE_DIR`) e schema (`auth.ts` gerado; `app.ts`: clients, briefings, sites, site_versions, assets, videos). Migrações SQL em `drizzle/`.
 - `src/lib/auth.ts`, `src/lib/session.ts` — Better Auth; `getAccess()` (sessão + papel), `requireOperator()`, `requireClientUser()`, `requireAccess()`. `src/proxy.ts` — redirecionamento otimista de `/admin`, `/painel` e `/preview`.
 - `src/clients/access.ts` — papéis e regra de isolamento `canAccessClient()`; `src/clients/invites.ts` — token, hash, situação e schemas do convite.
 - `src/data/access.ts` — convites (criar, listar, cancelar, consultar, aceitar) e pessoas com acesso; `src/data/audit.ts` — `recordAudit()` e `listAudit()`; `src/sites/changes.ts` — partes alteradas entre dois documentos.
@@ -13,13 +13,14 @@ Status: **aprovada em 2026-10-13**; produto redefinido para Bio Sites (D19). Imp
 - `src/sites/render/` — `BioRenderer` (componente de servidor), `bio.css`, `Icon.tsx`, `client-buttons.tsx` (Compartilhar, Copiar senha — únicos trechos com JS no navegador), `fonts.ts`, `media.ts`.
 - `src/clients/` — slug (com `RESERVED_SLUGS`), segmentos, briefing (campos reutilizados pela edição rápida), situações.
 - `src/media/process.ts` — validação e variantes WebP com sharp (remove EXIF).
+- `src/media/video.ts` — vídeos (D50): formato real pelo conteúdo, partes de 3 MB, trechos (Range) de até 2 MB; dados em `src/data/videos.ts`.
 - `src/sites/metrics.ts` — regras das métricas (origem, robôs, alvos aceitos, visitante diário); `src/data/metrics.ts` — `recordEvent` (público, via `src/app/api/m`) e `getMetrics`; `Tracker` em `src/sites/render/client-buttons.tsx`.
 - `src/data/` — **camada de acesso a dados**: única porta para o banco. Funções por cliente passam por `getClient()` (confere o acesso); exclusivas do operador chamam `requireOperator()`; públicas: `getPublishedSiteBySlug`, `findAssetVariant`, `lookupInvite`, `acceptInvite`.
 - `src/lib/storage/` — interface `Storage` + driver local; `clientKey()` isola por cliente.
 - `src/sites/operations.ts` — operações do editor (`applyOperation`), blocos novos, histórico desfazer/refazer.
 - `src/data/versions.ts` — listar, ver, restaurar e republicar versões.
 - `src/app/admin/clientes/[id]/editor/` — editor visual (`editor.tsx`: prévia + barra de ações + histórico; `panels.tsx`: Blocos, Topo, Contato, Faixa, Aparência).
-- `src/app/admin/clientes/...` — painel do operador (Dados, Briefing, Imagens, Bio Site, Editor visual, Edição rápida, Versões, Acessos, Atividade; Server Actions em `actions.ts`); os `view.tsx` de editor, rápida, imagens e versões são reaproveitados em `src/app/painel` (área do cliente); `src/app/convite/[token]` — aceite do convite; `src/app/preview/[clientId]` — prévia do rascunho; `src/app/[slug]` — Bio Site público; `src/app/media/[assetId]/[file]` — imagens.
+- `src/app/admin/clientes/...` — painel do operador (Dados, Briefing, Imagens, Bio Site, Editor visual, Edição rápida, Versões, Acessos, Atividade; Server Actions em `actions.ts`); os `view.tsx` de editor, rápida, imagens e versões são reaproveitados em `src/app/painel` (área do cliente); `src/app/convite/[token]` — aceite do convite; `src/app/preview/[clientId]` — prévia do rascunho; `src/app/[slug]` — Bio Site público; `src/app/media/[assetId]/[file]` — imagens e vídeos.
 - `scripts/` — migração, operador, demos (`seed-demo.ts`), preparo do E2E, capturas (`screenshots.mts`), amostra de fontes (`font-specimen.mts`).
 - `prototipos/` — protótipos visuais aprovados (referência de design, não são código do produto).
 
@@ -53,6 +54,7 @@ Cartões de serviço não guardam o link: `resolveLink(bloco, contact)` monta de
  ├─ /preview/<id>   rascunho (exige sessão)
  ├─ /<slug>         Bio Site publicado (público)
  └─ /media/<id>/<largura>.webp   imagens (públicas, cache imutável)
+ └─ /media/<id>/video.<ext>      vídeos aos pedaços (Range, até 2 MB por resposta)
         │                │                 │
         ▼                ▼                 ▼
    Banco relacional   Armazenamento     API da Claude (Fase 5)
@@ -75,7 +77,7 @@ Cartões de serviço não guardam o link: `resolveLink(bloco, contact)` monta de
 - Aprovação marca uma versão; publicar = mover o ponteiro para uma versão aprovada. Restaurar = copiar uma versão para o rascunho.
 - Página pública lida do snapshot publicado, com cache invalidado na publicação.
 
-**Dados (tabelas iniciais).** `clients`, `briefings`, `sites`, `site_versions`, `assets`, `ai_usage`, `audit_log`. Todas as linhas de conteúdo têm `client_id`; consultas sempre filtradas por ele.
+**Dados (tabelas iniciais).** `clients`, `briefings`, `sites`, `site_versions`, `assets`, `videos`, `ai_usage`, `audit_log`. Todas as linhas de conteúdo têm `client_id`; consultas sempre filtradas por ele.
 
 **Arquivos.** Caminho `clients/<client_id>/...`; originais preservados e variantes otimizadas (WebP/AVIF, larguras responsivas) geradas no upload; verificação do tipo real, limite de tamanho, remoção de metadados EXIF (localização).
 

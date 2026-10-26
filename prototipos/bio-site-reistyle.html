@@ -1,0 +1,1844 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reistyle Barbearia — protótipo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&family=Playfair+Display:wght@500;600;700&family=Kaushan+Script&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Protótipo Reistyle Barbearia (referências do usuário, 2026-10-26): fundo de mármore preto
+         com veios e moldura dourados (prototipos/ref/reistyle-fundo.jpg); movimento do vídeo de
+         referência = luz que corre pelas linhas, aqui só sobre o dourado do mármore (máscara
+         reistyle-veios.png). Amarelo da coroa do logo #F6C21B. Sem halo, sem grade. */
+      :root {
+        --gold: #e9b949;
+        --gold-hi: #f6d47a;
+        --gold-lo: #a97c2c;
+        --ink: #f4d78a;
+        --muted: #d4c095;
+        --card-a: #1d1a15;
+        --card-b: #0c0b09;
+        --name-font: "Playfair Display", Georgia, serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "DM Sans", system-ui, sans-serif;
+        background: #2b2e36;
+        color: var(--ink);
+      }
+      .tools {
+        max-width: 430px;
+        margin: 0 auto;
+        padding: 16px 16px 4px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #fff;
+      }
+      .tools button {
+        font: inherit;
+        border: 1px solid #555;
+        background: #1b1d24;
+        color: #fff;
+        border-radius: 999px;
+        padding: 6px 14px;
+        cursor: pointer;
+      }
+      .tools button[aria-pressed="true"] {
+        background: #fff;
+        color: #111;
+      }
+
+      .phone {
+        position: relative;
+        max-width: 430px;
+        margin: 12px auto 40px;
+        overflow: clip;
+        border-radius: 28px;
+        padding-bottom: 96px;
+        background: #0b0b0b;
+      }
+      /* Fundo do ramo: fica parado enquanto a página rola. */
+      .sky,
+      .fx {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        margin-bottom: -100vh;
+        pointer-events: none;
+      }
+      .sky {
+        background: #0b0b0b url(ref/reistyle-fundo.jpg) center / cover no-repeat;
+      }
+      /* Só o efeito do vídeo, sem o mármore: grafite liso como no vídeo. */
+      [data-bg="dark"] .sky {
+        background: linear-gradient(160deg, #26241f, #141311 60%, #1c1a17);
+      }
+      /* Movimento do vídeo de referência (2026-10-26): planos escuros em ângulo, e a luz vazando
+         pelas quinas e correndo ao longo delas, em dourado. Desenho em fx-*; só stroke-dashoffset
+         e opacity animam. */
+      .fx svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .fx .plane {
+        fill: #000;
+      }
+      /* As placas se mexem devagar, cada uma num ritmo (como no vídeo). */
+      .fx .slab {
+        transform-box: view-box;
+        transform-origin: 50% 50%;
+        animation: slab1 14s ease-in-out infinite alternate;
+      }
+      .fx .s2 {
+        animation-name: slab2;
+        animation-duration: 17s;
+      }
+      @keyframes slab1 {
+        from {
+          transform: translate(-14px, -10px) rotate(-3deg);
+        }
+        to {
+          transform: translate(16px, 22px) rotate(4deg);
+        }
+      }
+      @keyframes slab2 {
+        from {
+          transform: translate(12px, 8px) rotate(2deg);
+        }
+        to {
+          transform: translate(-18px, -16px) rotate(-3deg);
+        }
+      }
+      /* O mármore aproxima e se afasta bem devagar. */
+      .sky {
+        overflow: hidden;
+      }
+      .sky::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: inherit;
+        animation: breathe 22s ease-in-out infinite alternate;
+      }
+      @keyframes breathe {
+        from {
+          transform: scale(1);
+        }
+        to {
+          transform: scale(1.1) translate(-2%, 1.5%);
+        }
+      }
+      [data-bg="dark"] .fx .plane {
+        fill: #0d0c0a;
+      }
+      .fx .seam {
+        fill: none;
+        stroke: #c99a3a;
+        stroke-width: 1;
+        opacity: 0.45;
+      }
+      .fx .glow,
+      .fx .core {
+        fill: none;
+        stroke-linecap: round;
+        stroke-dasharray: 45 200;
+        stroke-dashoffset: 145;
+        animation: run var(--d, 8s) ease-in-out var(--w, 0s) infinite;
+      }
+      .fx .glow {
+        stroke: #f2b63c;
+        stroke-width: 30;
+        filter: url(#fx-blur);
+      }
+      .fx .core {
+        stroke: #fff1c4;
+        stroke-width: 2.2;
+      }
+      @keyframes run {
+        0% {
+          stroke-dashoffset: 145;
+          opacity: 0;
+        }
+        20% {
+          opacity: 1;
+        }
+        80% {
+          opacity: 1;
+        }
+        100% {
+          stroke-dashoffset: -100;
+          opacity: 0;
+        }
+      }
+
+      header {
+        position: relative;
+        text-align: center;
+        padding: 34px 20px 6px;
+      }
+      .logo-wrap {
+        position: relative;
+        width: 270px;
+        margin: 0 auto 4px;
+        animation: pop 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+      }
+      /* Logo redesenhado em vetor a partir do arquivo enviado (150 px, borrado quando ampliado). */
+      .logo {
+        width: 100%;
+        height: auto;
+        display: block;
+        overflow: visible;
+        filter: drop-shadow(0 4px 12px rgb(0 0 0 / 0.9));
+      }
+      .logo .word {
+        font-family: "Kaushan Script", cursive;
+        font-size: 84px;
+        fill: #fff;
+      }
+      .logo .sub {
+        font-family: "DM Sans", sans-serif;
+        font-weight: 800;
+        font-size: 15px;
+        letter-spacing: 0.04em;
+        fill: #fff;
+      }
+      .logo-orig {
+        display: none;
+        width: 190px;
+        margin: 0 auto;
+        border-radius: 50%;
+        box-shadow: 0 0 0 2px var(--gold);
+      }
+      [data-logo="orig"] .logo {
+        display: none;
+      }
+      [data-logo="orig"] .logo-orig {
+        display: block;
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: scale(0.85) translateY(10px);
+        }
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+      .slogan {
+        display: inline-block;
+        margin: 6px auto 14px;
+        font-family: var(--name-font);
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-size: 0.82rem;
+        color: var(--gold-hi);
+        background: rgb(10 9 7 / 0.78);
+        border: 1px solid rgb(233 185 73 / 0.75);
+        backdrop-filter: blur(6px);
+        border-radius: 999px;
+        padding: 9px 18px;
+      }
+      .cats {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+        margin: 0 0 14px;
+        padding: 0;
+        list-style: none;
+      }
+      .cats li {
+        font-size: 0.74rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #17130b;
+        background: linear-gradient(135deg, var(--gold-hi), var(--gold));
+        border-radius: 999px;
+        padding: 5px 11px;
+      }
+      .chips {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 0 0 22px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font: inherit;
+        font-weight: 700;
+        font-size: 0.92rem;
+        color: var(--gold-hi);
+        background: rgb(10 9 7 / 0.85);
+        border: 1px solid rgb(233 185 73 / 0.6);
+        border-radius: 999px;
+        padding: 9px 16px;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .chip svg {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* Cartões: preto fosco com borda dourada, todos iguais, sem halo. */
+      .cards {
+        list-style: none;
+        margin: 0;
+        padding: 0 16px;
+        display: grid;
+        gap: 14px;
+      }
+      .cards + .shop {
+        margin-top: 26px;
+      }
+      .shop + .cards {
+        margin-top: 0;
+      }
+      .card {
+        --c: var(--gold);
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        min-height: 78px;
+        padding: 12px 18px 12px 12px;
+        border-radius: 999px;
+        font: inherit;
+        color: var(--ink);
+        text-align: left;
+        text-decoration: none;
+        cursor: pointer;
+        background:
+          linear-gradient(90deg, var(--card-a), var(--card-b)) padding-box,
+          linear-gradient(90deg, var(--gold-lo), var(--gold-hi), var(--gold-lo)) border-box;
+        border: 2px solid transparent;
+        box-shadow: 0 8px 22px rgb(0 0 0 / 0.55);
+        transition: transform 0.15s;
+      }
+      .card:active {
+        transform: scale(0.98);
+      }
+      .card:focus-visible,
+      .chip:focus-visible,
+      .foot a:focus-visible,
+      .copy:focus-visible,
+      .sheet button:focus-visible,
+      .shop button:focus-visible {
+        outline: 3px solid var(--gold-hi);
+        outline-offset: 3px;
+      }
+      .card .t {
+        flex: 1;
+        display: grid;
+        gap: 2px;
+      }
+      .card strong {
+        font-size: 1.1rem;
+        color: var(--gold-hi);
+      }
+      .card small {
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+      .card .go {
+        font-size: 1.5rem;
+        color: var(--gold-hi);
+        opacity: 0.8;
+        transition: transform 0.2s;
+      }
+      .card[aria-expanded="true"] .go {
+        transform: rotate(90deg);
+      }
+      .ico {
+        flex: none;
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(160deg, rgb(255 255 255 / 0.3), transparent 45%), var(--c);
+        box-shadow:
+          inset 0 -3px 0 rgb(0 0 0 / 0.15),
+          0 4px 10px rgb(0 0 0 / 0.4);
+      }
+      .ico svg {
+        width: 27px;
+        height: 27px;
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .ico.ig {
+        background:
+          linear-gradient(160deg, rgb(255 255 255 / 0.3), transparent 45%),
+          radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285aeb 90%);
+      }
+      .ico.google {
+        background: #fff;
+      }
+      .ico.google svg {
+        stroke: none;
+      }
+      /* "Meu time": rostos sobrepostos no lugar do ícone */
+      .ico.faces {
+        width: 74px;
+        background: none;
+        box-shadow: none;
+        position: relative;
+      }
+      .ico.faces img {
+        position: absolute;
+        top: 7px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--gold);
+        background: #222;
+      }
+      .ico.faces img:nth-child(1) {
+        left: 0;
+      }
+      .ico.faces img:nth-child(2) {
+        left: 17px;
+      }
+      .ico.faces img:nth-child(3) {
+        left: 34px;
+      }
+
+      .reveal {
+        margin: 8px 10px 0;
+        padding: 14px 18px;
+        border-radius: 22px;
+        background: rgb(12 11 9 / 0.94);
+        border: 1px solid rgb(233 185 73 / 0.55);
+        display: grid;
+        gap: 10px;
+      }
+      .reveal[hidden] {
+        display: none;
+      }
+      .reveal dl {
+        margin: 0;
+        display: grid;
+        gap: 8px;
+      }
+      .reveal dt {
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .reveal dd {
+        margin: 1px 0 0;
+        font-weight: 700;
+        font-size: 1.02rem;
+        color: #fff;
+        word-break: break-word;
+      }
+      .copy,
+      .btn {
+        justify-self: start;
+        font: inherit;
+        font-weight: 800;
+        color: #17130b;
+        background: linear-gradient(90deg, var(--gold-hi), var(--gold));
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 18px;
+        cursor: pointer;
+      }
+
+      /* ===== Serviços e preços (catálogo da Mage, em preto e dourado) ===== */
+      .shop {
+        position: relative;
+        margin: 0 16px 22px;
+      }
+      .shop h2 {
+        font-family: var(--name-font);
+        font-weight: 700;
+        font-size: 1.75rem;
+        text-align: center;
+        color: var(--gold-hi);
+        margin: 0 0 6px;
+        text-shadow: 0 2px 10px rgb(0 0 0 / 0.9);
+      }
+      .shop-hint {
+        margin: 0 auto 14px;
+        max-width: 330px;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #f1e6cc;
+        text-shadow: 0 1px 6px rgb(0 0 0 / 0.95);
+      }
+      .shop ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .shop button.cat {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        font: inherit;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 22px;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, var(--card-a), var(--card-b)) padding-box,
+          linear-gradient(160deg, var(--gold-hi), var(--gold-lo)) border-box;
+        border: 2px solid transparent;
+        box-shadow: 0 8px 20px rgb(0 0 0 / 0.55);
+        transition: transform 0.15s;
+      }
+      .shop button.cat:active {
+        transform: scale(0.97);
+      }
+      .pic {
+        position: relative;
+        display: block;
+        aspect-ratio: 1;
+        background: #111;
+      }
+      .pic img,
+      .pic video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .tag {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.66rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #17130b;
+        background: linear-gradient(90deg, var(--gold-hi), var(--gold));
+        box-shadow: 0 2px 6px rgb(0 0 0 / 0.4);
+      }
+      /* selo de vídeo: triângulo branco num círculo escuro */
+      .play {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: rgb(0 0 0 / 0.55);
+        border: 2px solid rgb(255 255 255 / 0.9);
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+      }
+      .play::before {
+        content: "";
+        margin-left: 4px;
+        border-left: 14px solid #fff;
+        border-top: 9px solid transparent;
+        border-bottom: 9px solid transparent;
+      }
+      .media-n {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: #fff;
+        background: rgb(0 0 0 / 0.65);
+      }
+      .count {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        min-width: 26px;
+        height: 26px;
+        padding: 0 7px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: #fff;
+        background: #1a7f43;
+        box-shadow: 0 2px 6px rgb(0 0 0 / 0.4);
+      }
+      .shop strong {
+        padding: 10px 8px 0;
+        font-family: var(--name-font);
+        font-size: 1.18rem;
+        font-weight: 600;
+        line-height: 1.15;
+        color: var(--gold-hi);
+      }
+      .shop .cta {
+        padding: 4px 8px 12px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+
+      /* Folhas (catálogo, time, pedido) */
+      .sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        display: grid;
+        align-items: end;
+        background: rgb(0 0 0 / 0.6);
+        backdrop-filter: blur(4px);
+      }
+      .sheet[hidden] {
+        display: none;
+      }
+      .sheet .panel {
+        max-width: 430px;
+        width: 100%;
+        margin: 0 auto;
+        max-height: 88vh;
+        overflow: auto;
+        background: #12100c;
+        color: var(--ink);
+        border-top: 2px solid var(--gold);
+        border-radius: 26px 26px 0 0;
+        padding: 18px 18px 110px;
+      }
+      .sheet .bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .sheet h2 {
+        font-family: var(--name-font);
+        color: var(--gold-hi);
+        margin: 0;
+        font-size: 1.5rem;
+      }
+      .sheet .close {
+        font: inherit;
+        font-weight: 700;
+        border: 0;
+        border-radius: 999px;
+        padding: 8px 14px;
+        background: rgb(255 255 255 / 0.1);
+        color: var(--gold-hi);
+        cursor: pointer;
+      }
+      .prods {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .prod {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #1d1a15;
+        border: 1px solid rgb(233 185 73 / 0.4);
+      }
+      .prod .pic {
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+        width: 100%;
+      }
+      .prod .info {
+        padding: 8px 10px 0;
+        display: grid;
+        gap: 2px;
+        align-content: start;
+      }
+      .prod .info b {
+        font-size: 0.95rem;
+        line-height: 1.25;
+        color: #fff;
+      }
+      .prod .info small {
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+      .prod .price {
+        font-weight: 800;
+        color: var(--gold-hi);
+      }
+      .prod .act {
+        padding: 10px;
+      }
+      .add {
+        width: 100%;
+        min-height: 40px;
+        font: inherit;
+        font-weight: 800;
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+        color: #17130b;
+        background: linear-gradient(90deg, var(--gold-hi), var(--gold));
+      }
+      a.add,
+      a.btn {
+        display: grid;
+        place-items: center;
+        text-decoration: none;
+      }
+      .add.on {
+        color: var(--gold-hi);
+        background: rgb(255 255 255 / 0.08);
+        border: 1px solid var(--gold);
+      }
+      .add:focus-visible,
+      .cartbar:focus-visible,
+      .send:focus-visible,
+      .barber:focus-visible,
+      .btn:focus-visible {
+        outline: 3px solid var(--gold-hi);
+        outline-offset: 2px;
+      }
+
+      /* Visualizador de fotos e vídeos do serviço: desliza para o lado. */
+      .viewer .panel {
+        padding-bottom: 28px;
+      }
+      .slides {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 100%;
+        gap: 10px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        border-radius: 18px;
+      }
+      .slides figure {
+        margin: 0;
+        scroll-snap-align: center;
+      }
+      .slides img,
+      .slides video {
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        object-fit: cover;
+        display: block;
+        border-radius: 18px;
+        background: #000;
+      }
+      .slides figcaption {
+        margin-top: 8px;
+        font-size: 0.9rem;
+        color: var(--muted);
+        text-align: center;
+      }
+      .dots {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .dots i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgb(255 255 255 / 0.25);
+      }
+      .dots i.on {
+        background: var(--gold);
+      }
+
+      /* ===== Meu time (referência: cartões em pé com foto, nome e função) ===== */
+      .team {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .barber {
+        display: grid;
+        width: 100%;
+        padding: 0;
+        font: inherit;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 16px;
+        overflow: hidden;
+        color: var(--ink);
+        background:
+          linear-gradient(180deg, #1d1a15, #0c0b09) padding-box,
+          linear-gradient(160deg, var(--gold-hi), var(--gold-lo)) border-box;
+        border: 2px solid transparent;
+      }
+      .barber img {
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        object-fit: cover;
+        display: block;
+      }
+      .barber b {
+        padding: 8px 4px 0;
+        font-family: var(--name-font);
+        font-size: 0.98rem;
+        color: var(--gold-hi);
+      }
+      .barber small {
+        padding: 2px 4px 10px;
+        font-size: 0.74rem;
+        color: var(--muted);
+      }
+      /* Perfil do barbeiro (referência "Sonhos de barbeiro": texto à esquerda, foto à direita) */
+      .profile {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 44%;
+        min-height: 300px;
+        margin-bottom: 14px;
+        border-radius: 20px;
+        overflow: hidden;
+        background:
+          radial-gradient(90% 80% at 85% 40%, rgb(233 185 73 / 0.18), transparent 70%),
+          linear-gradient(120deg, #15130f, #0a0908);
+        border: 1px solid rgb(233 185 73 / 0.45);
+      }
+      .profile .txt {
+        position: relative;
+        z-index: 1;
+        padding: 18px 0 18px 16px;
+        display: grid;
+        align-content: center;
+        gap: 8px;
+      }
+      .profile .role {
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold);
+      }
+      .profile h3 {
+        margin: 0;
+        font-family: var(--name-font);
+        font-size: 1.9rem;
+        line-height: 1;
+        color: #fff;
+      }
+      .profile p {
+        margin: 0;
+        font-size: 0.88rem;
+        line-height: 1.45;
+        color: #e9dfc8;
+      }
+      .profile ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .profile li {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--gold-hi);
+        border: 1px solid rgb(233 185 73 / 0.6);
+        border-radius: 999px;
+        padding: 3px 8px;
+      }
+      .profile img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        -webkit-mask: linear-gradient(90deg, transparent, #000 35%);
+        mask: linear-gradient(90deg, transparent, #000 35%);
+      }
+      .profile-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .btn.ghost {
+        color: var(--gold-hi);
+        background: rgb(255 255 255 / 0.08);
+        border: 1px solid var(--gold);
+      }
+
+      /* Barra do pedido */
+      .cartbar {
+        position: fixed;
+        z-index: 20;
+        left: 50%;
+        bottom: 16px;
+        transform: translateX(-50%);
+        width: min(398px, calc(100% - 32px));
+        min-height: 58px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 10px 8px 14px;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        color: var(--gold-hi);
+        border: 2px solid var(--gold);
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--card-a), var(--card-b));
+        box-shadow: 0 10px 26px rgb(0 0 0 / 0.6);
+      }
+      .cartbar[hidden] {
+        display: none;
+      }
+      .cartbar .n {
+        min-width: 30px;
+        height: 30px;
+        padding: 0 8px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        color: #17130b;
+        background: var(--gold-hi);
+      }
+      .cartbar .txt {
+        flex: 1;
+        display: grid;
+        line-height: 1.2;
+      }
+      .cartbar .txt small {
+        color: var(--muted);
+      }
+      .cartbar .go2 {
+        padding: 9px 14px;
+        border-radius: 999px;
+        font-weight: 800;
+        color: #fff;
+        background: #1a7f43;
+      }
+      body.has-cart .wa {
+        display: none;
+      }
+      .cart-list {
+        list-style: none;
+        margin: 0 0 14px;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+      }
+      .cart-list li {
+        display: grid;
+        grid-template-columns: 56px 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 8px;
+        border-radius: 16px;
+        background: #1d1a15;
+      }
+      .cart-list li.empty {
+        display: block;
+        text-align: center;
+        color: var(--muted);
+      }
+      .cart-list img {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        object-fit: cover;
+      }
+      .cart-list .nm {
+        display: grid;
+        font-size: 0.92rem;
+        color: #fff;
+      }
+      .cart-list .nm small {
+        color: var(--muted);
+      }
+      .rm {
+        font: inherit;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--gold-hi);
+        background: none;
+        border: 1px solid rgb(233 185 73 / 0.5);
+        border-radius: 999px;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+      .who {
+        display: grid;
+        gap: 6px;
+        margin: 0 0 14px;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+      .who select {
+        font: inherit;
+        color: #fff;
+        background: #1d1a15;
+        border: 1px solid var(--gold);
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+      .total {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 800;
+        font-size: 1.05rem;
+        margin: 0 4px 14px;
+        color: #fff;
+      }
+      .send {
+        width: 100%;
+        min-height: 52px;
+        font: inherit;
+        font-weight: 800;
+        font-size: 1.05rem;
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+        color: #fff;
+        background: #1a7f43;
+      }
+      .send-hint {
+        margin: 10px 4px 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+        text-align: center;
+      }
+      .toast {
+        position: fixed;
+        z-index: 30;
+        left: 50%;
+        top: 18px;
+        transform: translateX(-50%);
+        width: min(380px, calc(100% - 32px));
+        padding: 12px 16px;
+        border-radius: 16px;
+        font-weight: 700;
+        color: #17130b;
+        background: var(--gold-hi);
+        box-shadow: 0 10px 26px rgb(0 0 0 / 0.5);
+      }
+      .toast[hidden] {
+        display: none;
+      }
+
+      /* Rodapé */
+      .about {
+        position: relative;
+        margin: 22px 16px 0;
+        padding: 18px 20px;
+        border-radius: 24px;
+        background: rgb(12 11 9 / 0.9);
+        border: 1px solid rgb(233 185 73 / 0.55);
+        color: #efe6d0;
+      }
+      .about h2 {
+        font-family: var(--name-font);
+        color: var(--gold-hi);
+        margin: 0 0 6px;
+        font-size: 1.3rem;
+      }
+      .about p {
+        margin: 0;
+        line-height: 1.5;
+      }
+      .foot {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        margin: 22px 0 0;
+      }
+      .foot a {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 4px 12px rgb(0 0 0 / 0.5);
+      }
+      .foot svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .sign {
+        position: relative;
+        text-align: center;
+        margin: 18px 0 0;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        color: var(--gold-hi);
+      }
+      .sign span {
+        background: rgb(10 9 7 / 0.85);
+        border-radius: 999px;
+        padding: 6px 14px;
+      }
+      .wa {
+        position: sticky;
+        float: right;
+        bottom: 18px;
+        margin: -70px 16px 0 0;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #25d366;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 6px 16px rgb(0 0 0 / 0.5);
+      }
+      .wa svg {
+        width: 30px;
+        height: 30px;
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2;
+      }
+      .note {
+        max-width: 430px;
+        margin: 0 auto 40px;
+        padding: 0 16px;
+        font-size: 0.92rem;
+        color: #d8dae0;
+        line-height: 1.5;
+      }
+
+      .cards li,
+      .about,
+      .foot,
+      .shop {
+        animation: up 0.6s ease-out both;
+      }
+      .cards li:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .cards li:nth-child(3) {
+        animation-delay: 0.2s;
+      }
+      .cards li:nth-child(4) {
+        animation-delay: 0.3s;
+      }
+      @keyframes up {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .logo-wrap,
+        .fx .slab,
+        .sky::before,
+        .cards li,
+        .about,
+        .foot,
+        .shop {
+          animation: none;
+        }
+        /* parado: a luz fica acesa no meio de cada quina */
+        .fx .glow,
+        .fx .core {
+          animation: none;
+          stroke-dashoffset: 67;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tools">
+      <b>Fundo:</b>
+      <button type="button" data-set="bg" data-v="marble" aria-pressed="true">Mármore + luz</button>
+      <button type="button" data-set="bg" data-v="dark" aria-pressed="false">Só o vídeo</button>
+      <b>Logo:</b>
+      <button type="button" data-set="logo" data-v="svg" aria-pressed="true">Redesenhado</button>
+      <button type="button" data-set="logo" data-v="orig" aria-pressed="false">Original</button>
+      <b>Wi-Fi:</b>
+      <button type="button" id="t-wifi" aria-pressed="true">Mostrar</button>
+    </div>
+
+    <main class="phone" data-bg="marble" data-logo="svg">
+      <div class="sky" aria-hidden="true"></div>
+      <div class="fx" aria-hidden="true">
+        <svg viewBox="0 0 400 712" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <filter id="fx-blur" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="10" />
+            </filter>
+          </defs>
+          <!-- placas: dois grupos que deslizam e giram devagar, cada um com suas quinas e luzes -->
+          <!-- Placa de baixo (fica atrás) e placa de cima, que desliza sobre ela; cada uma leva
+               as próprias quinas: linha fina sempre acesa + luz que corre (deslocada para um lado). -->
+          <g class="slab s2">
+            <polygon class="plane" opacity=".68" points="-60,100 215,330 160,780 -60,780" />
+            <polygon class="plane" opacity=".18" points="215,330 460,500 460,780 160,780" />
+            <path class="seam" d="M215 330L160 780" />
+            <path class="glow" pathLength="100" d="M221 331L166 781" style="--d: 7s; --w: -3s" />
+            <path class="core" pathLength="100" d="M215 330L160 780" style="--d: 7s; --w: -3s" />
+          </g>
+          <g class="slab s1">
+            <polygon class="plane" opacity=".5" points="-60,-60 262,-60 460,40 460,500 -60,100" />
+            <polygon class="plane" opacity=".22" points="262,-60 460,-60 460,40" />
+            <polygon class="plane" opacity=".14" points="300,18 405,272 460,500 300,390" />
+            <path class="seam" d="M-60 100L460 500" />
+            <path class="seam" d="M262 -60L460 40" />
+            <path class="seam" d="M300 18L405 272" />
+            <path class="glow" pathLength="100" d="M-64 105L456 505" style="--d: 9s" />
+            <path class="core" pathLength="100" d="M-60 100L460 500" style="--d: 9s" />
+            <path class="glow" pathLength="100" d="M259 -55L457 45" style="--d: 6s; --w: -1s" />
+            <path class="core" pathLength="100" d="M262 -60L460 40" style="--d: 6s; --w: -1s" />
+            <path class="glow" pathLength="100" d="M295 20L400 274" style="--d: 8s; --w: -5s" />
+            <path class="core" pathLength="100" d="M300 18L405 272" style="--d: 8s; --w: -5s" />
+          </g>
+        </svg>
+      </div>
+
+      <header>
+        <div class="logo-wrap">
+          <svg class="logo" viewBox="0 0 300 208" role="img" aria-label="Reistyle Barbearia">
+            <defs>
+              <linearGradient id="lg-gold" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ffd84a" />
+                <stop offset="1" stop-color="#efb000" />
+              </linearGradient>
+            </defs>
+            <g
+              transform="translate(58 6) scale(.72)"
+              fill="none"
+              stroke="url(#lg-gold)"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path stroke-width="3" d="M13 50L32 126M244 66L226 126" />
+              <path
+                stroke-width="12"
+                d="M13 50Q52 98 95 122Q112 72 128 24Q146 74 166 122Q210 104 244 66"
+              />
+              <circle cx="13" cy="40" r="10" stroke-width="6" fill="#000" />
+              <circle cx="128" cy="13" r="10" stroke-width="6" fill="#000" />
+              <circle cx="244" cy="57" r="10" stroke-width="6" fill="#000" />
+            </g>
+            <text class="word" x="150" y="166" text-anchor="middle" transform="rotate(-6 150 150)">
+              Reistyle
+            </text>
+            <text class="sub" x="150" y="200" text-anchor="middle">Barbearia</text>
+          </svg>
+          <img class="logo-orig" src="ref/reistyle-logo-orig.jpg" alt="Reistyle Barbearia" />
+        </div>
+        <h1 class="sr">Reistyle Barbearia</h1>
+        <p class="slogan">Somos além do corte de cabelo</p>
+        <ul class="cats">
+          <li>Corte</li>
+          <li>Barba</li>
+          <li>Sobrancelha</li>
+          <li>Pigmentação</li>
+          <li>Platinado</li>
+          <li>Hidratação</li>
+        </ul>
+        <div class="chips">
+          <span class="chip"
+            ><svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21z" />
+              <circle cx="12" cy="9.5" r="2.5" /></svg
+            >Fortaleza/CE</span
+          ><button class="chip" type="button" id="share">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" /></svg
+            >Compartilhar
+          </button>
+        </div>
+      </header>
+
+      <!-- Pedido do usuário: Google e Instagram primeiro. -->
+      <ul class="cards">
+        <li>
+          <a
+            class="card"
+            href="https://search.google.com/local/writereview?placeid=ChIJ54pHMZtNxwcRo6tUf364Lrg"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="ico google"
+              ><svg viewBox="0 0 48 48">
+                <path
+                  fill="#EA4335"
+                  d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13.6 17.7 9.5 24 9.5z"
+                />
+                <path
+                  fill="#4285F4"
+                  d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17.5z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M10.4 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.3.8-4.7l-7.8-6C.9 16.6 0 20.2 0 24s.9 7.4 2.6 10.7l7.8-6z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.7-4.1-13.6-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"
+                /></svg
+            ></span>
+            <span class="t"
+              ><strong>Avaliar no Google</strong><small>Sua opinião ajuda</small></span
+            >
+            <span class="go" aria-hidden="true">›</span>
+          </a>
+        </li>
+        <li>
+          <a
+            class="card"
+            href="https://www.instagram.com/reistylebarbearia/"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="ico ig"
+              ><svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r=".6" /></svg
+            ></span>
+            <span class="t"><strong>Instagram</strong><small>@reistylebarbearia</small></span>
+            <span class="go" aria-hidden="true">›</span>
+          </a>
+        </li>
+      </ul>
+
+      <section class="shop" aria-labelledby="h-shop">
+        <h2 id="h-shop">Serviços e preços</h2>
+        <p class="shop-hint">
+          Veja fotos e vídeos dos nossos trabalhos, escolha os serviços e agende pelo WhatsApp.
+        </p>
+        <ul id="cats"></ul>
+      </section>
+
+      <ul class="cards">
+        <li>
+          <button class="card" type="button" id="open-team">
+            <span class="ico faces" id="faces"></span>
+            <span class="t"><strong>Meu time</strong><small>Conheça nossos barbeiros</small></span>
+            <span class="go" aria-hidden="true">›</span>
+          </button>
+        </li>
+        <li>
+          <a class="card" href="#" data-group style="--c: #1fa855">
+            <span class="ico"
+              ><svg viewBox="0 0 24 24">
+                <path d="M3 21l1.6-5A8.5 8.5 0 1 1 8 19.5z" />
+                <path
+                  d="M9 9.5c.5 2.5 2.5 4.5 5 5l1.2-1.2 2 1-1 2C11 16 8 13 7.5 8.8l2-1 1 2z"
+                /></svg
+            ></span>
+            <span class="t"
+              ><strong>Agendar horário</strong><small>No grupo da barbearia</small></span
+            >
+            <span class="go" aria-hidden="true">›</span>
+          </a>
+        </li>
+        <li>
+          <div class="card" style="--c: #b8862e; cursor: default">
+            <span class="ico"
+              ><svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5l3 2" /></svg
+            ></span>
+            <span class="t"
+              ><strong>Horário de funcionamento</strong
+              ><small>Seg à Sáb | 08:00 às 19:00</small></span
+            >
+          </div>
+        </li>
+        <li>
+          <!-- O link do Google Meu Negócio traz o código do lugar (place id): abre a ficha no mapa. -->
+          <a
+            class="card"
+            style="--c: #4c7be8"
+            href="https://www.google.com/maps/search/?api=1&query=Reistyle%20Barbearia&query_place_id=ChIJ54pHMZtNxwcRo6tUf364Lrg"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="ico"
+              ><svg viewBox="0 0 24 24">
+                <path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21z" />
+                <circle cx="12" cy="9.5" r="2.5" /></svg
+            ></span>
+            <span class="t"><strong>Como chegar</strong><small>Ver no mapa</small></span>
+            <span class="go" aria-hidden="true">›</span>
+          </a>
+        </li>
+        <li id="wifi-li">
+          <button
+            class="card"
+            type="button"
+            style="--c: #7c5cd6"
+            aria-expanded="false"
+            aria-controls="wifi"
+          >
+            <span class="ico"
+              ><svg viewBox="0 0 24 24">
+                <path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0" />
+                <circle cx="12" cy="19.5" r="1" /></svg
+            ></span>
+            <span class="t"><strong>Wi-Fi</strong><small>Reistyle_Clientes</small></span>
+            <span class="go" aria-hidden="true">›</span>
+          </button>
+          <div class="reveal" id="wifi" hidden>
+            <dl>
+              <div>
+                <dt>Rede</dt>
+                <dd>Reistyle_Clientes</dd>
+              </div>
+              <div>
+                <dt>Senha</dt>
+                <dd>reistyle2026</dd>
+              </div>
+            </dl>
+            <button class="copy" type="button" data-copy="reistyle2026">Copiar senha</button>
+          </div>
+        </li>
+      </ul>
+
+      <section class="about">
+        <h2>Sobre a Reistyle</h2>
+        <p>
+          Somos além do corte de cabelo. Na Reistyle você é tratado como rei: corte, barba e
+          acabamento com atenção a cada detalhe, num espaço feito para você relaxar. Venha conhecer
+          a gente em Fortaleza/CE.
+        </p>
+      </section>
+
+      <nav class="foot" aria-label="Redes">
+        <a
+          href="https://www.instagram.com/reistylebarbearia/"
+          aria-label="Instagram"
+          style="
+            background: radial-gradient(
+              circle at 30% 107%,
+              #fdf497 0%,
+              #fd5949 45%,
+              #d6249f 60%,
+              #285aeb 90%
+            );
+          "
+          ><svg viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <circle cx="12" cy="12" r="4" /></svg
+        ></a>
+        <a href="#" data-group aria-label="Grupo no WhatsApp" style="background: #1fa855"
+          ><svg viewBox="0 0 24 24">
+            <path d="M3 21l1.6-5A8.5 8.5 0 1 1 8 19.5z" /></svg
+        ></a>
+      </nav>
+      <p class="sign"><span>REISTYLE BARBEARIA · FORTALEZA/CE</span></p>
+
+      <a class="wa" href="#" data-group aria-label="Agendar no grupo do WhatsApp"
+        ><svg viewBox="0 0 24 24">
+          <path d="M3 21l1.6-5A8.5 8.5 0 1 1 8 19.5z" />
+          <path d="M9 9.5c.5 2.5 2.5 4.5 5 5l1.2-1.2 2 1-1 2C11 16 8 13 7.5 8.8l2-1 1 2z" /></svg
+      ></a>
+    </main>
+
+    <div
+      class="sheet catalog"
+      id="catalog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="h-cat"
+      hidden
+    >
+      <div class="panel">
+        <div class="bar">
+          <h2 id="h-cat">Categoria</h2>
+          <button class="close" type="button">Fechar</button>
+        </div>
+        <ul class="prods" id="prods"></ul>
+      </div>
+    </div>
+
+    <div
+      class="sheet viewer"
+      id="viewer"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="h-view"
+      hidden
+    >
+      <div class="panel">
+        <div class="bar">
+          <h2 id="h-view">Trabalhos</h2>
+          <button class="close" type="button">Voltar</button>
+        </div>
+        <div class="slides" id="slides"></div>
+        <div class="dots" id="dots" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div class="sheet" id="team" role="dialog" aria-modal="true" aria-labelledby="h-team" hidden>
+      <div class="panel">
+        <div class="bar">
+          <h2 id="h-team">Meu time</h2>
+          <button class="close" type="button">Fechar</button>
+        </div>
+        <div id="profile"></div>
+        <ul class="team" id="team-list"></ul>
+      </div>
+    </div>
+
+    <p class="note">
+      <b>Protótipo Reistyle:</b> mármore da referência aproximando devagar, com placas em ângulo que
+      deslizam e giram e a luz dourada correndo pelas quinas (movimento do vídeo). Logo redesenhado
+      em vetor. Google e Instagram em cima; serviços com fotos e <b>vídeos</b> dos trabalhos junto
+      do preço; "Meu time" abre os barbeiros e o perfil de cada um. "Agendar" abre o grupo da
+      barbearia no WhatsApp. Preços, nomes, fotos, vídeo e Wi-Fi são <b>ilustrativos</b>.
+    </p>
+
+    <script>
+      const GROUP = "https://chat.whatsapp.com/Ly7Tgg5RxiO5ctJYtDzrLg";
+
+      // ===== Imagens provisórias (desenhadas aqui; trocar pelas fotos reais) =====
+      const ICONS = {
+        tesoura:
+          '<circle cx="9" cy="30" r="5"/><circle cx="9" cy="14" r="5"/><path d="M13 27L34 10M13 17l21 17"/>',
+        navalha: '<path d="M6 28h16l12-12-4-4L18 24H6z"/><path d="M22 28l6 6"/>',
+        pente:
+          '<path d="M8 12h28v6H8z"/><path d="M11 18v12M15 18v12M19 18v12M23 18v12M27 18v12M31 18v12"/>',
+        coroa: '<path d="M6 30l3-16 8 8 5-12 5 12 8-8 3 16z"/><path d="M6 34h32"/>',
+        gota: '<path d="M22 6c6 9 10 14 10 20a10 10 0 0 1-20 0c0-6 4-11 10-20z"/>',
+        olho: '<path d="M4 22s7-10 18-10 18 10 18 10-7 10-18 10S4 22 4 22z"/><circle cx="22" cy="22" r="5"/>',
+      };
+      const ph = (label, icon, hue = 0) =>
+        "data:image/svg+xml;utf8," +
+        encodeURIComponent(
+          `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${30 + hue},12%,16%)"/><stop offset="1" stop-color="#080807"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/><path d="M-10 80C60 60 120 140 310 40M40 310C90 200 180 230 240 -10" stroke="#a97c2c" stroke-width="1.4" fill="none" opacity=".55"/><g transform="translate(106 80) scale(2)" fill="none" stroke="#e9b949" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ICONS[icon]}</g><text x="150" y="232" text-anchor="middle" font-family="Georgia,serif" font-size="22" fill="#f6d47a">${label}</text><text x="150" y="262" text-anchor="middle" font-family="Arial" font-size="13" fill="#bfae88">foto ilustrativa</text></svg>`,
+        );
+      const face = (n, tone) =>
+        "data:image/svg+xml;utf8," +
+        encodeURIComponent(
+          `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"><defs><radialGradient id="b" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="#3a3226"/><stop offset="1" stop-color="#0b0a08"/></radialGradient></defs><rect width="300" height="400" fill="url(#b)"/><circle cx="150" cy="150" r="62" fill="${tone}"/><path d="M88 128c0-40 30-62 62-62s62 22 62 62c-10-18-30-26-62-26s-52 8-62 26z" fill="#1b1612"/><path d="M110 178c8 30 22 40 40 40s32-10 40-40c-6 22-20 30-40 30s-34-8-40-30z" fill="#1b1612"/><path d="M30 400c0-90 50-130 120-130s120 40 120 130z" fill="#16130f"/><path d="M118 272l32 40 32-40" fill="none" stroke="#e9b949" stroke-width="4"/><text x="150" y="380" text-anchor="middle" font-family="Arial" font-size="15" fill="#bfae88">foto ilustrativa ${n}</text></svg>`,
+        );
+      const VIDEO = "ref/reistyle-video-demo.mp4";
+
+      // ===== Barbeiros (ILUSTRATIVOS) =====
+      const TEAM = [
+        {
+          id: "b1",
+          name: "Barbeiro 1",
+          role: "Fundador",
+          photo: face(1, "#8a5a3c"),
+          bio: "Mais de 10 anos de tesoura e navalha. Especialista em degradê e barba desenhada.",
+          skills: ["Degradê", "Barba", "Navalhado"],
+        },
+        {
+          id: "b2",
+          name: "Barbeiro 2",
+          role: "Barbeiro",
+          photo: face(2, "#c08a64"),
+          bio: "Cortes clássicos e modernos, acabamento na navalha e pigmentação.",
+          skills: ["Social", "Pigmentação"],
+        },
+        {
+          id: "b3",
+          name: "Barbeiro 3",
+          role: "Visagista",
+          photo: face(3, "#6b4630"),
+          bio: "Química, platinado e luzes. Indica o corte que mais combina com o seu rosto.",
+          skills: ["Platinado", "Luzes", "Hidratação"],
+        },
+      ];
+
+      // ===== Serviços (preços e mídias ILUSTRATIVOS). media: [tipo, src, legenda] =====
+      const CATS = [
+        {
+          id: "cortes",
+          name: "Cortes",
+          tag: "Mais pedidos",
+          items: [
+            [
+              "Corte degradê",
+              40,
+              [
+                ["v", VIDEO, "Degradê na máquina (vídeo ilustrativo)"],
+                ["i", ph("Degradê", "tesoura"), "Degradê"],
+              ],
+            ],
+            ["Corte social", 35, [["i", ph("Social", "pente", 10), "Social"]]],
+            ["Corte infantil", 30, [["i", ph("Infantil", "tesoura", 20), "Infantil"]]],
+          ],
+        },
+        {
+          id: "barba",
+          name: "Barba",
+          items: [
+            [
+              "Barba completa",
+              25,
+              [
+                ["i", ph("Barba", "navalha"), "Barba completa"],
+                ["v", VIDEO, "Toalha quente (vídeo ilustrativo)"],
+              ],
+            ],
+            ["Barba desenhada", 30, [["i", ph("Desenhada", "navalha", 15), "Barba desenhada"]]],
+          ],
+        },
+        {
+          id: "combos",
+          name: "Combos",
+          tag: "Economize",
+          items: [
+            ["Corte + barba", 60, [["i", ph("Corte + barba", "coroa"), "Corte + barba"]]],
+            [
+              "Corte + barba + sobrancelha",
+              70,
+              [["i", ph("Combo rei", "coroa", 12), "Combo completo"]],
+            ],
+          ],
+        },
+        {
+          id: "quimica",
+          name: "Química",
+          items: [
+            ["Platinado", 120, [["i", ph("Platinado", "gota"), "Platinado"]]],
+            ["Luzes", 90, [["i", ph("Luzes", "gota", 18), "Luzes"]]],
+            ["Pigmentação", 20, [["i", ph("Pigmentação", "gota", 8), "Pigmentação"]]],
+          ],
+        },
+        {
+          id: "acab",
+          name: "Sobrancelha",
+          items: [
+            ["Sobrancelha na navalha", 10, [["i", ph("Sobrancelha", "olho"), "Sobrancelha"]]],
+            ["Pezinho", 10, [["i", ph("Pezinho", "navalha", 6), "Pezinho"]]],
+          ],
+        },
+        {
+          id: "trat",
+          name: "Tratamentos",
+          items: [
+            ["Hidratação", 30, [["i", ph("Hidratação", "gota", 25), "Hidratação"]]],
+            ["Relaxamento", 40, [["i", ph("Relaxamento", "pente", 25), "Relaxamento"]]],
+          ],
+        },
+      ];
+
+      const money = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const find = (k) => {
+        const [c, i] = k.split(":");
+        const cat = CATS.find((x) => x.id === c);
+        const it = cat && cat.items[+i];
+        return it && { cat, name: it[0], price: it[1], media: it[2] };
+      };
+      const cover = (media, alt) => {
+        const m = media[0];
+        const inner =
+          m[0] === "v"
+            ? `<video src="${m[1]}" muted loop playsinline autoplay preload="metadata"></video><span class="play"></span>`
+            : `<img src="${m[1]}" alt="${alt}" />`;
+        return (
+          inner + (media.length > 1 ? `<span class="media-n">${media.length} itens</span>` : "")
+        );
+      };
+      // O agendamento é no grupo da barbearia (sem mensagem pronta): "Agendar" só abre o grupo.
+      let openCat = null;
+      function render() {
+        document.getElementById("cats").innerHTML = CATS.map(
+          (c) =>
+            `<li><button class="cat" type="button" data-cat="${c.id}"><span class="pic">${cover(c.items[0][2], "")}${c.tag ? `<span class="tag">${c.tag}</span>` : ""}</span><strong>${c.name}</strong><span class="cta">Ver serviços (${c.items.length})</span></button></li>`,
+        ).join("");
+        if (openCat) {
+          const c = CATS.find((x) => x.id === openCat);
+          document.getElementById("h-cat").textContent = c.name;
+          document.getElementById("prods").innerHTML = c.items
+            .map((it, i) => {
+              const k = c.id + ":" + i;
+              const vids = it[2].filter((m) => m[0] === "v").length;
+              const fotos = it[2].length - vids;
+              const what = [
+                fotos && `${fotos} foto${fotos > 1 ? "s" : ""}`,
+                vids && `${vids} vídeo${vids > 1 ? "s" : ""}`,
+              ]
+                .filter(Boolean)
+                .join(" · ");
+              return `<li class="prod"><button class="pic" type="button" data-view="${k}" aria-label="Ver trabalhos: ${it[0]}">${cover(it[2], "")}</button><span class="info"><b>${it[0]}</b><span class="price">${money(it[1])}</span><small>${what}</small></span><span class="act"><a class="add" href="${GROUP}" target="_blank" rel="noopener">Agendar</a></span></li>`;
+            })
+            .join("");
+        }
+      }
+
+      // ===== Folhas =====
+      const opener = {};
+      const sheet = (id, on, from) => {
+        const s = document.getElementById(id);
+        s.hidden = !on;
+        if (on) {
+          if (from) opener[id] = from;
+          s.querySelector(".close").focus();
+        } else {
+          s.querySelectorAll("video").forEach((v) => v.pause());
+          opener[id]?.focus?.();
+        }
+      };
+      for (const id of ["catalog", "viewer", "team"]) {
+        const s = document.getElementById(id);
+        s.querySelector(".close").onclick = () => sheet(id, false);
+        s.onclick = (e) => e.target === s && sheet(id, false);
+      }
+      addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        const open = ["viewer", "catalog", "team"].find(
+          (id) => !document.getElementById(id).hidden,
+        );
+        if (open) sheet(open, false);
+      });
+
+      function showViewer(k, from) {
+        const p = find(k);
+        document.getElementById("h-view").textContent = p.name;
+        const slides = document.getElementById("slides");
+        slides.innerHTML = p.media
+          .map((m) =>
+            m[0] === "v"
+              ? `<figure><video src="${m[1]}" controls playsinline muted loop preload="metadata"></video><figcaption>${m[2]}</figcaption></figure>`
+              : `<figure><img src="${m[1]}" alt="${m[2]}" /><figcaption>${m[2]}</figcaption></figure>`,
+          )
+          .join("");
+        const dots = document.getElementById("dots");
+        dots.innerHTML =
+          p.media.length > 1
+            ? p.media.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")
+            : "";
+        slides.onscroll = () => {
+          const i = Math.round(slides.scrollLeft / slides.clientWidth);
+          dots.querySelectorAll("i").forEach((d, j) => d.classList.toggle("on", i === j));
+          slides.querySelectorAll("video").forEach((v, j) => j !== i && v.pause());
+        };
+        sheet("viewer", true, from);
+        const v = slides.querySelector("figure:first-child video");
+        if (v) v.play().catch(() => {});
+      }
+
+      function showTeam(id) {
+        const b = TEAM.find((x) => x.id === id) || TEAM[0];
+        document.getElementById("profile").innerHTML =
+          `<div class="profile"><div class="txt"><span class="role">${b.role}</span><h3>${b.name}</h3><p>${b.bio}</p><ul>${b.skills.map((s) => `<li>${s}</li>`).join("")}</ul></div><img src="${b.photo}" alt="${b.name} (foto ilustrativa)" /></div><div class="profile-actions"><a class="btn" href="${GROUP}" target="_blank" rel="noopener">Agendar no grupo</a></div>`;
+        document.getElementById("team-list").innerHTML = TEAM.map(
+          (x) =>
+            `<li><button class="barber" type="button" data-barber="${x.id}" aria-pressed="${x.id === b.id}"${x.id === b.id ? ' style="border-width:3px"' : ""}><img src="${x.photo}" alt="" /><b>${x.name}</b><small>${x.role}</small></button></li>`,
+        ).join("");
+      }
+      document.getElementById("faces").innerHTML = TEAM.map(
+        (b) => `<img src="${b.photo}" alt="" />`,
+      ).join("");
+      document.querySelectorAll("[data-group]").forEach((a) => (a.href = GROUP));
+
+      document.addEventListener("click", (e) => {
+        const el = e.target.closest("[data-cat],[data-view],[data-barber]");
+        if (!el) return;
+        if (el.dataset.cat) {
+          openCat = el.dataset.cat;
+          render();
+          sheet("catalog", true, el);
+        } else if (el.dataset.view) {
+          showViewer(el.dataset.view, el);
+        } else if (el.dataset.barber) {
+          showTeam(el.dataset.barber);
+          document.querySelector(`[data-barber="${el.dataset.barber}"]`).focus();
+          document.getElementById("team").querySelector(".panel").scrollTop = 0;
+        }
+      });
+      document.getElementById("open-team").onclick = (e) => {
+        showTeam(TEAM[0].id);
+        sheet("team", true, e.currentTarget);
+      };
+      document.querySelectorAll("[aria-controls]").forEach((b) =>
+        b.addEventListener("click", () => {
+          const open = b.getAttribute("aria-expanded") !== "true";
+          b.setAttribute("aria-expanded", open);
+          document.getElementById(b.getAttribute("aria-controls")).hidden = !open;
+        }),
+      );
+      document.querySelectorAll("[data-copy]").forEach((b) =>
+        b.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(b.dataset.copy);
+            const t = b.textContent;
+            b.textContent = "Copiado!";
+            setTimeout(() => (b.textContent = t), 1500);
+          } catch {}
+        }),
+      );
+      document.querySelectorAll("[data-set]").forEach((b) =>
+        b.addEventListener("click", () => {
+          document.querySelector(".phone").dataset[b.dataset.set] = b.dataset.v;
+          document
+            .querySelectorAll(`[data-set="${b.dataset.set}"]`)
+            .forEach((x) => x.setAttribute("aria-pressed", x === b));
+        }),
+      );
+      document.getElementById("t-wifi").onclick = (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", on);
+        e.currentTarget.textContent = on ? "Mostrar" : "Escondido";
+        document.getElementById("wifi-li").hidden = !on;
+      };
+      document.getElementById("share").addEventListener("click", () => {
+        if (navigator.share) navigator.share({ title: "Reistyle Barbearia", url: location.href });
+      });
+      render();
+    </script>
+  </body>
+</html>

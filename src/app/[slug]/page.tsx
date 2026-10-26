@@ -50,6 +50,7 @@ export default async function PublicBioPage({ params }: PageProps<"/[slug]">) {
     <BioRenderer
       doc={site.document}
       assets={site.assets}
+      videos={site.videos}
       trackSlug={slug}
       publicUrl={env().PUBLIC_URL}
     />

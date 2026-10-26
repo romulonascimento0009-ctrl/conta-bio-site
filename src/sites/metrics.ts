@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 import { z } from "zod";
 import { resolveLink, type BioDocument } from "./bio";
+import { whatsappTarget } from "./links";
 
 /** Origens de visita, na ordem exibida no painel. */
 export const SOURCES = {
@@ -72,6 +73,9 @@ export const TARGET_LABEL: Record<string, string> = {
   catalog: "Catálogo: abriu categoria",
   "catalog:add": "Catálogo: adicionou ao pedido",
   "catalog:order": "Catálogo: pedido enviado pelo WhatsApp",
+  "catalog:book": "Catálogo: tocou em Agendar",
+  team: "Equipe (abrir perfis)",
+  "team:book": "Equipe: agendar com a pessoa",
   "social:instagram": "Rodapé: Instagram",
   "social:facebook": "Rodapé: Facebook",
   "social:tiktok": "Rodapé: TikTok",
@@ -96,13 +100,23 @@ export function trackTargets(doc: BioDocument): Map<string, { target: string; la
     } else if (b.type === "gallery" || b.type === "pix" || b.type === "wifi") {
       map.set(`b:${b.id}`, { target: b.type, label: b.title });
     } else if (b.type === "catalog") {
-      // Catálogo: abrir categoria, adicionar cada produto (só o primeiro toque) e enviar o pedido.
+      // Catálogo: abrir categoria, adicionar cada produto (só o primeiro toque) e enviar o pedido;
+      // no modo "Agendar", o toque em Agendar de cada serviço.
+      const book = b.mode === "book";
       for (const c of b.categories) {
         map.set(`k:${c.id}`, { target: "catalog", label: c.name });
         for (const p of c.products)
-          map.set(`p:${c.id}:${p.id}`, { target: "catalog:add", label: `${p.name} (${c.name})` });
+          map.set(`p:${c.id}:${p.id}`, {
+            target: book ? "catalog:book" : "catalog:add",
+            label: `${p.name} (${c.name})`,
+          });
       }
-      map.set("order", { target: "catalog:order", label: TARGET_LABEL["catalog:order"] });
+      if (!book)
+        map.set("order", { target: "catalog:order", label: TARGET_LABEL["catalog:order"] });
+    } else if (b.type === "team") {
+      map.set(`b:${b.id}`, { target: "team", label: b.title });
+      for (const m of b.members)
+        map.set(`t:${b.id}:${m.id}`, { target: "team:book", label: m.name });
     }
   }
   for (const icon of [
@@ -117,7 +131,7 @@ export function trackTargets(doc: BioDocument): Map<string, { target: string; la
   ]) {
     map.set(`s:${icon}`, { target: `social:${icon}`, label: TARGET_LABEL[`social:${icon}`] });
   }
-  if (doc.floatingWhatsapp && doc.contact.whatsapp) {
+  if (doc.floatingWhatsapp && whatsappTarget(doc.contact)) {
     map.set("fab", { target: "fab", label: TARGET_LABEL.fab });
   }
   return map;

@@ -6,6 +6,7 @@ import { clients, sites, siteVersions } from "@/db/schema";
 import { requireOperator } from "@/lib/session";
 import {
   collectImageRefs,
+  collectVideoRefs,
   validateBio,
   type BioDocument,
   type ValidationResult,
@@ -16,6 +17,7 @@ import { createBioDocument } from "@/sites/templates";
 import type { ThemeId } from "@/sites/themes";
 import { assetsOfClient, type AssetInfo } from "./assets";
 import { recordAudit } from "./audit";
+import { videosOfClient, type VideoInfo } from "./videos";
 import { getBriefing } from "./briefings";
 import { getClient } from "./clients";
 
@@ -89,6 +91,21 @@ export async function saveDraft(
       })),
     };
   }
+  const videoRefs = collectVideoRefs(result.document);
+  const ownedVideos = await videosOfClient(
+    client.id,
+    videoRefs.map((r) => r.videoId),
+  );
+  const foreignVideos = videoRefs.filter((r) => !ownedVideos.has(r.videoId));
+  if (foreignVideos.length > 0) {
+    return {
+      ok: false,
+      issues: foreignVideos.map((r) => ({
+        path: "",
+        message: `vídeo não pertence a este cliente: ${r.videoId}`,
+      })),
+    };
+  }
 
   const [current] = await db
     .select({ draft: sites.draft })
@@ -136,19 +153,33 @@ export async function hasUnpublishedChanges(site: Site): Promise<boolean> {
   return !v || JSON.stringify(v.document) !== JSON.stringify(site.draft);
 }
 
-export type RenderableSite = { document: BioDocument; assets: Map<string, AssetInfo> };
+export type RenderableSite = {
+  document: BioDocument;
+  assets: Map<string, AssetInfo>;
+  videos: Map<string, VideoInfo>;
+};
+
+/** Imagens e vídeos do documento (com as capas dos vídeos), só do próprio cliente. */
+export async function siteMedia(
+  clientId: string,
+  doc: BioDocument,
+): Promise<Pick<RenderableSite, "assets" | "videos">> {
+  const videos = await videosOfClient(
+    clientId,
+    collectVideoRefs(doc).map((r) => r.videoId),
+  );
+  const posters = [...videos.values()].flatMap((v) => (v.posterAssetId ? [v.posterAssetId] : []));
+  const assets = await assetsOfClient(clientId, [
+    ...collectImageRefs(doc).map((r) => r.assetId),
+    ...posters,
+  ]);
+  return { assets, videos };
+}
 
 async function renderable(clientId: string, raw: unknown): Promise<RenderableSite | null> {
   const parsed = validateBio(raw);
   if (!parsed.ok) return null;
-  const refs = collectImageRefs(parsed.document);
-  return {
-    document: parsed.document,
-    assets: await assetsOfClient(
-      clientId,
-      refs.map((r) => r.assetId),
-    ),
-  };
+  return { document: parsed.document, ...(await siteMedia(clientId, parsed.document)) };
 }
 
 /** Rascunho para a prévia (exige acesso ao cliente, via getSite → getClient). */

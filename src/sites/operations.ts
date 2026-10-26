@@ -73,6 +73,7 @@ export function applyOperation(doc: BioDocument, op: Operation): BioDocument {
         "taglineDark",
         "shine",
         "effects",
+        "darkPanels",
       ] as const) {
         if (doc.theme[k] !== undefined)
           Object.assign(next.theme, { [k]: structuredClone(doc.theme[k]) });
@@ -158,6 +159,7 @@ export const NEW_BLOCK_TYPES = {
   text: "Texto",
   pix: "Pix",
   catalog: "Catálogo de produtos (pedido pelo WhatsApp)",
+  team: "Equipe (Meu time)",
 } as const;
 export type NewBlockType = keyof typeof NEW_BLOCK_TYPES;
 
@@ -234,6 +236,18 @@ export function newBlock(
                 products: [{ id: "p1", name: "Produto", image: firstImage }],
               },
             ],
+          }
+        : null;
+    case "team":
+      // Começa com uma pessoa (a primeira imagem como foto); o operador troca no painel.
+      return firstImage
+        ? {
+            id: uniqueBlockId(doc, "equipe"),
+            type: "team",
+            hidden: false,
+            title: "Meu time",
+            subtitle: "Conheça nossa equipe",
+            members: [{ id: "m1", name: "Nome", role: "Função", photo: firstImage }],
           }
         : null;
     case "text":

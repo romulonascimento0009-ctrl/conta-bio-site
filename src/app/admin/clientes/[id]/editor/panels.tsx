@@ -15,6 +15,8 @@ import {
   isStandardStyle,
   MAX_CATALOG_CATEGORIES,
   MAX_CATALOG_PRODUCTS,
+  MAX_PRODUCT_MEDIA,
+  MAX_TEAM_MEMBERS,
   resolveLink,
   type BioDocument,
   type CatalogCategory,
@@ -22,16 +24,18 @@ import {
   type BlockOf,
   type Hero,
   type LinkAction,
+  type MediaItem,
+  type TeamMember,
 } from "@/sites/bio";
 import { formatPrice, nextItemId, parsePrice } from "@/sites/catalog";
 import { FONT_IDS, FONTS, isItalicFont } from "@/sites/fonts";
 import { customIconStart, ICON_IDS, ICONS, type IconId, type SectionIconId } from "@/sites/icons";
 import { NEW_BLOCK_TYPES, newBlock, type NewBlockType } from "@/sites/operations";
 import { PATTERN_IDS, PATTERNS } from "@/sites/patterns";
-import { looksLikeLink } from "@/sites/links";
+import { looksLikeLink, parseWhatsappGroup, WHATSAPP_GROUP } from "@/sites/links";
 import { mediaUrl } from "@/sites/render/media";
 import { THEME_IDS, THEMES } from "@/sites/themes";
-import type { Dispatch, EditorAsset } from "./editor";
+import type { Dispatch, EditorAsset, EditorVideo } from "./editor";
 
 /* ---------- Campos básicos ---------- */
 
@@ -410,7 +414,9 @@ function blockLabel(b: Block): string {
               ? "Pix"
               : b.type === "catalog"
                 ? "Catálogo"
-                : "Texto";
+                : b.type === "team"
+                  ? "Equipe"
+                  : "Texto";
   const title = "title" in b && b.title ? b.title : "";
   return title && title !== kind ? `${title} · ${kind}` : kind;
 }
@@ -419,12 +425,14 @@ export function BlocksPanel({
   doc,
   dispatch,
   assets,
+  videos = [],
   selected,
   onSelect,
 }: {
   doc: BioDocument;
   dispatch: Dispatch;
   assets: EditorAsset[];
+  videos?: EditorVideo[];
   selected?: string;
   onSelect: (id: string | undefined) => void;
 }) {
@@ -521,7 +529,8 @@ export function BlocksPanel({
           type="button"
           onClick={add}
           disabled={
-            ((newType === "gallery" || newType === "catalog") && !assets.length) ||
+            ((newType === "gallery" || newType === "catalog" || newType === "team") &&
+              !assets.length) ||
             (newType === "catalog" && doc.blocks.some((b) => b.type === "catalog"))
           }
           className="rounded-md border border-border bg-white px-4 py-2 text-sm font-medium disabled:opacity-50"
@@ -531,13 +540,19 @@ export function BlocksPanel({
         {newType === "catalog" && doc.blocks.some((b) => b.type === "catalog") && (
           <p className="text-xs text-muted">Este Bio Site já tem um catálogo.</p>
         )}
-        {(newType === "gallery" || newType === "catalog") && !assets.length && (
-          <p className="text-xs text-muted">Envie imagens antes.</p>
-        )}
+        {(newType === "gallery" || newType === "catalog" || newType === "team") &&
+          !assets.length && <p className="text-xs text-muted">Envie imagens antes.</p>}
       </div>
 
       {block ? (
-        <BlockEditor key={block.id} block={block} doc={doc} dispatch={dispatch} assets={assets} />
+        <BlockEditor
+          key={block.id}
+          block={block}
+          doc={doc}
+          dispatch={dispatch}
+          assets={assets}
+          videos={videos}
+        />
       ) : (
         <p className="text-sm text-muted">
           Selecione um bloco na lista ou na prévia para editá-lo.
@@ -552,11 +567,13 @@ function BlockEditor({
   doc,
   dispatch,
   assets,
+  videos,
 }: {
   block: Block;
   doc: BioDocument;
   dispatch: Dispatch;
   assets: EditorAsset[];
+  videos: EditorVideo[];
 }) {
   const set = (patch: Record<string, unknown>, field: string) =>
     dispatch({ type: "block-update", id: block.id, patch }, `block.${block.id}.${field}`);
@@ -794,7 +811,9 @@ function BlockEditor({
         </Section>
       );
     case "catalog":
-      return <CatalogEditor block={block} assets={assets} set={set} />;
+      return <CatalogEditor block={block} assets={assets} videos={videos} set={set} />;
+    case "team":
+      return <TeamEditor block={block} assets={assets} set={set} />;
     case "text":
       return (
         <Section title="Texto">
@@ -871,15 +890,119 @@ function PriceField({
   );
 }
 
+/**
+ * Mais fotos e vídeos de um produto (depois da foto principal), na ordem em que forem marcados,
+ * cada um com legenda opcional. Os vídeos vêm da aba Imagens → Vídeos.
+ */
+function ProductMedia({
+  label,
+  media,
+  assets,
+  videos,
+  onChange,
+}: {
+  label: string;
+  media: MediaItem[];
+  assets: EditorAsset[];
+  videos: EditorVideo[];
+  onChange: (media: MediaItem[] | undefined, field: string) => void;
+}) {
+  const full = media.length >= MAX_PRODUCT_MEDIA;
+  const has = (m: MediaItem, id: string) =>
+    m.kind === "image" ? m.assetId === id : m.videoId === id;
+  const toggle = (id: string, item: MediaItem) => {
+    const on = media.some((m) => has(m, id));
+    const next = on ? media.filter((m) => !has(m, id)) : [...media, item];
+    onChange(next.length ? next : undefined, "media-" + id);
+  };
+  const thumb = (assetId: string | null | undefined) => {
+    const a = assetId ? assets.find((x) => x.id === assetId) : undefined;
+    return a ? mediaUrl(a.id, a.variants[0]) : undefined;
+  };
+  const tile = (on: boolean) =>
+    `relative h-16 w-16 overflow-hidden rounded border ${on ? "border-accent ring-2 ring-accent" : "border-border opacity-60"} disabled:opacity-30`;
+  return (
+    <fieldset className="grid gap-2">
+      <legend className="text-sm font-medium">{label}</legend>
+      <p className="text-xs text-muted">
+        Abrem ao tocar na foto do produto, deslizando para o lado. Até {MAX_PRODUCT_MEDIA}, na ordem
+        em que forem marcados.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {assets.map((a) => {
+          const on = media.some((m) => has(m, a.id));
+          return (
+            <button
+              key={a.id}
+              type="button"
+              aria-pressed={on}
+              aria-label={`Foto: ${a.alt || a.name}`}
+              disabled={!on && full}
+              onClick={() => toggle(a.id, { kind: "image", assetId: a.id, alt: a.alt })}
+              className={tile(on)}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- miniatura própria */}
+              <img src={thumb(a.id)} alt="" className="h-full w-full object-cover" />
+            </button>
+          );
+        })}
+        {videos.map((v) => {
+          const on = media.some((m) => has(m, v.id));
+          const src = thumb(v.posterAssetId);
+          return (
+            <button
+              key={v.id}
+              type="button"
+              aria-pressed={on}
+              aria-label={`Vídeo: ${v.name}`}
+              disabled={!on && full}
+              onClick={() => toggle(v.id, { kind: "video", videoId: v.id })}
+              className={tile(on)}
+            >
+              {src && (
+                // eslint-disable-next-line @next/next/no-img-element -- miniatura própria
+                <img src={src} alt="" className="h-full w-full object-cover" />
+              )}
+              <span className="absolute inset-x-0 bottom-0 bg-black/70 text-[10px] font-bold text-white">
+                ▶ vídeo
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {videos.length === 0 && (
+        <p className="text-xs text-muted">Para usar vídeos, envie-os na aba Imagens → Vídeos.</p>
+      )}
+      {media.map((m, i) => (
+        <TextField
+          key={m.kind === "image" ? m.assetId : m.videoId}
+          label={`${m.kind === "image" ? "Foto" : "Vídeo"} ${i + 2} — legenda (opcional)`}
+          value={m.caption ?? ""}
+          onChange={(v) =>
+            onChange(
+              media.map((x, j) => (j === i ? clean({ ...x, caption: v }) : x)),
+              `media.${i}.caption`,
+            )
+          }
+          maxLength={240}
+        />
+      ))}
+    </fieldset>
+  );
+}
+
 function CatalogEditor({
   block,
   assets,
+  videos,
   set,
 }: {
   block: BlockOf<"catalog">;
   assets: EditorAsset[];
+  videos: EditorVideo[];
   set: (patch: Record<string, unknown>, field: string) => void;
 }) {
+  const book = block.mode === "book";
   const cats = block.categories;
   const setCats = (categories: CatalogCategory[], field: string) =>
     set({ categories }, `categories.${field}`);
@@ -908,9 +1031,21 @@ function CatalogEditor({
         onChange={(v) => set({ subtitle: v || undefined }, "subtitle")}
         maxLength={120}
       />
+      <Select
+        label="Como funciona"
+        value={block.mode ?? "order"}
+        options={[
+          { value: "order", label: "Pedido: carrinho enviado pelo WhatsApp (lojas)" },
+          { value: "book", label: "Agendar: botão Agendar em cada serviço (barbearias, salões)" },
+        ]}
+        onChange={(v) => set({ mode: v === "order" ? undefined : v }, "mode")}
+      />
       <p className="text-xs text-muted">
-        Quem visita escolhe produtos de várias categorias e envia o pedido inteiro pelo WhatsApp
-        (Contato). Até {MAX_CATALOG_CATEGORIES} categorias com {MAX_CATALOG_PRODUCTS} produtos cada.
+        {book
+          ? "Cada serviço mostra o preço e um botão Agendar, que abre o WhatsApp (ou o grupo, sem número) em Contato."
+          : "Quem visita escolhe produtos de várias categorias e envia o pedido inteiro pelo WhatsApp (Contato)."}{" "}
+        Até {MAX_CATALOG_CATEGORIES} categorias com {MAX_CATALOG_PRODUCTS}{" "}
+        {book ? "serviços" : "produtos"} cada.
       </p>
       {cats.map((c, i) => (
         <details key={c.id} open={i === 0} className="rounded-md border border-border p-3">
@@ -1001,6 +1136,13 @@ function CatalogEditor({
                       cents={p.priceCents}
                       onChange={(v) => updProd({ priceCents: v }, "price")}
                     />
+                    <ProductMedia
+                      label={`Produto ${k + 1} — mais fotos e vídeos (opcional)`}
+                      media={p.media ?? []}
+                      assets={assets}
+                      videos={videos}
+                      onChange={(media, field) => updProd({ media }, field)}
+                    />
                     <div className="flex flex-wrap gap-2 text-sm">
                       <button
                         type="button"
@@ -1088,6 +1230,159 @@ function CatalogEditor({
         className="justify-self-start rounded-md border border-border bg-white px-4 py-2 text-sm font-medium disabled:opacity-50"
       >
         + Adicionar categoria
+      </button>
+    </Section>
+  );
+}
+
+/* ---------- Equipe ---------- */
+
+function TeamEditor({
+  block,
+  assets,
+  set,
+}: {
+  block: BlockOf<"team">;
+  assets: EditorAsset[];
+  set: (patch: Record<string, unknown>, field: string) => void;
+}) {
+  const members = block.members;
+  const setMembers = (list: TeamMember[], field: string) =>
+    set({ members: list }, `members.${field}`);
+  const upd = (i: number, patch: Partial<TeamMember>, field: string) =>
+    setMembers(
+      members.map((m, j) => (j === i ? clean({ ...m, ...patch }) : m)),
+      `${i}.${field}`,
+    );
+  const first = assets[0] && { assetId: assets[0].id, alt: assets[0].alt };
+  return (
+    <Section title="Equipe (Meu time)">
+      <TextField
+        label="Título do cartão"
+        value={block.title}
+        onChange={(v) => set({ title: v }, "title")}
+        maxLength={40}
+      />
+      <TextField
+        label="Subtítulo do cartão (opcional)"
+        value={block.subtitle ?? ""}
+        placeholder="Ex.: Conheça nossos barbeiros"
+        onChange={(v) => set({ subtitle: v }, "subtitle")}
+        maxLength={90}
+      />
+      <p className="text-xs text-muted">
+        O cartão mostra os rostos e abre o perfil de cada pessoa, com o botão Agendar (WhatsApp ou
+        grupo, em Contato). Até {MAX_TEAM_MEMBERS} pessoas.
+      </p>
+      <ol className="grid gap-3">
+        {members.map((m, i) => (
+          <li key={m.id} className="grid gap-2 rounded-md bg-slate-50 p-2">
+            <ImagePicker
+              label={`Pessoa ${i + 1} — foto`}
+              assets={assets}
+              value={m.photo.assetId}
+              onChange={(id) => {
+                const a = id ? assets.find((x) => x.id === id) : undefined;
+                if (a) upd(i, { photo: { assetId: a.id, alt: a.alt } }, "photo");
+              }}
+            />
+            <TextField
+              label={`Pessoa ${i + 1} — nome`}
+              value={m.name}
+              onChange={(v) => upd(i, { name: v }, "name")}
+              maxLength={40}
+            />
+            <TextField
+              label={`Pessoa ${i + 1} — função (opcional)`}
+              value={m.role ?? ""}
+              placeholder="Ex.: Barbeiro, Fundador, Visagista"
+              onChange={(v) => upd(i, { role: v }, "role")}
+              maxLength={40}
+            />
+            <TextField
+              label={`Pessoa ${i + 1} — quem é (opcional)`}
+              value={m.bio ?? ""}
+              multiline
+              placeholder="Ex.: 10 anos de navalha, especialista em degradê."
+              onChange={(v) => upd(i, { bio: v }, "bio")}
+              maxLength={240}
+            />
+            <ListField
+              label={`Pessoa ${i + 1} — especialidades (opcional)`}
+              hint="Separadas por vírgula, até 5. Ex.: Degradê, Barba, Pigmentação"
+              multiline={false}
+              value={m.skills ?? []}
+              format={(v) => v.join(", ")}
+              parse={(t) =>
+                t
+                  .split(",")
+                  .map((x) => x.trim().slice(0, 24))
+                  .filter(Boolean)
+                  .slice(0, 5)
+              }
+              onChange={(skills) =>
+                upd(i, { skills: skills.length ? skills : undefined }, "skills")
+              }
+            />
+            <div className="flex flex-wrap gap-2 text-sm">
+              <button
+                type="button"
+                disabled={i === 0}
+                aria-label={`Subir ${m.name}`}
+                onClick={() => setMembers(moved(members, i, -1), "order")}
+                className="rounded border border-border px-2 py-1 disabled:opacity-30"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                disabled={i === members.length - 1}
+                aria-label={`Descer ${m.name}`}
+                onClick={() => setMembers(moved(members, i, 1), "order")}
+                className="rounded border border-border px-2 py-1 disabled:opacity-30"
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                disabled={members.length === 1}
+                onClick={() =>
+                  setMembers(
+                    members.filter((_, j) => j !== i),
+                    "remove",
+                  )
+                }
+                className="rounded px-2 py-1 text-danger disabled:opacity-30"
+              >
+                Remover pessoa
+              </button>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <button
+        type="button"
+        disabled={!first || members.length >= MAX_TEAM_MEMBERS}
+        onClick={() =>
+          first &&
+          setMembers(
+            [
+              ...members,
+              {
+                id: nextItemId(
+                  members.map((x) => x.id),
+                  "m",
+                ),
+                name: "Nome",
+                photo: first,
+              },
+            ],
+            "add",
+          )
+        }
+        className="justify-self-start rounded-md border border-border bg-white px-3 py-2 text-sm font-medium disabled:opacity-50"
+      >
+        + Adicionar pessoa ({members.length}/{MAX_TEAM_MEMBERS})
       </button>
     </Section>
   );
@@ -1353,6 +1648,13 @@ export function ProfilePanel({
             onChange={(v) => set({ logoHasName: v || undefined }, "logoHasName")}
           />
         )}
+        {p.logo && p.logoHasName && (
+          <Check
+            label="O logo traz só o nome: mostrar o slogan mesmo assim"
+            checked={!!p.keepTagline}
+            onChange={(v) => set({ keepTagline: v || undefined }, "keepTagline")}
+          />
+        )}
         <ImagePicker
           label="Foto da fachada (ou de fundo)"
           assets={assets}
@@ -1467,6 +1769,17 @@ export function ContactPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Di
             set("whatsapp", /[a-z]/i.test(v) ? normalize(whatsappField, v) : v.replace(/D/g, ""))
           }
           onBlur={() => set("whatsapp", normalize(whatsappField, c.whatsapp ?? ""))}
+        />
+        <TextField
+          label="Grupo do WhatsApp (opcional)"
+          value={c.whatsappGroup ?? ""}
+          placeholder="https://chat.whatsapp.com/…"
+          hint="Link de convite do grupo. Sem número de WhatsApp, os botões de WhatsApp e Agendar abrem o grupo (link de grupo não leva mensagem pronta)."
+          onChange={(v) => set("whatsappGroup", v)}
+          onBlur={() => {
+            const g = parseWhatsappGroup(c.whatsappGroup ?? "");
+            if (WHATSAPP_GROUP.test(g)) set("whatsappGroup", g);
+          }}
         />
         <TextField
           label="Mensagem inicial do WhatsApp"
@@ -1814,6 +2127,11 @@ function StandardDetails({ doc, dispatch }: { doc: BioDocument; dispatch: Dispat
         onChange={(on) => theme({ taglineDark: on || undefined })}
       />
       <Check
+        label="Painéis, etiquetas e rodapé escuros, na cor dos cartões (visual preto e dourado)"
+        checked={!!th.darkPanels}
+        onChange={(on) => theme({ darkPanels: on || undefined })}
+      />
+      <Check
         label="Reflexo de luz passando no fundo"
         checked={!!th.shine}
         onChange={(on) => theme({ shine: on || undefined })}
@@ -1825,6 +2143,7 @@ function StandardDetails({ doc, dispatch }: { doc: BioDocument; dispatch: Dispat
           { value: "none", label: "Nenhum" },
           { value: "electric", label: "Elétrico (raios, neon, engrenagens, faíscas)" },
           { value: "glitter", label: "Glitter (brilho caindo, pétalas, anel no logo)" },
+          { value: "slabs", label: "Placas com luz (placas em ângulo, luz nas quinas)" },
         ]}
         onChange={(v) => theme({ effects: v === "none" ? undefined : v })}
       />
@@ -1838,6 +2157,13 @@ function StandardDetails({ doc, dispatch }: { doc: BioDocument; dispatch: Dispat
         <p className="text-xs text-muted">
           O glitter usa as cores da borda e a cor do texto dos painéis; o logo ganha um anel de
           brilho girando. Fica parado para quem desligou as animações no celular.
+        </p>
+      )}
+      {th.effects === "slabs" && (
+        <p className="text-xs text-muted">
+          Placas escuras deslizam devagar sobre o fundo, com uma luz nas cores da borda correndo
+          pelas quinas; o fundo da página aproxima e se afasta. Fica parado para quem desligou as
+          animações no celular.
         </p>
       )}
     </div>

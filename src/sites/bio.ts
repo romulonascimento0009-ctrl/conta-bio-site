@@ -2,7 +2,13 @@ import { z } from "zod";
 import { averageHex, contrastRatio, HEX_COLOR, mixHex } from "./color";
 import { FONT_IDS, FONTS, isItalicFont } from "./fonts";
 import { glossTop, ICON_IDS, type IconId } from "./icons";
-import { INSTAGRAM_HANDLE, isSafeHref, WHATSAPP_DIGITS, whatsappHref } from "./links";
+import {
+  INSTAGRAM_HANDLE,
+  isSafeHref,
+  WHATSAPP_DIGITS,
+  WHATSAPP_GROUP,
+  whatsappTarget,
+} from "./links";
 import { PATTERN_IDS } from "./patterns";
 
 /**
@@ -27,6 +33,20 @@ export const imageRef = z.object({
   caption: optText(240),
 });
 export type ImageRef = z.infer<typeof imageRef>;
+
+/** Vídeo enviado pelo cliente (tabela `videos`; capa e dimensões vêm de lá). */
+export const videoRef = z.object({
+  videoId: z.uuid(),
+  caption: optText(240),
+});
+export type VideoRef = z.infer<typeof videoRef>;
+
+/** Foto ou vídeo de um trabalho (serviços da Reistyle: fotos e vídeos junto do preço). */
+export const mediaItem = z.discriminatedUnion("kind", [
+  imageRef.extend({ kind: z.literal("image") }),
+  videoRef.extend({ kind: z.literal("video") }),
+]);
+export type MediaItem = z.infer<typeof mediaItem>;
 
 function checkContrast(
   ctx: z.RefinementCtx,
@@ -156,12 +176,20 @@ export const themeSchema = z
      * Cores da borda neon (`neonEdges`). Parados para quem desligou as animações.
      * "glitter" = glitter caindo e cintilando, pétalas, anel no logo e entrada dos cartões
      * (Mage Beauty); glitter nas cores da borda, contornado na cor do texto dos painéis.
+     * "slabs" = placas em ângulo que deslizam sobre o fundo, com luz correndo pelas quinas, e o
+     * fundo da página aproximando devagar (Reistyle); luz nas cores da borda.
      */
-    effects: z.enum(["electric", "glitter"]).optional(),
+    effects: z.enum(["electric", "glitter", "slabs"]).optional(),
     /** Cor dos cartões: cor do texto (ausente = branco), sobre o degradê cardTop → cardBottom. */
     cardText: hex.optional(),
     /** Visual padrão sobre fundo claro: topo com texto na cor dos painéis (o cetim já é assim). */
     lightPage: z.boolean().optional(),
+    /**
+     * Visual escuro (Reistyle, preto e dourado): painéis, etiquetas e rodapé no degradê dos cartões
+     * com o texto dos cartões (contraste já conferido em cardTop/cardBottom), e bordas dos
+     * cartões só nas cores da borda (sem a cor de cada ícone).
+     */
+    darkPanels: z.boolean().optional(),
   })
   .superRefine((t, ctx) => {
     const c = t.colors;
@@ -269,6 +297,11 @@ export const contactSchema = z.object({
     .regex(WHATSAPP_DIGITS, "WhatsApp: só dígitos com DDI, ex. 5511999998888")
     .optional(),
   whatsappMessage: optText(200),
+  /** Grupo do WhatsApp (convite). Sem número, os botões de WhatsApp abrem o grupo (sem mensagem). */
+  whatsappGroup: z
+    .string()
+    .regex(WHATSAPP_GROUP, "grupo: link de convite, ex. https://chat.whatsapp.com/AbC123…")
+    .optional(),
   phone: z
     .string()
     .regex(/^\+?[0-9]{8,15}$/, "telefone: só dígitos, ex. 551133330000")
@@ -431,12 +464,15 @@ export const galleryBlock = z
  */
 export const MAX_CATALOG_CATEGORIES = 12;
 export const MAX_CATALOG_PRODUCTS = 10;
+export const MAX_PRODUCT_MEDIA = 8;
 const itemId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,19}$/);
 export const catalogProduct = z.object({
   id: itemId,
   name: text(60),
   priceCents: z.int().min(0).max(10_000_000).optional(),
   image: imageRef,
+  /** Mais fotos e vídeos do produto/serviço, depois da foto principal (abrem ao tocar na foto). */
+  media: z.array(mediaItem).max(MAX_PRODUCT_MEDIA).optional(),
 });
 export const catalogCategory = z.object({
   id: itemId,
@@ -454,6 +490,11 @@ export const catalogBlock = z
     type: z.literal("catalog"),
     title: text(40).default("Nossos produtos"),
     subtitle: optText(120),
+    /**
+     * "order" (ausente) = carrinho e pedido pelo WhatsApp; "book" = serviços com preço e botão
+     * "Agendar" em cada um, sem carrinho (abre o WhatsApp ou o grupo).
+     */
+    mode: z.enum(["order", "book"]).optional(),
     categories: z.array(catalogCategory).min(1).max(MAX_CATALOG_CATEGORIES),
   })
   .superRefine((b, ctx) => {
@@ -475,6 +516,39 @@ export const catalogBlock = z
     });
   });
 
+/**
+ * Equipe ("Meu time", Reistyle): cartão com os rostos que abre o perfil de cada pessoa (foto,
+ * função, frase, especialidades) e o botão de agendar.
+ */
+export const MAX_TEAM_MEMBERS = 12;
+export const teamMember = z.object({
+  id: itemId,
+  name: text(40),
+  role: optText(40),
+  bio: optText(240),
+  skills: z.array(text(24)).max(5).optional(),
+  photo: imageRef,
+});
+export type TeamMember = z.infer<typeof teamMember>;
+export const teamBlock = z
+  .object({
+    ...blockBase,
+    type: z.literal("team"),
+    title: text(40).default("Meu time"),
+    subtitle: optText(90),
+    members: z.array(teamMember).min(1).max(MAX_TEAM_MEMBERS),
+    ...iconColor,
+  })
+  .superRefine((b, ctx) => {
+    checkIconColor(ctx, b.iconColor);
+    const ids = new Set<string>();
+    b.members.forEach((m, i) => {
+      if (ids.has(m.id))
+        ctx.addIssue({ code: "custom", path: ["members", i, "id"], message: "id repetido" });
+      ids.add(m.id);
+    });
+  });
+
 export const textBlock = z.object({
   ...blockBase,
   type: z.literal("text"),
@@ -490,6 +564,7 @@ export const anyBlock = z.discriminatedUnion("type", [
   textBlock,
   pixBlock,
   catalogBlock,
+  teamBlock,
 ]);
 export type Block = z.infer<typeof anyBlock>;
 export type BlockOf<T extends Block["type"]> = Extract<Block, { type: T }>;
@@ -536,6 +611,8 @@ export const bioDocumentSchema = z
       pageBackground: imageRef.optional(),
       /** O logo já traz o nome e o slogan: escondidos na tela (ficam para leitores de tela e buscas). */
       logoHasName: z.boolean().optional(),
+      /** Com `logoHasName`: o logo traz só o nome; o slogan continua à vista. */
+      keepTagline: z.boolean().optional(),
     }),
     contact: contactSchema,
     ticker: tickerSchema,
@@ -579,11 +656,19 @@ export const bioDocumentSchema = z
     if (catalogs.length > 1) {
       ctx.addIssue({ code: "custom", path: ["blocks"], message: "só um catálogo por Bio Site" });
     }
-    if (catalogs.length && !doc.contact.whatsapp) {
+    const cat = catalogs[0];
+    if (cat && cat.mode !== "book" && !doc.contact.whatsapp) {
       ctx.addIssue({
         code: "custom",
         path: ["contact", "whatsapp"],
         message: "o catálogo envia o pedido pelo WhatsApp: preencha o WhatsApp em Contato",
+      });
+    }
+    if (cat?.mode === "book" && !doc.contact.whatsapp && !doc.contact.whatsappGroup) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["contact", "whatsapp"],
+        message: "o botão Agendar abre o WhatsApp: preencha o WhatsApp ou o grupo em Contato",
       });
     }
     const seen = new Set<string>();
@@ -625,9 +710,24 @@ export function collectImageRefs(doc: BioDocument): ImageRef[] {
     if (b.type === "catalog")
       for (const c of b.categories) {
         if (c.cover) refs.push(c.cover);
-        refs.push(...c.products.map((p) => p.image));
+        for (const p of c.products) {
+          refs.push(p.image);
+          for (const m of p.media ?? []) if (m.kind === "image") refs.push(m);
+        }
       }
+    if (b.type === "team") refs.push(...b.members.map((m) => m.photo));
   }
+  return refs;
+}
+
+/** Todos os vídeos referenciados (para carregar capa e dimensões e conferir a posse). */
+export function collectVideoRefs(doc: BioDocument): VideoRef[] {
+  const refs: VideoRef[] = [];
+  for (const b of doc.blocks)
+    if (b.type === "catalog")
+      for (const c of b.categories)
+        for (const p of c.products)
+          for (const m of p.media ?? []) if (m.kind === "video") refs.push(m);
   return refs;
 }
 
@@ -652,10 +752,11 @@ export function resolveLink(block: BlockOf<"link">, c: Contact): ResolvedLink | 
       return c.googleReviewUrl
         ? { href: c.googleReviewUrl, icon: "google", subtitle: "Sua opinião ajuda", external: true }
         : null;
-    case "whatsapp":
-      return c.whatsapp
-        ? { href: whatsappHref(c.whatsapp, c.whatsappMessage), icon: "whatsapp", external: true }
-        : null;
+    case "whatsapp": {
+      // Sem número, o grupo (quando há): link de grupo não leva mensagem pronta.
+      const href = whatsappTarget(c, c.whatsappMessage);
+      return href ? { href, icon: "whatsapp", external: true } : null;
+    }
     case "phone":
       return c.phone
         ? { href: `tel:${c.phone}`, icon: "phone", subtitle: formatPhone(c.phone), external: false }

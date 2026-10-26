@@ -1,6 +1,7 @@
 import QRCode from "qrcode";
 import type { CSSProperties, ReactNode } from "react";
 import type { AssetInfo } from "@/data/assets";
+import type { VideoInfo } from "@/data/videos";
 import {
   glassTop,
   HERO_DEFAULTS,
@@ -16,6 +17,7 @@ import {
   type Block,
   type BlockOf,
   type ImageRef,
+  type MediaItem,
 } from "@/sites/bio";
 import {
   featureColors,
@@ -26,18 +28,20 @@ import {
   type SectionIconId,
 } from "@/sites/icons";
 import { isItalicFont } from "@/sites/fonts";
-import { cardSubtitle, whatsappHref } from "@/sites/links";
+import { cardSubtitle, whatsappHref, whatsappTarget } from "@/sites/links";
 import { mixHex, rgbaCss } from "@/sites/color";
 import { PATTERNS } from "@/sites/patterns";
 import { pixPayload } from "@/sites/pix";
 import "./bio.css";
 import { CopyButton, SheetCard, ShareButton, Tracker } from "./client-buttons";
 import { ElectricFx } from "./ElectricFx";
-import { Catalog, type CatalogImage, type CatalogView } from "./Catalog";
+import { Catalog, type CatalogImage, type CatalogMedia, type CatalogView } from "./Catalog";
 import { GlitterFx } from "./GlitterFx";
 import { loadedFont } from "./fonts";
 import { Icon } from "./Icon";
-import { mediaUrl } from "./media";
+import { mediaUrl, videoUrl } from "./media";
+import { SlabsFx } from "./SlabsFx";
+import { TeamProfiles, type TeamView } from "./Team";
 
 const RADIUS = {
   square: { card: "12px", ico: "8px", panel: "12px" },
@@ -49,6 +53,7 @@ const RADIUS = {
 type Ctx = {
   doc: BioDocument;
   assets: Map<string, AssetInfo>;
+  videos: Map<string, VideoInfo>;
   cartKey: string;
   /** Página "Fotos do pedido" do catálogo (só no endereço público). */
   orderBase?: string;
@@ -313,6 +318,56 @@ function GalleryCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"gallery"> }) {
   );
 }
 
+/** Perfis da equipe para o componente do navegador (fotos, agendar com cada pessoa). */
+function teamViews(ctx: Ctx, block: BlockOf<"team">): TeamView[] {
+  const c = ctx.doc.contact;
+  return block.members.map((m) => ({
+    id: m.id,
+    name: m.name,
+    role: m.role,
+    bio: m.bio,
+    skills: m.skills,
+    photo: catalogImage(ctx, m.photo, m.photo.alt || m.name),
+    bookHref:
+      whatsappTarget(
+        c,
+        `Oi! Vim pelo Bio Site da ${ctx.doc.profile.name} e quero agendar um horário com ${m.name}.`,
+      ) ?? undefined,
+    track: `t:${block.id}:${m.id}`,
+  }));
+}
+
+/** "Meu time": cartão com até 3 rostos no lugar do ícone; abre o perfil de cada pessoa. */
+function TeamCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"team"> }) {
+  const faces = block.members.slice(0, 3);
+  return (
+    <li>
+      <SheetCard
+        {...stdCard(block.iconColor ?? SECTION_ICONS.photos.color)}
+        track={`b:${block.id}`}
+        blockId={block.id}
+        title={block.title}
+        trigger={
+          <StdCardBody
+            icon="photos"
+            photo={
+              <span className="bio-faces" data-n={faces.length}>
+                {faces.map((m) => (
+                  <Img key={m.id} ctx={ctx} image={m.photo} sizes="44px" alt="" />
+                ))}
+              </span>
+            }
+            title={block.title}
+            subtitle={cardSubtitle(block.subtitle)}
+          />
+        }
+      >
+        <TeamProfiles members={teamViews(ctx, block)} />
+      </SheetCard>
+    </li>
+  );
+}
+
 /** Dados do Pix: recebedor, chave, botões de copiar e QR "copia e cola" (sem valor). */
 function PixInfo({ block }: { block: BlockOf<"pix"> }) {
   const payload = pixPayload(block);
@@ -514,6 +569,14 @@ function Panel({ block, ctx }: { block: Exclude<Block, BlockOf<"link">>; ctx: Ct
     }
     case "catalog":
       return <CatalogBlock ctx={ctx} block={block} />;
+    case "team":
+      // Fora do visual padrão a equipe fica num painel (o cartão é do visual padrão).
+      return (
+        <section className="bio-panel" aria-labelledby={titleId} data-block-id={block.id}>
+          <h2 id={titleId}>{block.title}</h2>
+          <TeamProfiles members={teamViews(ctx, block)} />
+        </section>
+      );
     case "text":
       return (
         <section
@@ -544,21 +607,67 @@ function catalogImage(ctx: Ctx, image: ImageRef | undefined, alt: string): Catal
   };
 }
 
+/** Foto principal + mais fotos e vídeos do produto (vídeos só os prontos, com capa). */
+function productMedia(
+  ctx: Ctx,
+  main: CatalogImage | null,
+  items: MediaItem[] | undefined,
+): CatalogMedia[] | undefined {
+  if (!items?.length) return undefined;
+  const list: CatalogMedia[] = main ? [{ kind: "image", ...main }] : [];
+  for (const m of items) {
+    if (m.kind === "image") {
+      const img = catalogImage(ctx, m, m.alt);
+      if (img) list.push({ kind: "image", ...img, caption: m.caption });
+    } else {
+      const v = ctx.videos.get(m.videoId);
+      if (!v) continue;
+      const poster = v.posterAssetId ? ctx.assets.get(v.posterAssetId) : undefined;
+      const pw = poster && (poster.variants.find((w) => w >= 960) ?? poster.variants.at(-1)!);
+      list.push({
+        kind: "video",
+        src: videoUrl(v.id, v.mime),
+        type: v.mime === "video/quicktime" ? "video/mp4" : v.mime,
+        poster: poster && pw ? mediaUrl(poster.id, pw) : null,
+        width: v.width,
+        height: v.height,
+        caption: m.caption,
+      });
+    }
+  }
+  return list.length > 1 ? list : undefined;
+}
+
 /** Catálogo com carrinho: os dados vão prontos para o componente do navegador. */
 function CatalogBlock({ ctx, block }: { ctx: Ctx; block: BlockOf<"catalog"> }) {
   const { doc } = ctx;
-  if (!doc.contact.whatsapp) return null;
+  const book = block.mode === "book";
+  if (!book && !doc.contact.whatsapp) return null;
+  if (book && !whatsappTarget(doc.contact)) return null;
   const categories: CatalogView[] = block.categories.map((c) => ({
     id: c.id,
     name: c.name,
     tag: c.tag,
     cover: catalogImage(ctx, c.cover ?? c.products[0].image, ""),
-    products: c.products.map((p) => ({
-      id: p.id,
-      name: p.name,
-      priceCents: p.priceCents,
-      image: catalogImage(ctx, p.image, p.image.alt || p.name),
-    })),
+    products: c.products.map((p) => {
+      const image = catalogImage(ctx, p.image, p.image.alt || p.name);
+      const media = productMedia(ctx, image, p.media);
+      return {
+        id: p.id,
+        name: p.name,
+        priceCents: p.priceCents,
+        image,
+        ...(media ? { media } : {}),
+        ...(book
+          ? {
+              bookHref: whatsappTarget(
+                doc.contact,
+                `Oi! Vim pelo Bio Site da ${doc.profile.name} e quero agendar: ${p.name}.`,
+              )!,
+            }
+          : {}),
+      };
+    }),
   }));
   return (
     <Catalog
@@ -567,6 +676,7 @@ function CatalogBlock({ ctx, block }: { ctx: Ctx; block: BlockOf<"catalog"> }) {
       subtitle={block.subtitle}
       categories={categories}
       whatsapp={doc.contact.whatsapp}
+      {...(book ? { mode: "book" as const } : {})}
       intro={`Oi! Vim pelo Bio Site da ${doc.profile.name} e quero fazer este pedido:`}
       storageKey={`bio-pedido:${ctx.cartKey}`}
       orderBase={ctx.orderBase}
@@ -576,7 +686,8 @@ function CatalogBlock({ ctx, block }: { ctx: Ctx; block: BlockOf<"catalog"> }) {
 
 /** Agrupa cartões consecutivos numa lista e intercala os painéis, mantendo a ordem do documento. */
 function Blocks({ ctx }: { ctx: Ctx }) {
-  type CardBlock = BlockOf<"link"> | BlockOf<"gallery"> | BlockOf<"pix"> | BlockOf<"wifi">;
+  type CardBlock =
+    BlockOf<"link"> | BlockOf<"gallery"> | BlockOf<"pix"> | BlockOf<"wifi"> | BlockOf<"team">;
   const groups: (CardBlock[] | Exclude<Block, BlockOf<"link">>)[] = [];
   // Galeria em cartão só no visual padrão; nos estilos antigos continua como painel.
   const std = isStandardStyle(ctx.doc.theme.cardStyle);
@@ -585,7 +696,7 @@ function Blocks({ ctx }: { ctx: Ctx }) {
     if (
       b.type === "link" ||
       (std && b.type === "gallery" && b.display === "card") ||
-      (std && (b.type === "pix" || b.type === "wifi"))
+      (std && (b.type === "pix" || b.type === "wifi" || b.type === "team"))
     ) {
       const last = groups.at(-1);
       if (Array.isArray(last)) last.push(b);
@@ -604,6 +715,8 @@ function Blocks({ ctx }: { ctx: Ctx }) {
             <PixCard key={b.id} block={b} />
           ) : b.type === "wifi" ? (
             <WifiCard key={b.id} block={b} />
+          ) : b.type === "team" ? (
+            <TeamCard key={b.id} ctx={ctx} block={b} />
           ) : (
             <GalleryCard key={b.id} ctx={ctx} block={b} />
           ),
@@ -646,12 +759,15 @@ function initials(name: string): string {
 export function BioRenderer({
   doc,
   assets,
+  videos = new Map(),
   embedded = false,
   trackSlug,
   publicUrl,
 }: {
   doc: BioDocument;
   assets: Map<string, AssetInfo>;
+  /** Vídeos referenciados no documento (capas em `assets`). */
+  videos?: Map<string, VideoInfo>;
   embedded?: boolean;
   /** Só no endereço público: registra visitas e cliques (métricas). */
   trackSlug?: string;
@@ -661,6 +777,7 @@ export function BioRenderer({
   const ctx: Ctx = {
     doc,
     assets,
+    videos,
     cartKey: trackSlug ?? `previa:${doc.profile.name}`,
     orderBase: trackSlug && publicUrl ? `${publicUrl}/${trackSlug}/pedido` : undefined,
   };
@@ -740,15 +857,20 @@ export function BioRenderer({
   if (c.email) social.push({ icon: "email", href: `mailto:${c.email}`, label: "E-mail" });
 
   const tickerOn = doc.ticker.enabled && doc.ticker.items.length > 0;
+  // Botão flutuante: o número com a mensagem pronta ou, sem número, o grupo.
+  const fab = whatsappTarget(c, c.whatsappMessage);
   const motion = doc.theme.cardStyle === "glass" && doc.theme.motion !== false;
   const std = isStandardStyle(doc.theme.cardStyle);
   const logoFree = std && doc.profile.logoFrame === "none" && !!doc.profile.logo;
   const electric = std && th.effects === "electric";
   const glitter = std && th.effects === "glitter";
+  const slabs = std && th.effects === "slabs";
   // Fundo claro: topo com texto na cor dos painéis (cetim sempre; os demais quando marcado).
   const lightPage = std && (th.cardStyle === "satin" || !!th.lightPage);
   // Logo que já traz o nome e o slogan: os textos saem da tela (ficam para leitores e buscas).
   const logoName = !!doc.profile.logoHasName && !!doc.profile.logo;
+  const hideTagline = logoName && !doc.profile.keepTagline;
+  const darkPanels = std && !!th.darkPanels;
   // Destaque do nome: última palavra na cor escolhida ("Rota 316").
   const nameParts = std && th.nameAccent ? splitNameAccent(doc.profile.name) : null;
   // Fundo do ramo (visual padrão): imagem nítida, parada enquanto a página rola.
@@ -766,7 +888,7 @@ export function BioRenderer({
 
   return (
     <div
-      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}${std ? ` bio--std bio--${doc.theme.cardStyle}` : ""}${page ? " bio--page" : ""}${logoFree ? " bio--logo-free" : ""}${std && th.taglineDark ? " bio--tagline-dark" : ""}${electric ? " bio--fx-electric" : ""}${glitter ? " bio--fx-glitter" : ""}${lightPage ? " bio--light-page" : ""}${logoName ? " bio--logo-name" : ""}`}
+      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}${std ? ` bio--std bio--${doc.theme.cardStyle}` : ""}${page ? " bio--page" : ""}${logoFree ? " bio--logo-free" : ""}${std && th.taglineDark ? " bio--tagline-dark" : ""}${electric ? " bio--fx-electric" : ""}${glitter ? " bio--fx-glitter" : ""}${slabs ? " bio--fx-slabs" : ""}${lightPage ? " bio--light-page" : ""}${logoName ? " bio--logo-name" : ""}${darkPanels ? " bio--dark-panels" : ""}`}
       style={style as CSSProperties}
     >
       <div className="bio-photo" aria-hidden="true">
@@ -780,6 +902,7 @@ export function BioRenderer({
       {motion && <Aurora />}
       {std && th.shine && <div className="bio-shine" aria-hidden="true" />}
       {electric && <ElectricFx />}
+      {slabs && <SlabsFx />}
       {glitter && (
         <GlitterFx
           colors={th.neonEdges ? [th.neonEdges.start, th.neonEdges.end] : [colors.accent]}
@@ -821,7 +944,9 @@ export function BioRenderer({
             )}
           </h1>
           {doc.profile.tagline && (
-            <p className={logoName ? "bio-tagline bio-sr" : "bio-tagline"}>{doc.profile.tagline}</p>
+            <p className={hideTagline ? "bio-tagline bio-sr" : "bio-tagline"}>
+              {doc.profile.tagline}
+            </p>
           )}
           {doc.profile.categories.length > 0 && (
             <ul className="bio-chips" aria-label="Categorias">
@@ -890,12 +1015,12 @@ export function BioRenderer({
         )}
       </main>
 
-      {doc.floatingWhatsapp && c.whatsapp && (
+      {doc.floatingWhatsapp && fab && (
         <a
           className="bio-fab"
           data-track="fab"
           style={doc.floatingWhatsappColor ? { background: doc.floatingWhatsappColor } : undefined}
-          href={whatsappHref(c.whatsapp, c.whatsappMessage)}
+          href={fab}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Conversar no WhatsApp"

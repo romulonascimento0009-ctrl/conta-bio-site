@@ -2201,3 +2201,386 @@ button.bio-tag {
   border: 2px solid currentColor;
   color: inherit;
 }
+
+/* Catálogo: botão "Agendar" é link (modo "book", D51); foto que abre fotos e vídeos do produto. */
+a.bio-add {
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+}
+.bio-prod-pic {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.bio-prod-pic:focus-visible {
+  outline: 3px solid var(--shop-accent);
+  outline-offset: -3px;
+}
+.bio-play {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid rgb(255 255 255 / 0.9);
+  background: rgb(0 0 0 / 0.55);
+}
+.bio-play::before {
+  content: "";
+  margin-left: 4px;
+  border-left: 14px solid #fff;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+}
+.bio-media-n {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #fff;
+  background: rgb(0 0 0 / 0.65);
+}
+.bio-media-n::after {
+  content: " itens";
+}
+.bio-media {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+}
+.bio-media:focus-visible {
+  outline: 3px solid var(--shop-accent);
+  outline-offset: 3px;
+}
+.bio-media figure {
+  margin: 0;
+  scroll-snap-align: center;
+}
+.bio-media img,
+.bio-media video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 70dvh;
+  object-fit: contain;
+  border-radius: 18px;
+  background: #000;
+}
+.bio-media figcaption {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+.bio-media-dots {
+  margin: -6px 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+/* "Meu time" (D52): rostos sobrepostos no lugar do ícone; perfil com texto e foto lado a lado. */
+.bio-ico.photo:has(.bio-faces) {
+  width: auto;
+  min-width: 54px;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.bio-faces {
+  display: flex;
+  align-items: center;
+}
+.bio-faces img {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 50%;
+  border: 2px solid var(--neon-a, #fff);
+  background: #222;
+}
+.bio-faces img + img {
+  margin-left: -14px;
+}
+.bio-team {
+  display: grid;
+  gap: 14px;
+}
+.bio-team-profile {
+  display: grid;
+  grid-template-columns: 1fr 42%;
+  min-height: 260px;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--neon-a, #fff) 45%, transparent);
+  background:
+    radial-gradient(
+      90% 80% at 85% 40%,
+      color-mix(in srgb, var(--neon-a, #fff) 18%, transparent),
+      transparent 70%
+    ),
+    var(--card-top, #15130f);
+}
+.bio-team-txt {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 18px 0 18px 16px;
+}
+.bio-team-role {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--neon-a, inherit);
+}
+.bio-team-txt h3 {
+  margin: 0;
+  font: 700 1.8rem/1.05 var(--font-display);
+  font-style: var(--display-style, normal);
+}
+.bio-team-txt p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.bio-team-txt ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bio-team-txt li {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--neon-a, #fff) 60%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.bio-team-profile > img,
+.bio-team-profile > .bio-team-nopic {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mask-image: linear-gradient(90deg, transparent, #000 35%);
+}
+.bio-team-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bio-team-list button {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  padding: 0 0 10px;
+  overflow: hidden;
+  font: inherit;
+  text-align: center;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 16px;
+  border: 2px solid color-mix(in srgb, var(--neon-a, #fff) 50%, transparent);
+  background: var(--card-top, #15130f);
+}
+.bio-team-list button[aria-pressed="true"] {
+  border-color: var(--neon-a, #fff);
+}
+.bio-team-list button:focus-visible {
+  outline: 3px solid var(--neon-a, #fff);
+  outline-offset: 2px;
+}
+.bio-team-list img,
+.bio-team-nopic {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: #222;
+}
+.bio-team-list strong {
+  padding: 8px 4px 0;
+  font: 600 0.98rem/1.15 var(--font-display);
+}
+.bio-team-list small {
+  padding: 2px 4px 0;
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+/* Efeito "placas" (D53, SlabsFx.tsx): placas que deslizam e giram, luz correndo pelas quinas nas
+   cores da borda e o fundo da página aproximando devagar. Só transform/opacity/dashoffset. */
+.bio--fx-slabs {
+  --fx-a: var(--neon-a, #f6d47a);
+  --fx-b: var(--neon-b, #a97c2c);
+}
+.bio-slabs svg {
+  width: 100%;
+  height: 100%;
+}
+.bio-slab {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: bio-slab1 14s ease-in-out infinite alternate;
+}
+.bio-slab.s2 {
+  animation-name: bio-slab2;
+  animation-duration: 17s;
+}
+@keyframes bio-slab1 {
+  from {
+    transform: translate(-14px, -10px) rotate(-3deg);
+  }
+  to {
+    transform: translate(16px, 22px) rotate(4deg);
+  }
+}
+@keyframes bio-slab2 {
+  from {
+    transform: translate(12px, 8px) rotate(2deg);
+  }
+  to {
+    transform: translate(-18px, -16px) rotate(-3deg);
+  }
+}
+.bio-slab-plane {
+  fill: #000;
+}
+.bio-slab-seam {
+  fill: none;
+  stroke: var(--fx-b);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+.bio-slab-glow,
+.bio-slab-core {
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 45 200;
+  stroke-dashoffset: 145;
+  animation: bio-slab-run var(--d, 8s) ease-in-out var(--w, 0s) infinite;
+}
+.bio-slab-glow {
+  stroke: var(--fx-a);
+  stroke-width: 30;
+  filter: url(#bio-slab-blur);
+}
+.bio-slab-core {
+  stroke: color-mix(in srgb, var(--fx-a) 35%, #fff);
+  stroke-width: 2.2;
+}
+@keyframes bio-slab-run {
+  0% {
+    stroke-dashoffset: 145;
+    opacity: 0;
+  }
+  20%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -100;
+    opacity: 0;
+  }
+}
+.bio--fx-slabs.bio--page .bio-photo {
+  overflow: hidden;
+}
+.bio--fx-slabs.bio--page .bio-photo img {
+  animation: bio-breathe 22s ease-in-out infinite alternate;
+}
+@keyframes bio-breathe {
+  to {
+    transform: scale(1.1) translate(-2%, 1.5%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bio-slab,
+  .bio--fx-slabs.bio--page .bio-photo img {
+    animation: none;
+  }
+  /* parado: a luz fica acesa no meio de cada quina */
+  .bio-slab-glow,
+  .bio-slab-core {
+    animation: none;
+    stroke-dashoffset: 67;
+  }
+}
+
+/* Visual escuro (theme.darkPanels, Reistyle): painéis, etiquetas e rodapé no degradê dos cartões,
+   texto dos cartões; bordas só nas cores da borda (sem a cor de cada ícone), sem reflexo cinza. */
+.bio--dark-panels {
+  --dark-text: var(--card-text, #fff);
+  --dark-edge: color-mix(in srgb, var(--neon-a, #fff) 55%, transparent);
+}
+.bio--dark-panels .bio-panel {
+  color: var(--dark-text);
+  background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+  border: 1px solid var(--dark-edge);
+  backdrop-filter: none;
+}
+.bio--dark-panels .bio-hours div {
+  border-top-color: rgb(255 255 255 / 0.15);
+}
+.bio--dark-panels .bio-tag {
+  color: var(--dark-text);
+  background: color-mix(in srgb, var(--card-bottom) 88%, transparent);
+  border: 1px solid var(--dark-edge);
+}
+.bio--dark-panels .bio-tag:focus-visible {
+  outline-color: var(--dark-text);
+}
+.bio--dark-panels .bio-sign span {
+  color: var(--dark-text);
+  background: color-mix(in srgb, var(--card-bottom) 88%, transparent);
+}
+.bio--dark-panels .bio-card.std {
+  background:
+    linear-gradient(90deg, var(--card-top), var(--card-bottom)) padding-box,
+    linear-gradient(
+        90deg,
+        var(--neon-b, var(--dark-text)),
+        var(--neon-a, var(--dark-text)),
+        var(--neon-b, var(--dark-text))
+      )
+      border-box;
+}
+.bio--dark-panels .bio-card.std::before {
+  content: none;
+}
+.bio--dark-panels.bio--tagline-dark .bio-tagline {
+  color: var(--dark-text);
+  background: color-mix(in srgb, var(--card-bottom) 88%, transparent);
+  border-color: var(--dark-edge);
+  font-family: var(--font-display);
+  font-style: var(--display-style, normal);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+}
+.bio--dark-panels .bio-shop > h2 {
+  color: var(--dark-text);
+  text-shadow: 0 2px 10px rgb(0 0 0 / 0.9);
+}

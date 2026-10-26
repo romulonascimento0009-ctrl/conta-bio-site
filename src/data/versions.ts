@@ -2,10 +2,9 @@ import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { clients, sites, siteVersions } from "@/db/schema";
-import { collectImageRefs, validateBio } from "@/sites/bio";
-import { assetsOfClient } from "./assets";
+import { validateBio } from "@/sites/bio";
 import { recordAudit } from "./audit";
-import { getSite, type RenderableSite } from "./sites";
+import { getSite, siteMedia, type RenderableSite } from "./sites";
 
 export type VersionSummary = { id: string; note: string; createdAt: Date; published: boolean };
 
@@ -42,13 +41,9 @@ export async function getVersionForPreview(
   if (!found) return null;
   const parsed = validateBio(found.version.document);
   if (!parsed.ok) return null;
-  const refs = collectImageRefs(parsed.document);
   return {
     document: parsed.document,
-    assets: await assetsOfClient(
-      found.site.clientId,
-      refs.map((r) => r.assetId),
-    ),
+    ...(await siteMedia(found.site.clientId, parsed.document)),
   };
 }
 

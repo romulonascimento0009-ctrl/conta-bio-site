@@ -1,6 +1,6 @@
 /**
  * Copia um cliente do banco local (PGlite, só leitura) para a produção (Neon + Netlify Blobs, D42):
- * cadastro, Bio Site, versões, imagens, auditoria e métricas, mais as contas do operador e dos
+ * cadastro, Bio Site, versões, imagens, vídeos, auditoria e métricas, mais as contas do operador e dos
  * usuários desse cliente (mesma senha). Para se o cliente já existir na produção.
  * Também remove as demos da produção com `--remove-demos`.
  * Uso: npx tsx --env-file=.env.neon scripts/copy-client-to-prod.ts <slug> [--remove-demos]
@@ -27,6 +27,7 @@ const {
   siteEvents,
   siteVersions,
   user,
+  videos,
 } = schema;
 
 async function listFiles(dir: string): Promise<string[]> {
@@ -109,6 +110,8 @@ async function main() {
     }
     const imgs = await src.select().from(assets).where(eq(assets.clientId, client.id));
     if (imgs.length) await db.insert(assets).values(imgs);
+    const vids = await src.select().from(videos).where(eq(videos.clientId, client.id));
+    if (vids.length) await db.insert(videos).values(vids);
     const audit = await src.select().from(auditLog).where(eq(auditLog.clientId, client.id));
     const prodUsers = new Set((await db.select({ id: user.id }).from(user)).map((u) => u.id));
     const auditRows = audit.map((a) =>
@@ -129,7 +132,7 @@ async function main() {
     }
 
     console.log(
-      `/${slug} copiado: ${versions.length} versões, ${imgs.length} imagens (${files.length} arquivos), ` +
+      `/${slug} copiado: ${versions.length} versões, ${imgs.length} imagens, ${vids.length} vídeos (${files.length} arquivos), ` +
         `${newUsers.length} conta(s) nova(s), ${auditRows.length} registros de auditoria, ${events.length} métricas.`,
     );
   } finally {

@@ -17,6 +17,27 @@ export function whatsappHref(digits: string, message?: string): string {
   return `https://wa.me/${digits}${text}`;
 }
 
+/** Convite de grupo do WhatsApp (Reistyle, 2026-10-26): https://chat.whatsapp.com/<código>. */
+export const WHATSAPP_GROUP = /^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9]{10,40}$/;
+
+/** Link de grupo como o usuário colar (sem https, com /invite/ ou ?parâmetros): forma canônica. */
+export function parseWhatsappGroup(input: string): string {
+  const code = input.trim().match(/chat\.whatsapp\.com\/(?:invite\/)?([A-Za-z0-9]+)/i)?.[1];
+  return code ? `https://chat.whatsapp.com/${code}` : input.trim();
+}
+
+/**
+ * Destino do WhatsApp do cliente: o número (com a mensagem pronta) ou, sem número, o grupo
+ * (link de grupo não aceita mensagem). Sem nenhum dos dois, `null`.
+ */
+export function whatsappTarget(
+  c: { whatsapp?: string; whatsappGroup?: string },
+  message?: string,
+): string | null {
+  if (c.whatsapp) return whatsappHref(c.whatsapp, message);
+  return c.whatsappGroup ?? null;
+}
+
 /**
  * WhatsApp como o usuário colar: link (wa.me/…, api.whatsapp.com/send?phone=…) ou número em
  * qualquer formato. Devolve só os dígitos; número brasileiro sem DDI (10 ou 11 dígitos, com ou

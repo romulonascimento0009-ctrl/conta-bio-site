@@ -12,7 +12,16 @@ import { saveBriefing } from "@/data/briefings";
 import { createClient, deleteClient, getClient, SlugTaken, updateClient } from "@/data/clients";
 import { createSiteFromTemplate, publishDraft, saveDraft, saveQuickEdit } from "@/data/sites";
 import { publishVersion, restoreVersion } from "@/data/versions";
+import {
+  deleteVideo,
+  finishVideoUpload,
+  startVideoUpload,
+  uploadVideoPart,
+  VideoInUse,
+  type VideoStart,
+} from "@/data/videos";
 import { ImageRejected } from "@/media/process";
+import { VideoRejected } from "@/media/video";
 import { quickEditSchema } from "@/sites/quick-edit";
 import { THEMES, type ThemeId } from "@/sites/themes";
 
@@ -135,6 +144,72 @@ export async function uploadAssetAction(clientId: string, fd: FormData): Promise
   }
   refresh(clientId);
   return { ok: true, message: `${file.name} enviada.` };
+}
+
+/**
+ * Vídeo (D50): o navegador confere o vídeo e tira a capa, depois envia em partes de 3 MB
+ * (cada envio passa por uma função com limite de tamanho) e termina com a capa.
+ */
+export async function startVideoUploadAction(
+  clientId: string,
+  meta: VideoStart,
+): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
+  try {
+    return { ok: true, id: await startVideoUpload(clientId, meta) };
+  } catch (err) {
+    if (err instanceof VideoRejected) return { ok: false, message: err.message };
+    throw err;
+  }
+}
+
+export async function uploadVideoPartAction(
+  clientId: string,
+  videoId: string,
+  index: number,
+  fd: FormData,
+): Promise<FormState> {
+  const part = fd.get("part");
+  if (!(part instanceof Blob)) return { ok: false, message: "Parte do vídeo não enviada." };
+  try {
+    await uploadVideoPart(clientId, videoId, index, new Uint8Array(await part.arrayBuffer()));
+  } catch (err) {
+    if (err instanceof VideoRejected) return { ok: false, message: err.message };
+    throw err;
+  }
+  return { ok: true };
+}
+
+export async function finishVideoUploadAction(
+  clientId: string,
+  videoId: string,
+  fd: FormData,
+): Promise<FormState> {
+  const poster = fd.get("poster");
+  if (!(poster instanceof File)) return { ok: false, message: "Capa do vídeo não enviada." };
+  try {
+    const video = await finishVideoUpload(clientId, videoId, poster);
+    refresh(clientId);
+    return { ok: true, message: `${video.originalName} enviado.` };
+  } catch (err) {
+    if (err instanceof VideoRejected || err instanceof ImageRejected)
+      return { ok: false, message: err.message };
+    throw err;
+  }
+}
+
+export async function deleteVideoAction(
+  clientId: string,
+  videoId: string,
+  _prev: FormState,
+): Promise<FormState> {
+  try {
+    await deleteVideo(clientId, videoId);
+  } catch (err) {
+    if (err instanceof VideoInUse) return { ok: false, message: err.message };
+    throw err;
+  }
+  refresh(clientId);
+  return { ok: true, message: "Vídeo excluído." };
 }
 
 export async function updateAltAction(

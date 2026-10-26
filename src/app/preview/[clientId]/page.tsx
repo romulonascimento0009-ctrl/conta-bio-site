@@ -24,5 +24,5 @@ export default async function PreviewPage({
       ? await getVersionForPreview(clientId, versao)
       : await getDraftForPreview(clientId);
   if (!site) notFound();
-  return <BioRenderer doc={site.document} assets={site.assets} />;
+  return <BioRenderer doc={site.document} assets={site.assets} videos={site.videos} />;
 }

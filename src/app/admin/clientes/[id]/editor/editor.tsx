@@ -12,6 +12,7 @@ import {
 } from "react";
 import { PublishForm } from "@/app/admin/_components/publish-form";
 import type { AssetInfo } from "@/data/assets";
+import type { VideoInfo } from "@/data/videos";
 import { validateBio, type BioDocument } from "@/sites/bio";
 import {
   historyApply,
@@ -29,6 +30,7 @@ import { AiPanel, type AiInfo, type AiProposal } from "./ai-panel";
 import { BlocksPanel, ContactPanel, LookPanel, ProfilePanel, TickerPanel } from "./panels";
 
 export type EditorAsset = AssetInfo & { alt: string; name: string };
+export type EditorVideo = VideoInfo & { name: string; durationMs: number };
 
 type Action = { type: "apply"; op: Operation; key?: string } | { type: "undo" } | { type: "redo" };
 
@@ -53,6 +55,7 @@ export function Editor({
   clientId,
   initial,
   assets,
+  videos = [],
   pending,
   publishedUrl,
   ai,
@@ -60,6 +63,8 @@ export function Editor({
   clientId: string;
   initial: BioDocument;
   assets: EditorAsset[];
+  /** Vídeos prontos do cliente (aba Imagens). */
+  videos?: EditorVideo[];
   pending: boolean;
   publishedUrl?: string;
   /** Só para o operador: a aba IA. */
@@ -81,6 +86,10 @@ export function Editor({
   const assetMap = useMemo(
     () => new Map<string, AssetInfo>(assets.map((a) => [a.id, a])),
     [assets],
+  );
+  const videoMap = useMemo(
+    () => new Map<string, VideoInfo>(videos.map((v) => [v.id, v])),
+    [videos],
   );
   const validation = useMemo(() => validateBio(doc), [doc]);
   const dirty = JSON.stringify(doc) !== savedJson;
@@ -259,7 +268,12 @@ export function Editor({
                   Prévia da proposta da IA (ainda não aplicada)
                 </p>
               )}
-              <BioRenderer doc={proposal?.document ?? doc} assets={assetMap} embedded />
+              <BioRenderer
+                doc={proposal?.document ?? doc}
+                assets={assetMap}
+                videos={videoMap}
+                embedded
+              />
             </div>
           </div>
           <p className="mt-2 text-center text-xs text-muted">
@@ -298,6 +312,7 @@ export function Editor({
                 doc={doc}
                 dispatch={dispatch}
                 assets={assets}
+                videos={videos}
                 selected={selected}
                 onSelect={setSelected}
               />

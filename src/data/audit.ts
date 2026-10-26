@@ -15,6 +15,8 @@ export const AUDIT_ACTIONS = {
   "asset.upload": "Imagem enviada",
   "asset.alt": "Descrição de imagem alterada",
   "asset.delete": "Imagem excluída",
+  "video.upload": "Vídeo enviado",
+  "video.delete": "Vídeo excluído",
   "invite.create": "Convite criado",
   "invite.revoke": "Convite cancelado",
   "invite.accept": "Convite aceito",

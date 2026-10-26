@@ -11,6 +11,9 @@ import { Icon } from "./Icon";
  * pessoa entre as categorias e vai inteiro para o WhatsApp do cliente. O pedido fica guardado só
  * neste navegador (localStorage), sem cadastro nem pagamento no site. Métricas pelos `data-track`
  * (categoria, primeiro "Adicionar" de cada produto, envio) — ver `trackTargets`.
+ *
+ * Modo "book" (Reistyle, D51): serviços com preço e botão "Agendar" em cada um, sem carrinho.
+ * Produto com mais fotos e vídeos: tocar na foto abre o visualizador (desliza para o lado).
  */
 
 export type CatalogImage = {
@@ -20,12 +23,33 @@ export type CatalogImage = {
   height: number;
   alt: string;
 };
+/** Foto ou vídeo do visualizador (vídeo com capa e dimensões para reservar o espaço). */
+export type CatalogMedia =
+  | ({ kind: "image"; caption?: string } & CatalogImage)
+  | {
+      kind: "video";
+      src: string;
+      type: string;
+      poster: string | null;
+      width: number;
+      height: number;
+      caption?: string;
+    };
 export type CatalogView = {
   id: string;
   name: string;
   tag?: string;
   cover: CatalogImage | null;
-  products: { id: string; name: string; priceCents?: number; image: CatalogImage | null }[];
+  products: {
+    id: string;
+    name: string;
+    priceCents?: number;
+    image: CatalogImage | null;
+    /** Foto principal + mais fotos e vídeos (só quando há mais de um item). */
+    media?: CatalogMedia[];
+    /** Modo "book": destino do botão "Agendar". */
+    bookHref?: string;
+  }[];
 };
 
 const money = (cents: number) =>
@@ -64,6 +88,64 @@ function Stepper({ label, qty, set }: { label: string; qty: number; set: (q: num
   );
 }
 
+/** Fotos e vídeos de um produto, deslizando para o lado; só o vídeo à vista toca. */
+function MediaViewer({ items }: { items: CatalogMedia[] }) {
+  const [at, setAt] = useState(0);
+  return (
+    <>
+      {/* Faixa que desliza para o lado: focável e nomeada (teclado e leitores de tela). */}
+      <div
+        className="bio-media"
+        role="region"
+        aria-label="Fotos e vídeos"
+        tabIndex={0}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          const i = Math.round(el.scrollLeft / el.clientWidth);
+          if (i === at) return;
+          setAt(i);
+          el.querySelectorAll("video").forEach((v, j) => j !== i && v.pause());
+        }}
+      >
+        {items.map((m, i) => (
+          <figure key={i}>
+            {m.kind === "video" ? (
+              <video
+                poster={m.poster ?? undefined}
+                width={m.width}
+                height={m.height}
+                controls
+                playsInline
+                preload="none"
+              >
+                <source src={m.src} type={m.type} />
+              </video>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element -- variantes próprias, sem next/image
+              <img
+                src={m.src}
+                srcSet={m.srcSet}
+                sizes="(max-width: 480px) 100vw, 440px"
+                width={m.width}
+                height={m.height}
+                alt={m.alt}
+                loading="lazy"
+                decoding="async"
+              />
+            )}
+            {m.caption && <figcaption>{m.caption}</figcaption>}
+          </figure>
+        ))}
+      </div>
+      {items.length > 1 && (
+        <p className="bio-media-dots" aria-live="polite">
+          {at + 1} de {items.length} · deslize para o lado
+        </p>
+      )}
+    </>
+  );
+}
+
 export function Catalog({
   blockId,
   title,
@@ -73,12 +155,15 @@ export function Catalog({
   intro,
   storageKey,
   orderBase,
+  mode = "order",
 }: {
   blockId: string;
   title: string;
   subtitle?: string;
   categories: CatalogView[];
-  whatsapp: string;
+  /** Modo "order": número do WhatsApp que recebe o pedido. */
+  whatsapp?: string;
+  mode?: "order" | "book";
   /** Primeira linha da mensagem (ex.: "Oi! Vim pelo Bio Site da Loja e quero fazer este pedido:"). */
   intro: string;
   storageKey: string;
@@ -88,7 +173,10 @@ export function Catalog({
   const rootRef = useRef<HTMLElement>(null);
   const catRef = useRef<HTMLDialogElement>(null);
   const cartRef = useRef<HTMLDialogElement>(null);
+  const viewRef = useRef<HTMLDialogElement>(null);
   const [openCat, setOpenCat] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<string | null>(null);
+  const viewTitleId = useId();
   const [cart, setCart] = useState<Cart>({});
   const titleId = useId();
   const catTitleId = useId();
@@ -147,6 +235,10 @@ export function Catalog({
     setOpenCat(id);
     if (!embedded()) catRef.current?.showModal();
   }
+  function showMedia(key: string) {
+    setViewing(key);
+    if (!embedded()) viewRef.current?.showModal();
+  }
   function showCart() {
     catRef.current?.close();
     if (!embedded()) cartRef.current?.showModal();
@@ -195,6 +287,9 @@ export function Catalog({
     );
 
   const cat = categories.find((c) => c.id === openCat);
+  const view = viewing ? find(viewing) : null;
+  const book = mode === "book";
+  const hasMedia = categories.some((c) => c.products.some((p) => p.media));
   const outside = (e: MouseEvent<HTMLDialogElement>) => {
     if (e.target === e.currentTarget) e.currentTarget.close();
   };
@@ -227,13 +322,20 @@ export function Catalog({
                   )}
                 </span>
                 <strong>{c.name}</strong>
-                <span className="bio-shop-cta">Ver produtos ({c.products.length})</span>
+                <span className="bio-shop-cta">
+                  {/* mesmos nós de texto de antes no modo pedido (HTML da Mage inalterado) */}
+                  {book ? (
+                    <>Ver serviços ({c.products.length})</>
+                  ) : (
+                    <>Ver produtos ({c.products.length})</>
+                  )}
+                </span>
               </button>
             </li>
           );
         })}
       </ul>
-      {cartBar(false)}
+      {!book && cartBar(false)}
 
       <dialog
         ref={catRef}
@@ -255,7 +357,25 @@ export function Catalog({
               const qty = cart[key] ?? 0;
               return (
                 <li key={p.id} className="bio-prod">
-                  <Pic image={p.image} sizes="(max-width: 480px) 50vw, 220px" />
+                  {p.media ? (
+                    <button
+                      type="button"
+                      className="bio-prod-pic"
+                      aria-haspopup="dialog"
+                      aria-label={`Ver fotos e vídeos: ${p.name}`}
+                      onClick={() => showMedia(key)}
+                    >
+                      <Pic image={p.image} sizes="(max-width: 480px) 50vw, 220px" />
+                      {p.media.some((m) => m.kind === "video") && (
+                        <span className="bio-play" aria-hidden="true" />
+                      )}
+                      <span className="bio-media-n" aria-hidden="true">
+                        {p.media.length}
+                      </span>
+                    </button>
+                  ) : (
+                    <Pic image={p.image} sizes="(max-width: 480px) 50vw, 220px" />
+                  )}
                   <span className="bio-prod-info">
                     <strong>{p.name}</strong>
                     {p.priceCents !== undefined && (
@@ -263,7 +383,17 @@ export function Catalog({
                     )}
                   </span>
                   <span className="bio-prod-act">
-                    {qty > 0 ? (
+                    {book ? (
+                      <a
+                        className="bio-add"
+                        href={p.bookHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-track={`p:${cat.id}:${p.id}`}
+                      >
+                        Agendar
+                      </a>
+                    ) : qty > 0 ? (
                       <Stepper label={p.name} qty={qty} set={(q) => setQty(key, q)} />
                     ) : (
                       <button
@@ -281,63 +411,99 @@ export function Catalog({
             })}
           </ul>
         </div>
-        {cartBar(true)}
+        {!book && cartBar(true)}
       </dialog>
 
-      <dialog
-        ref={cartRef}
-        className="bio-sheet bio-shop-sheet"
-        aria-labelledby={cartTitleId}
-        onClick={outside}
-      >
-        <div className="bio-sheet-head">
-          <h2 id={cartTitleId}>Seu pedido</h2>
-          <button type="button" aria-label="Fechar" onClick={() => cartRef.current?.close()}>
-            ×
-          </button>
-        </div>
-        <div className="bio-sheet-body">
-          {keys.length === 0 ? (
-            <p className="bio-cart-empty">Nenhum produto escolhido.</p>
-          ) : (
-            <>
-              <ul className="bio-cart">
-                {keys.map((k) => {
-                  const { cat: c, prod } = find(k)!;
-                  return (
-                    <li key={k}>
-                      <Pic image={prod.image} sizes="56px" />
-                      <span className="bio-cart-name">
-                        <strong>{prod.name}</strong>
-                        <small>
-                          {c.name}
-                          {prod.priceCents !== undefined ? ` · ${money(prod.priceCents)}` : ""}
-                        </small>
-                      </span>
-                      <Stepper label={prod.name} qty={cart[k]} set={(q) => setQty(k, q)} />
-                    </li>
-                  );
-                })}
-              </ul>
-              {priced && (
-                <p className="bio-cart-total">
-                  <span>Total</span>
-                  <span>{money(total)}</span>
-                </p>
-              )}
+      {hasMedia && (
+        <dialog
+          ref={viewRef}
+          className="bio-sheet bio-shop-sheet"
+          aria-labelledby={viewTitleId}
+          onClick={outside}
+          onClose={(e) => {
+            e.currentTarget.querySelectorAll("video").forEach((v) => v.pause());
+            setViewing(null);
+          }}
+        >
+          <div className="bio-sheet-head">
+            <h2 id={viewTitleId}>{view?.prod.name}</h2>
+            <button type="button" aria-label="Fechar" onClick={() => viewRef.current?.close()}>
+              ×
+            </button>
+          </div>
+          <div className="bio-sheet-body">
+            {view?.prod.media && <MediaViewer key={viewing} items={view.prod.media} />}
+            {book && view?.prod.bookHref && (
               <a
                 className="bio-send"
-                href={whatsappHref(whatsapp, message)}
+                href={view.prod.bookHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                data-track="order"
+                data-track={`p:${view.cat.id}:${view.prod.id}`}
               >
-                <Icon name="whatsapp" /> Enviar pedido pelo WhatsApp
+                <Icon name="whatsapp" /> Agendar {view.prod.name}
               </a>
-            </>
-          )}
-        </div>
-      </dialog>
+            )}
+          </div>
+        </dialog>
+      )}
+
+      {!book && (
+        <dialog
+          ref={cartRef}
+          className="bio-sheet bio-shop-sheet"
+          aria-labelledby={cartTitleId}
+          onClick={outside}
+        >
+          <div className="bio-sheet-head">
+            <h2 id={cartTitleId}>Seu pedido</h2>
+            <button type="button" aria-label="Fechar" onClick={() => cartRef.current?.close()}>
+              ×
+            </button>
+          </div>
+          <div className="bio-sheet-body">
+            {keys.length === 0 ? (
+              <p className="bio-cart-empty">Nenhum produto escolhido.</p>
+            ) : (
+              <>
+                <ul className="bio-cart">
+                  {keys.map((k) => {
+                    const { cat: c, prod } = find(k)!;
+                    return (
+                      <li key={k}>
+                        <Pic image={prod.image} sizes="56px" />
+                        <span className="bio-cart-name">
+                          <strong>{prod.name}</strong>
+                          <small>
+                            {c.name}
+                            {prod.priceCents !== undefined ? ` · ${money(prod.priceCents)}` : ""}
+                          </small>
+                        </span>
+                        <Stepper label={prod.name} qty={cart[k]} set={(q) => setQty(k, q)} />
+                      </li>
+                    );
+                  })}
+                </ul>
+                {priced && (
+                  <p className="bio-cart-total">
+                    <span>Total</span>
+                    <span>{money(total)}</span>
+                  </p>
+                )}
+                <a
+                  className="bio-send"
+                  href={whatsappHref(whatsapp ?? "", message)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-track="order"
+                >
+                  <Icon name="whatsapp" /> Enviar pedido pelo WhatsApp
+                </a>
+              </>
+            )}
+          </div>
+        </dialog>
+      )}
     </section>
   );
 }
