@@ -82,6 +82,10 @@ Decisões por trás: D41 (visual a partir de referências), D42 (produção grá
 
 | Vídeo não abre no Playwright | O Chromium dos testes não decodifica H.264 (MP4) | Conferir MP4 com `channel: "chrome"`; nos E2E usar WebM gravado no próprio navegador |
 | Prévia do protótipo sem máscara/luz | Máscaras CSS e vídeo não carregam por `file://` | Servir a pasta `prototipos/` por HTTP local |
+| Orçamento sem mensagem pronta | O link `wa.me/message/…` (WhatsApp Business) e o de grupo não aceitam texto | Usar o **número** em Contato (o da arte da cliente); conferir que `wa.me/<número>?text=` leva o texto |
+| Schema recusa a cor de um ícone | Desenho branco sobre cor clara (ex.: dourado #c27800, 2,89:1; mínimo 3) | Escurecer a cor (#a86400 passou) |
+| Clique do teste não acontece no botão "desligado" | O Playwright respeita `aria-disabled` | `click({ force: true })` para provar que nada é enviado |
+| Fundo branco "cansa a vista" (Casa Limpa) | Fundo claro demais no protótipo | O usuário mandou a referência do azul; pedir referência de fundo logo no começo |
 
 ## Vídeos (D50)
 

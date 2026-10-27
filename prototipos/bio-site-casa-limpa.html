@@ -1,0 +1,1691 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Casa Limpa — protótipo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fredoka:wght@500;600;700&family=Pacifico&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Protótipo Casa Limpa (referências do usuário, 2026-10-27): arte oficial da cliente
+         (prototipos/ref/casalimpa-arte.jpg) = branco, marinho e azul royal, brilhos de 4 pontas,
+         serviços em pílulas azul-claras com ícone num círculo marinho, onda marinha no rodapé.
+         Logo original 150 px (casalimpa-logo-orig.jpg) redesenhado em vetor. Sem halo, sem grade.
+         Movimento único: bolhas de sabão subindo devagar e brilhos piscando no fundo claro. */
+      :root {
+        --navy: #0b2f6e;
+        --royal: #1a5fd0;
+        --sky: #5aaef5;
+        --mist: #e4f0ff;
+        --pill: #d7e8ff;
+        --ink: #0b2f6e;
+        --muted: #3c5683;
+        --title-font: "Fredoka", system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "DM Sans", system-ui, sans-serif;
+        background: #2b2e36;
+        color: var(--ink);
+      }
+      .tools {
+        max-width: 430px;
+        margin: 0 auto;
+        padding: 16px 16px 4px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #fff;
+      }
+      .tools button {
+        font: inherit;
+        border: 1px solid #555;
+        background: #1b1d24;
+        color: #fff;
+        border-radius: 999px;
+        padding: 6px 14px;
+        cursor: pointer;
+      }
+      .tools button[aria-pressed="true"] {
+        background: #fff;
+        color: #111;
+      }
+
+      .phone {
+        position: relative;
+        max-width: 430px;
+        margin: 12px auto 40px;
+        overflow: clip;
+        border-radius: 28px;
+        padding-bottom: 180px;
+        /* Azul royal da referência do usuário (prototipos/ref/casalimpa-fundo-ref.jpg):
+           bordas #1249c7, luz clara no alto à direita (#4ca2ef), bolhas grandes desfocadas. */
+        background:
+          radial-gradient(
+            circle at 88% 6%,
+            rgba(76, 162, 239, 0.9) 0,
+            rgba(46, 115, 219, 0.5) 22%,
+            transparent 42%
+          ),
+          radial-gradient(circle at 0% 70%, rgba(60, 137, 225, 0.45) 0, transparent 40%),
+          linear-gradient(180deg, #1b56cc 0%, #1650c8 50%, #1146bd 100%);
+        --head: #fff;
+        --head-sub: #e3eeff;
+      }
+      .phone .chip svg {
+        stroke: #bfe0ff;
+      }
+      .slogan,
+      .sub {
+        text-shadow: 0 1px 8px rgba(8, 35, 100, 0.35);
+      }
+      .bokeh {
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 40% 35%,
+          rgba(255, 255, 255, 0.28),
+          rgba(255, 255, 255, 0.06) 65%
+        );
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        filter: blur(1.5px);
+      }
+
+      /* Meus trabalhos: os 3 vídeos lado a lado num quadro de destaque (sem halo). O primeiro
+         toca sozinho, sem som; tocar em qualquer um abre o vídeo grande, com som. */
+      .work {
+        margin: 22px 16px 0;
+        padding: 14px 12px 12px;
+        border-radius: 26px;
+        background: #fff;
+        border: 2px solid var(--royal);
+        box-shadow: 0 10px 24px rgba(11, 47, 110, 0.18);
+      }
+      .work-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 4px 10px;
+      }
+      .work-head svg {
+        flex: none;
+        width: 20px;
+        height: 20px;
+        fill: var(--royal);
+      }
+      .work h2 {
+        font-family: var(--title-font);
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin: 0;
+        color: var(--navy);
+      }
+      .work-head small {
+        margin-left: auto;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+      .tiles {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .tile {
+        position: relative;
+        padding: 0;
+        border: 0;
+        border-radius: 16px;
+        overflow: hidden;
+        aspect-ratio: 9 / 14;
+        background: #0b2f6e;
+        cursor: pointer;
+      }
+      .tile video,
+      .tile img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .tile .play {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.92);
+        display: grid;
+        place-items: center;
+      }
+      .tile .play svg {
+        width: 13px;
+        height: 13px;
+        fill: var(--navy);
+        margin-left: 2px;
+      }
+      .tile span.cap {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 26px 8px 8px;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+        color: #fff;
+        font-size: 0.78rem;
+        font-weight: 700;
+        line-height: 1.15;
+        text-align: left;
+      }
+      .tile:focus-visible {
+        outline: 3px solid var(--royal);
+        outline-offset: 2px;
+      }
+      .viewer video {
+        width: 100%;
+        max-height: 74vh;
+        border-radius: 18px;
+        background: #000;
+        display: block;
+      }
+      /* Fundo do ramo: fica parado enquanto a página rola. */
+      .fx {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        margin-bottom: -100vh;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .bubble {
+        position: absolute;
+        bottom: -60px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.9) 0 10%, transparent 11%),
+          radial-gradient(
+            circle at 50% 50%,
+            rgba(255, 255, 255, 0.04) 50%,
+            rgba(255, 255, 255, 0.22) 100%
+          );
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        animation: rise var(--d, 18s) linear infinite;
+        animation-delay: var(--w, 0s);
+      }
+      @keyframes rise {
+        0% {
+          transform: translate(0, 0);
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        50% {
+          transform: translate(var(--x, 14px), -55vh);
+        }
+        90% {
+          opacity: 0.9;
+        }
+        100% {
+          transform: translate(0, -115vh);
+          opacity: 0;
+        }
+      }
+      .spark {
+        position: absolute;
+        width: var(--s, 18px);
+        height: var(--s, 18px);
+        color: #cfe6ff;
+        animation: twinkle var(--d, 4s) ease-in-out infinite;
+        animation-delay: var(--w, 0s);
+      }
+      .spark svg {
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
+      }
+      @keyframes twinkle {
+        0%,
+        100% {
+          opacity: 0.15;
+          transform: scale(0.6) rotate(0deg);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1) rotate(20deg);
+        }
+      }
+      .phone[data-fx="off"] .fx {
+        display: none;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .bubble,
+        .spark {
+          animation: none;
+          opacity: 0.6;
+        }
+        .bubble {
+          display: none;
+        }
+      }
+
+      header {
+        position: relative;
+        text-align: center;
+        padding: 28px 20px 8px;
+      }
+      /* Pedido do usuário: foto de perfil = a Ana Paula (confiança); o logo vira um selo pequeno,
+         tamanho em que o arquivo de 150 px ainda fica nítido. */
+      .profile {
+        display: none;
+        position: relative;
+        width: 176px;
+        height: 176px;
+        margin: 0 auto;
+      }
+      .profile .me {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        object-position: 50% 30%;
+        border: 5px solid #fff;
+        box-shadow: 0 12px 28px rgba(8, 35, 100, 0.4);
+      }
+      .profile .badge {
+        position: absolute;
+        right: -6px;
+        bottom: 2px;
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        background: #fff;
+        box-shadow: 0 6px 14px rgba(8, 35, 100, 0.35);
+      }
+      .brand {
+        display: none;
+        margin: 12px 0 0;
+        font-family: "Pacifico", cursive;
+        font-weight: 400;
+        font-size: 2.3rem;
+        line-height: 1.2;
+        color: #fff;
+        text-shadow: 0 2px 10px rgba(8, 35, 100, 0.4);
+      }
+      .brand small {
+        display: block;
+        font-family: "DM Sans", system-ui, sans-serif;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        color: #e3eeff;
+        text-shadow: none;
+        margin-top: 14px;
+      }
+      .phone[data-logo="foto"] .profile,
+      .phone[data-logo="foto"] .brand {
+        display: block;
+      }
+      .phone[data-logo="foto"] .logo,
+      .phone[data-logo="foto"] .logo-orig {
+        display: none;
+      }
+      .phone[data-logo="foto"] .slogan {
+        margin-top: 8px;
+      }
+      /* Cartão só com o nome (padrão: Feedback e cartões criados pelo operador). */
+      .card.plain {
+        justify-content: center;
+        min-height: 60px;
+        padding: 6px 18px;
+        text-align: center;
+      }
+      .card.plain .t {
+        flex: none;
+      }
+      .prints {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .prints div {
+        aspect-ratio: 9 / 16;
+        border-radius: 14px;
+        background: var(--mist);
+        border: 2px dashed #9cbfee;
+        display: grid;
+        place-items: center;
+        padding: 8px;
+        text-align: center;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      .logo {
+        width: 216px;
+        height: 216px;
+        display: block;
+        margin: 0 auto;
+        filter: drop-shadow(0 10px 22px rgba(11, 47, 110, 0.18));
+      }
+      .logo-orig {
+        display: none;
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+        border-radius: 50%;
+      }
+      .phone[data-logo="orig"] .logo {
+        display: none;
+      }
+      .phone[data-logo="orig"] .logo-orig {
+        display: block;
+      }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
+      .slogan {
+        font-family: var(--title-font);
+        font-weight: 600;
+        font-size: 1.35rem;
+        line-height: 1.2;
+        margin: 14px 0 4px;
+        color: var(--head, var(--navy));
+      }
+      .sub {
+        margin: 0 auto;
+        max-width: 30ch;
+        color: var(--head-sub, var(--navy));
+        font-size: 1rem;
+        line-height: 1.45;
+      }
+      .cats {
+        list-style: none;
+        padding: 0;
+        margin: 14px 0 0;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+      }
+      .cats li {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--navy);
+        background: #fff;
+        border: 1.5px solid var(--pill);
+        border-radius: 999px;
+        padding: 4px 11px;
+      }
+      .chips {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--head, var(--navy));
+        background: transparent;
+        border: 0;
+        padding: 4px 6px;
+      }
+      button.chip {
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .chip svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: var(--royal);
+        stroke-width: 2;
+      }
+
+      .cards {
+        list-style: none;
+        margin: 18px 0 0;
+        padding: 0 16px;
+        display: grid;
+        gap: 12px;
+      }
+      /* Pílula da arte oficial: fundo azul-claro, ícone num círculo marinho que encosta na borda. */
+      .card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        min-height: 72px;
+        padding: 6px 18px 6px 6px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--pill), #ecf4ff);
+        border: 1px solid rgba(26, 95, 208, 0.14);
+        color: var(--ink);
+        text-decoration: none;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .card:focus-visible,
+      .opt:focus-visible,
+      .send:focus-visible,
+      .close:focus-visible,
+      input:focus-visible {
+        outline: 3px solid var(--royal);
+        outline-offset: 3px;
+      }
+      .ico {
+        flex: none;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--navy);
+        color: #fff;
+        box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.14);
+      }
+      .ico svg {
+        width: 30px;
+        height: 30px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      /* Pedido do usuário: cores próprias no Feedback (estrela de avaliação) e no Instagram (cores da marca). */
+      .ico.star {
+        background: linear-gradient(145deg, #ffd54a, #f59e0b);
+        color: #fff;
+      }
+      .ico.star svg {
+        stroke: #fff;
+        stroke-width: 1.2;
+        filter: drop-shadow(0 1px 1px rgba(150, 80, 0, 0.35));
+      }
+      .ico.ig {
+        background: radial-gradient(
+          circle at 30% 107%,
+          #fdf497 0%,
+          #fd5949 45%,
+          #d6249f 60%,
+          #285aeb 90%
+        );
+        color: #fff;
+      }
+      .ico img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--navy);
+      }
+      .t {
+        flex: 1;
+        display: grid;
+        gap: 1px;
+      }
+      .t strong {
+        font-family: var(--title-font);
+        font-weight: 600;
+        font-size: 1.12rem;
+        line-height: 1.2;
+      }
+      .t small {
+        font-size: 0.86rem;
+        color: var(--muted);
+      }
+      .go {
+        font-size: 1.6rem;
+        color: var(--royal);
+        line-height: 1;
+      }
+      /* Cartão principal: o mesmo desenho, invertido (marinho). */
+      .card.main {
+        background: linear-gradient(90deg, var(--navy), var(--royal));
+        color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.7);
+        box-shadow: 0 10px 24px rgba(8, 35, 100, 0.35);
+      }
+      .card.main .ico {
+        background: #fff;
+        color: var(--navy);
+      }
+      .card.main .t small,
+      .card.main .go {
+        color: #dbe9ff;
+      }
+      .card.info {
+        cursor: default;
+      }
+
+      .about {
+        margin: 22px 16px 0;
+        padding: 20px 20px 22px;
+        border-radius: 26px;
+        background: #fff;
+        border: 1px solid var(--pill);
+      }
+      .about h2 {
+        font-family: var(--title-font);
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin: 0 0 8px;
+      }
+      .about p {
+        margin: 0 0 14px;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+      .promises {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .promises li {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        font-size: 0.88rem;
+        font-weight: 500;
+        line-height: 1.3;
+      }
+      .promises svg {
+        flex: none;
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: var(--royal);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* Onda marinha do rodapé, como na arte. */
+      .wave {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 160px;
+      }
+      .wave svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .foot {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 14px;
+        margin: 0;
+        padding: 0 16px;
+        display: grid;
+        gap: 4px;
+        justify-items: center;
+        text-align: center;
+        color: #fff;
+        font-size: 0.92rem;
+        font-weight: 500;
+      }
+      .foot .area {
+        display: grid;
+        justify-items: center;
+        gap: 6px;
+      }
+      .foot svg {
+        flex: none;
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: #9ccbff;
+        stroke-width: 2;
+      }
+      .foot small {
+        color: #b9d6ff;
+        font-size: 0.78rem;
+      }
+      .fab {
+        position: absolute;
+        right: 16px;
+        bottom: 182px;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: #1fa855;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 8px 20px rgba(11, 47, 110, 0.3);
+      }
+      .fab svg {
+        width: 30px;
+        height: 30px;
+        fill: #fff;
+      }
+
+      /* Painéis (orçamento, serviços, vídeos, Ana Paula). */
+      .sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        display: grid;
+        align-items: end;
+        background: rgba(11, 47, 110, 0.45);
+      }
+      .sheet[hidden] {
+        display: none;
+      }
+      .panel {
+        width: 100%;
+        max-width: 430px;
+        max-height: 92vh;
+        margin: 0 auto;
+        overflow: auto;
+        background: #fff;
+        border-radius: 26px 26px 0 0;
+        padding: 18px 18px 24px;
+        color: var(--ink);
+      }
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 6px;
+      }
+      .panel h2 {
+        font-family: var(--title-font);
+        font-weight: 600;
+        font-size: 1.3rem;
+        margin: 0;
+      }
+      .close {
+        flex: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 0;
+        background: var(--mist);
+        color: var(--navy);
+        font-size: 1.4rem;
+        cursor: pointer;
+      }
+      .lead {
+        margin: 0 0 14px;
+        color: var(--muted);
+        font-size: 0.92rem;
+        line-height: 1.45;
+      }
+      fieldset {
+        border: 0;
+        margin: 0 0 16px;
+        padding: 0;
+      }
+      legend,
+      label.q {
+        display: block;
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+      }
+      .opts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .opt {
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--navy);
+        background: var(--mist);
+        border: 1.5px solid transparent;
+        border-radius: 999px;
+        padding: 8px 14px;
+        min-height: 40px;
+        cursor: pointer;
+      }
+      .opt[aria-pressed="true"] {
+        background: var(--navy);
+        color: #fff;
+      }
+      .row2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      input[type="text"] {
+        width: 100%;
+        font: inherit;
+        font-size: 1rem;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1.5px solid #b9d3f5;
+        color: var(--ink);
+      }
+      .hint {
+        font-size: 0.84rem;
+        color: var(--muted);
+        margin: 6px 0 0;
+      }
+      .note {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        background: var(--mist);
+        border-radius: 16px;
+        padding: 12px 14px;
+        font-size: 0.88rem;
+        line-height: 1.4;
+        margin: 4px 0 16px;
+      }
+      .note svg {
+        flex: none;
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: var(--royal);
+        stroke-width: 1.8;
+      }
+      .send {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font: inherit;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #fff;
+        background: #1a8f4c;
+        border: 0;
+        border-radius: 999px;
+        min-height: 54px;
+        cursor: pointer;
+      }
+      .send svg {
+        width: 24px;
+        height: 24px;
+        fill: #fff;
+      }
+      .send[aria-disabled="true"] {
+        background: #8aa0bf;
+        cursor: not-allowed;
+      }
+      .missing {
+        text-align: center;
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin: 8px 0 0;
+        min-height: 1.2em;
+      }
+
+      .ana {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        margin: 6px 0 14px;
+      }
+      .ana img {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--pill);
+      }
+      .ana strong {
+        font-family: var(--title-font);
+        font-weight: 600;
+        font-size: 1.25rem;
+        display: block;
+      }
+      .ana small {
+        color: var(--muted);
+      }
+
+      /* Pedido do usuário: nem cartão branco nem vidro. Três estilos para escolher (data-cards). */
+      .card,
+      .work,
+      .about {
+        box-shadow: 0 8px 20px rgba(6, 28, 88, 0.28);
+      }
+      .card .ico.star {
+        background: linear-gradient(145deg, #ffd54a, #f59e0b);
+        color: #fff;
+      }
+      .card .ico.ig {
+        background: radial-gradient(
+          circle at 30% 107%,
+          #fdf497 0%,
+          #fd5949 45%,
+          #d6249f 60%,
+          #285aeb 90%
+        );
+        color: #fff;
+      }
+      .card .ico.pix {
+        background: #fff;
+        color: #32bcad;
+      }
+      .card .ico.pix svg {
+        fill: currentColor;
+        stroke: none;
+      }
+
+      /* A: marinho cheio, texto branco, ícones em círculo branco; o orçamento em branco. */
+      .phone[data-cards="marinho"] :is(.card, .work, .about) {
+        background: linear-gradient(90deg, #0b2f6e, #0f3a86);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+      .phone[data-cards="marinho"] .card .ico:not(.star, .ig, .pix) {
+        background: #fff;
+        color: var(--navy);
+      }
+      .phone[data-cards="marinho"] .card.main {
+        background: linear-gradient(90deg, #2f8cf0, #1a5fd0);
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        color: #fff;
+      }
+
+      /* B: azul-céu da arte dela, texto marinho, ícones em círculo marinho. */
+      .phone[data-cards="ceu"] :is(.card, .work, .about) {
+        background: linear-gradient(90deg, #7fc0fa, #a9d5fc);
+        border: 0;
+        color: var(--navy);
+      }
+      .phone[data-cards="ceu"] .card.main {
+        background: linear-gradient(90deg, #0b2f6e, #123f8f);
+        border: 2px solid rgba(255, 255, 255, 0.75);
+        color: #fff;
+      }
+
+      /* C: cada cartão na cor do seu ícone, texto branco. */
+      .phone[data-cards="cor"] :is(.card, .work, .about) {
+        background: linear-gradient(
+          90deg,
+          var(--c, #0b2f6e),
+          color-mix(in srgb, var(--c, #0b2f6e) 78%, #000)
+        );
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        color: #fff;
+      }
+      .phone[data-cards="cor"] .card .ico:not(.star, .ig) {
+        background: #fff;
+        color: var(--c, var(--navy));
+      }
+
+      .phone:is([data-cards="marinho"], [data-cards="cor"])
+        :is(.card .t small, .card .go, .work-head small, .about p) {
+        color: #e3edff;
+      }
+      .phone:is([data-cards="marinho"], [data-cards="cor"]) :is(.work h2, .about h2) {
+        color: #fff;
+      }
+      .phone:is([data-cards="marinho"], [data-cards="cor"]) :is(.work-head svg, .promises svg) {
+        stroke: #bfe0ff;
+      }
+      .phone:is([data-cards="marinho"], [data-cards="cor"]) .work-head svg {
+        fill: #bfe0ff;
+      }
+      .phone[data-cards="ceu"] :is(.card .t small, .work-head small, .about p) {
+        color: #123a78;
+      }
+      .phone[data-cards="ceu"] .card.main :is(small, .go) {
+        color: #dbe9ff;
+      }
+      .toast {
+        position: fixed;
+        left: 50%;
+        top: 24px;
+        z-index: 20;
+        transform: translateX(-50%);
+        background: #0b2f6e;
+        color: #fff;
+        border-radius: 999px;
+        padding: 10px 18px;
+        font-weight: 700;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      }
+      .pixkey {
+        display: grid;
+        gap: 4px;
+        background: var(--mist);
+        border-radius: 16px;
+        padding: 14px 16px;
+        margin: 6px 0 14px;
+      }
+      .pixkey small {
+        color: var(--muted);
+      }
+      .pixkey strong {
+        font-size: 1.1rem;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tools">
+      <b>Logo:</b>
+      <button type="button" data-set="logo" data-v="foto" aria-pressed="false">Foto dela</button>
+      <button type="button" data-set="logo" data-v="svg" aria-pressed="false">
+        Logo redesenhado
+      </button>
+      <button type="button" data-set="logo" data-v="orig" aria-pressed="true">Logo original</button>
+      <b>Cartões:</b>
+      <button type="button" data-set="cards" data-v="marinho" aria-pressed="true">
+        A · Marinho
+      </button>
+      <button type="button" data-set="cards" data-v="ceu" aria-pressed="false">B · Azul-céu</button>
+      <button type="button" data-set="cards" data-v="cor" aria-pressed="false">
+        C · Cor do ícone
+      </button>
+      <b>Efeito:</b>
+      <button type="button" data-set="fx" data-v="on" aria-pressed="true">Bolhas e brilhos</button>
+      <button type="button" data-set="fx" data-v="off" aria-pressed="false">Liso</button>
+    </div>
+
+    <main class="phone" data-logo="orig" data-fx="on" data-cards="marinho">
+      <div class="fx" aria-hidden="true" id="fx"></div>
+
+      <header>
+        <div class="profile">
+          <img class="me" src="ref/casalimpa-ana.jpg" alt="Ana Paula, da Casa Limpa" />
+          <img class="badge" src="ref/casalimpa-logo-orig.jpg" alt="" />
+        </div>
+        <p class="brand" aria-hidden="true">Casa Limpa<small>LIMPEZA RESIDENCIAL</small></p>
+        <svg
+          class="logo"
+          viewBox="0 0 300 300"
+          role="img"
+          aria-label="Casa Limpa, limpeza residencial"
+        >
+          <defs>
+            <linearGradient id="lg-ring" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#5aaef5" />
+              <stop offset="1" stop-color="#1a5fd0" />
+            </linearGradient>
+            <linearGradient id="lg-limpa" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#2f8cf0" />
+              <stop offset="1" stop-color="#5aaef5" />
+            </linearGradient>
+            <symbol id="star4" viewBox="-10 -10 20 20">
+              <path d="M0-10C1-3 3-1 10 0C3 1 1 3 0 10C-1 3-3 1-10 0C-3-1-1-3 0-10Z" />
+            </symbol>
+          </defs>
+          <circle cx="150" cy="150" r="146" fill="#fff" />
+          <circle cx="150" cy="150" r="140" fill="none" stroke="url(#lg-ring)" stroke-width="7" />
+          <!-- casa -->
+          <g fill="none" stroke="#0b2f6e" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke-width="12" d="M80 100L142 48L202 98" />
+            <path stroke-width="10" d="M96 94V128M180 66V82" />
+          </g>
+          <g fill="#1a5fd0">
+            <rect x="129" y="72" width="11" height="11" rx="2" />
+            <rect x="144" y="72" width="11" height="11" rx="2" />
+            <rect x="129" y="87" width="11" height="11" rx="2" />
+            <rect x="144" y="87" width="11" height="11" rx="2" />
+          </g>
+          <!-- vassoura -->
+          <path d="M238 42L208 104" stroke="#0b2f6e" stroke-width="7" stroke-linecap="round" />
+          <path d="M198 98L220 108L210 136Q192 142 180 130Z" fill="#1a5fd0" />
+          <path
+            d="M202 110L190 130M209 114L200 134M215 117L210 134"
+            stroke="#fff"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+          <!-- curva de limpeza -->
+          <path
+            d="M76 124Q140 154 198 128"
+            fill="none"
+            stroke="#5aaef5"
+            stroke-width="5"
+            stroke-linecap="round"
+          />
+          <!-- brilhos -->
+          <g fill="#2f8cf0">
+            <use href="#star4" x="52" y="84" width="22" height="22" />
+            <use href="#star4" x="70" y="112" width="11" height="11" />
+            <use href="#star4" x="162" y="26" width="16" height="16" />
+            <use href="#star4" x="244" y="84" width="20" height="20" />
+            <use href="#star4" x="236" y="112" width="11" height="11" />
+          </g>
+          <text x="150" y="190" text-anchor="middle" font-family="Pacifico, cursive" font-size="42">
+            <tspan fill="#0b2f6e">Casa</tspan>
+            <tspan fill="url(#lg-limpa)" dx="8">Limpa</tspan>
+          </text>
+          <path d="M143 200c0-4 6-5 7 0c1-5 7-4 7 0c0 4-7 8-7 8s-7-4-7-8z" fill="#5aaef5" />
+          <g stroke="#1a5fd0" stroke-width="2" stroke-linecap="round">
+            <path d="M46 222H64M236 222H254" />
+          </g>
+          <text
+            x="150"
+            y="226"
+            text-anchor="middle"
+            font-family="DM Sans, sans-serif"
+            font-weight="700"
+            font-size="11"
+            letter-spacing="1.6"
+            fill="#0b2f6e"
+          >
+            LIMPEZA RESIDENCIAL
+          </text>
+          <text
+            x="150"
+            y="248"
+            text-anchor="middle"
+            font-family="Pacifico, cursive"
+            font-size="12"
+            fill="#1a5fd0"
+          >
+            Mais tempo para você,
+          </text>
+          <text
+            x="150"
+            y="265"
+            text-anchor="middle"
+            font-family="Pacifico, cursive"
+            font-size="12"
+            fill="#1a5fd0"
+          >
+            uma casa sempre limpa!
+          </text>
+        </svg>
+        <img
+          class="logo-orig"
+          src="ref/casalimpa-logo-orig.jpg"
+          alt="Casa Limpa, limpeza residencial"
+        />
+        <h1 class="sr">Casa Limpa — Limpeza residencial</h1>
+        <p class="slogan">Cuidado, capricho e confiança</p>
+        <p class="sub">Deixe sua casa limpa e aconchegante.</p>
+        <ul class="cats">
+          <li>Limpeza geral</li>
+          <li>Cozinha</li>
+          <li>Banheiros</li>
+          <li>Quartos</li>
+          <li>Janelas e vidros</li>
+        </ul>
+        <div class="chips">
+          <span class="chip"
+            ><svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21z" />
+              <circle cx="12" cy="9.5" r="2.5" /></svg
+            >Fortaleza e região</span
+          ><button class="chip" type="button" id="share">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" /></svg
+            >Compartilhar
+          </button>
+        </div>
+      </header>
+
+      <!-- Pedido do usuário: "Meus trabalhos" em destaque, mas sem ocupar a tela. -->
+      <section class="work" aria-labelledby="h-work">
+        <div class="work-head">
+          <svg viewBox="-10 -10 20 20" aria-hidden="true">
+            <path d="M0-10C1-3 3-1 10 0C3 1 1 3 0 10C-1 3-3 1-10 0C-3-1-1-3 0-10Z" />
+          </svg>
+          <h2 id="h-work">Meus trabalhos</h2>
+          <small>Toque para assistir</small>
+        </div>
+        <div class="tiles">
+          <button
+            class="tile"
+            type="button"
+            data-video="ref/casalimpa-v1.mp4"
+            data-title="A arte do processo"
+          >
+            <video
+              muted
+              loop
+              playsinline
+              autoplay
+              preload="metadata"
+              poster="ref/casalimpa-c1.png"
+              src="ref/casalimpa-v1.mp4"
+              aria-hidden="true"
+            ></video
+            ><span class="play"
+              ><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" /></svg></span
+            ><span class="cap">A arte do processo</span>
+          </button>
+          <button
+            class="tile"
+            type="button"
+            data-video="ref/casalimpa-v2.mp4"
+            data-title="Banheiro e cozinha"
+          >
+            <img src="ref/casalimpa-c2.png" alt="" /><span class="play"
+              ><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" /></svg></span
+            ><span class="cap">Banheiro e cozinha</span>
+          </button>
+          <button
+            class="tile"
+            type="button"
+            data-video="ref/casalimpa-v3.mp4"
+            data-title="Meu superpoder"
+          >
+            <img src="ref/casalimpa-c3.png" alt="" /><span class="play"
+              ><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" /></svg></span
+            ><span class="cap">Meu superpoder</span>
+          </button>
+        </div>
+      </section>
+
+      <ul class="cards">
+        <li>
+          <button class="card main" type="button" data-open="quote" style="--c: #0b2f6e">
+            <span class="ico"
+              ><svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="4" width="14" height="17" rx="2" />
+                <path d="M9 4V3h6v1M8.5 10h7M8.5 14h7M8.5 18h4" /></svg
+            ></span>
+            <span class="t"
+              ><strong>Pedir orçamento</strong><small>Responda 4 perguntas rápidas</small></span
+            >
+            <span class="go" aria-hidden="true">›</span>
+          </button>
+        </li>
+        <li>
+          <button class="card" type="button" data-open="ana" style="--c: #1a5fd0">
+            <span class="ico"><img src="ref/casalimpa-ana.jpg" alt="" /></span>
+            <span class="t"
+              ><strong>Quem cuida da sua casa</strong><small>Conheça a Ana Paula</small></span
+            >
+            <span class="go" aria-hidden="true">›</span>
+          </button>
+        </li>
+        <li>
+          <button class="card" type="button" data-open="feedback" style="--c: #b86e00">
+            <span class="ico star"
+              ><svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"
+                /></svg
+            ></span>
+            <span class="t"
+              ><strong>Feedback de clientes</strong><small>O que as clientes dizem</small></span
+            >
+            <span class="go" aria-hidden="true">›</span>
+          </button>
+        </li>
+        <li>
+          <a
+            class="card"
+            style="--c: #b02a7c"
+            href="https://www.instagram.com/casa_limpa_limpeza.residencial/"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="ico ig"
+              ><svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.2" cy="6.8" r="0.6" fill="currentColor" /></svg
+            ></span>
+            <span class="t"><strong>Instagram</strong><small>Siga no Instagram</small></span>
+            <span class="go" aria-hidden="true">›</span>
+          </a>
+        </li>
+        <li>
+          <button class="card" type="button" data-open="pix" style="--c: #0f8f84">
+            <span class="ico pix"
+              ><svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M17.6 16.8a2.9 2.9 0 0 1-2.1-.9l-3-3a.6.6 0 0 0-.8 0l-3 3a2.9 2.9 0 0 1-2.1.9H6l3.8 3.8a3 3 0 0 0 4.3 0l3.8-3.8zM6.6 7.2a2.9 2.9 0 0 1 2.1.9l3 3a.6.6 0 0 0 .8 0l3-3a2.9 2.9 0 0 1 2.1-.9h.4l-3.8-3.8a3 3 0 0 0-4.3 0L6.1 7.2zM20.6 9.9l-2.3-2.3h-.7a2 2 0 0 0-1.4.6l-3 3a1.7 1.7 0 0 1-2.4 0l-3-3a2 2 0 0 0-1.4-.6h-.9L3.4 9.9a3 3 0 0 0 0 4.3l2.1 2.1h.9a2 2 0 0 0 1.4-.6l3-3a1.7 1.7 0 0 1 2.4 0l3 3a2 2 0 0 0 1.4.6h.7l2.3-2.3a3 3 0 0 0 0-4.3z"
+                /></svg
+            ></span>
+            <span class="t"><strong>Pix</strong><small>Toque para copiar a chave</small></span>
+            <span class="go" aria-hidden="true">›</span>
+          </button>
+        </li>
+        <li>
+          <div class="card info" style="--c: #0b2f6e">
+            <span class="ico"
+              ><svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 7.5V12l3 2" /></svg
+            ></span>
+            <span class="t"
+              ><strong>Horário</strong><small>Segunda a sábado, 08:00 às 18:00</small></span
+            >
+          </div>
+        </li>
+      </ul>
+
+      <section class="about" aria-labelledby="h-about">
+        <h2 id="h-about">Sobre mim</h2>
+        <p>
+          Sou a Ana Paula e cuido da limpeza da sua casa com o mesmo carinho que tenho com a minha.
+          Trabalho sozinha, então é sempre eu quem vai até você. Uso os seus produtos de limpeza e o
+          valor depende do tamanho da casa: me conte como ela é e eu mando o orçamento.
+        </p>
+        <ul class="promises">
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z" />
+              <path d="M9 12l2 2 4-4" /></svg
+            >Trabalho com dedicação e respeito
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="8.5" />
+              <path d="M12 7.5V12l3 2" /></svg
+            >Pontualidade e compromisso
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg
+            >Sua satisfação é a minha prioridade
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 3h6M10 3v4l-4 4v9h12v-9l-4-4V3" />
+              <path d="M6 14h12" /></svg
+            >Uso os produtos da sua casa
+          </li>
+        </ul>
+      </section>
+
+      <a class="fab" href="#" data-open="quote" aria-label="Pedir orçamento pelo WhatsApp">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.3 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.1.1.7-.1 1.3z"
+          />
+        </svg>
+      </a>
+
+      <div class="wave" aria-hidden="true">
+        <svg viewBox="0 0 430 110" preserveAspectRatio="none">
+          <path d="M0 30Q110 0 215 26T430 22V110H0Z" fill="#5aaef5" opacity=".5" />
+          <path class="deep" d="M0 44Q120 14 230 42T430 36V110H0Z" fill="#0b2f6e" />
+        </svg>
+      </div>
+      <!-- Pedido do usuário: área de atendimento no fim da página, sem cartão próprio. -->
+      <p class="foot">
+        <span class="area"
+          ><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21z" />
+            <circle cx="12" cy="9.5" r="2.5" /></svg
+          ><span>Atendimento em toda Fortaleza<br />e região metropolitana</span></span
+        >
+        <small>Casa Limpa · Limpeza residencial</small>
+      </p>
+    </main>
+
+    <!-- Pedir orçamento: perguntas de tocar que viram a mensagem do WhatsApp. -->
+    <div
+      class="sheet viewer"
+      id="viewer"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="h-viewer"
+      hidden
+    >
+      <div class="panel">
+        <div class="panel-head">
+          <h2 id="h-viewer">Meus trabalhos</h2>
+          <button class="close" type="button" data-close aria-label="Fechar">×</button>
+        </div>
+        <video id="player" controls playsinline></video>
+      </div>
+    </div>
+
+    <div class="sheet" id="quote" role="dialog" aria-modal="true" aria-labelledby="h-quote" hidden>
+      <div class="panel">
+        <div class="panel-head">
+          <h2 id="h-quote">Pedir orçamento</h2>
+          <button class="close" type="button" data-close aria-label="Fechar">×</button>
+        </div>
+        <p class="lead">
+          O valor depende do tamanho da casa. Responda e eu mando o orçamento pelo WhatsApp.
+        </p>
+
+        <fieldset>
+          <legend>O que você precisa limpar?</legend>
+          <div class="opts" data-q="what" data-multi>
+            <button class="opt" type="button" aria-pressed="false">Casa toda</button>
+            <button class="opt" type="button" aria-pressed="false">Cozinha</button>
+            <button class="opt" type="button" aria-pressed="false">Banheiros</button>
+            <button class="opt" type="button" aria-pressed="false">Quartos</button>
+            <button class="opt" type="button" aria-pressed="false">Janelas e vidros</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Como é o imóvel?</legend>
+          <div class="opts" data-q="kind">
+            <button class="opt" type="button" aria-pressed="false">Casa</button>
+            <button class="opt" type="button" aria-pressed="false">Apartamento</button>
+          </div>
+        </fieldset>
+
+        <div class="row2">
+          <fieldset>
+            <legend>Quartos</legend>
+            <div class="opts" data-q="rooms">
+              <button class="opt" type="button" aria-pressed="false">1</button>
+              <button class="opt" type="button" aria-pressed="false">2</button>
+              <button class="opt" type="button" aria-pressed="false">3</button>
+              <button class="opt" type="button" aria-pressed="false">4+</button>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Banheiros</legend>
+            <div class="opts" data-q="baths">
+              <button class="opt" type="button" aria-pressed="false">1</button>
+              <button class="opt" type="button" aria-pressed="false">2</button>
+              <button class="opt" type="button" aria-pressed="false">3+</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <fieldset>
+          <legend>Com que frequência?</legend>
+          <div class="opts" data-q="freq">
+            <button class="opt" type="button" aria-pressed="false">Só uma vez</button>
+            <button class="opt" type="button" aria-pressed="false">Toda semana</button>
+            <button class="opt" type="button" aria-pressed="false">A cada 15 dias</button>
+            <button class="opt" type="button" aria-pressed="false">Uma vez por mês</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <label class="q" for="hood">Bairro e cidade</label>
+          <input
+            type="text"
+            id="hood"
+            autocomplete="address-level3"
+            placeholder="Ex.: Messejana, Fortaleza"
+            maxlength="60"
+          />
+        </fieldset>
+
+        <div class="note">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 3h6M10 3v4l-4 4v9h12v-9l-4-4V3" />
+            <path d="M6 14h12" />
+          </svg>
+          Eu uso os produtos de limpeza da sua casa.
+        </div>
+
+        <button class="send" type="button" id="send" aria-disabled="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.3 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.1.1.7-.1 1.3z"
+            /></svg
+          >Enviar pelo WhatsApp
+        </button>
+        <p class="missing" id="missing" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="sheet" id="feedback" role="dialog" aria-modal="true" aria-labelledby="h-fb" hidden>
+      <div class="panel">
+        <div class="panel-head">
+          <h2 id="h-fb">Feedback de clientes</h2>
+          <button class="close" type="button" data-close aria-label="Fechar">×</button>
+        </div>
+        <p class="lead">O que as clientes dizem depois da faxina.</p>
+        <!-- Lugar dos prints: a cliente manda as conversas/avaliações. -->
+        <div class="prints">
+          <div>Print da cliente 1</div>
+          <div>Print da cliente 2</div>
+          <div>Print da cliente 3</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet" id="pix" role="dialog" aria-modal="true" aria-labelledby="h-pix" hidden>
+      <div class="panel">
+        <div class="panel-head">
+          <h2 id="h-pix">Pix</h2>
+          <button class="close" type="button" data-close aria-label="Fechar">×</button>
+        </div>
+        <!-- Chave ILUSTRATIVA: trocar pela chave real da cliente. -->
+        <div class="pixkey">
+          <small>Chave Pix (ilustrativa)</small>
+          <strong id="pix-key">casalimpa@exemplo.com</strong>
+          <small>Ana Paula · Banco a confirmar</small>
+        </div>
+        <button class="send" type="button" id="copy-pix" style="background: #0f8f84">
+          Copiar chave
+        </button>
+      </div>
+    </div>
+
+    <div class="sheet" id="ana" role="dialog" aria-modal="true" aria-labelledby="h-ana" hidden>
+      <div class="panel">
+        <div class="panel-head">
+          <h2 id="h-ana">Quem cuida da sua casa</h2>
+          <button class="close" type="button" data-close aria-label="Fechar">×</button>
+        </div>
+        <div class="ana">
+          <img src="ref/casalimpa-ana.jpg" alt="Ana Paula, sorrindo, de óculos e blusa branca" />
+          <div><strong>Ana Paula</strong><small>Diarista · Fortaleza e região</small></div>
+        </div>
+        <p class="lead">
+          Eu cuido da limpeza para você ter mais tempo para o que importa. Sou sempre eu quem vai
+          até a sua casa.
+        </p>
+        <button class="send" type="button" data-open="quote" style="background: var(--navy)">
+          Pedir orçamento
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const phone = document.querySelector(".phone");
+      // Ferramentas do protótipo.
+      document.querySelectorAll(".tools [data-set]").forEach((b) =>
+        b.addEventListener("click", () => {
+          const key = b.dataset.set;
+          phone.dataset[key] = b.dataset.v;
+          document
+            .querySelectorAll(`.tools [data-set="${key}"]`)
+            .forEach((o) => o.setAttribute("aria-pressed", String(o === b)));
+        }),
+      );
+
+      // Bolhas e brilhos de 4 pontas (como os da arte).
+      const fx = document.getElementById("fx");
+      [
+        [72, 4, 120],
+        [84, 30, 70],
+        [-6, 52, 90],
+        [62, 74, 56],
+      ].forEach(([x, y, d]) => {
+        const k = document.createElement("span");
+        k.className = "bokeh";
+        k.style.cssText = `left:${x}%;top:${y}%;width:${d}px;height:${d}px`;
+        fx.append(k);
+      });
+      const star =
+        '<svg viewBox="-10 -10 20 20"><path d="M0-10C1-3 3-1 10 0C3 1 1 3 0 10C-1 3-3 1-10 0C-3-1-1-3 0-10Z"/></svg>';
+      [
+        [8, 22, 16, 0],
+        [22, 14, 22, -6],
+        [41, 30, 19, -11],
+        [63, 18, 24, -3],
+        [79, 26, 17, -8],
+        [91, 12, 21, -14],
+      ].forEach(([x, s, d, w]) => {
+        const b = document.createElement("span");
+        b.className = "bubble";
+        b.style.cssText = `left:${x}%;width:${s}px;height:${s}px;--d:${d}s;--w:${w}s;--x:${x > 50 ? -16 : 16}px`;
+        fx.append(b);
+      });
+      [
+        [10, 8, 18, 3.6, 0],
+        [86, 6, 22, 4.4, -1.2],
+        [92, 30, 14, 3.2, -2],
+        [6, 44, 14, 5, -0.6],
+        [88, 58, 18, 4, -2.8],
+        [12, 74, 20, 4.6, -1.8],
+        [80, 86, 14, 3.8, -0.4],
+      ].forEach(([x, y, s, d, w]) => {
+        const e = document.createElement("span");
+        e.className = "spark";
+        e.style.cssText = `left:${x}%;top:${y}%;--s:${s}px;--d:${d}s;--w:${w}s`;
+        e.innerHTML = star;
+        fx.append(e);
+      });
+
+      // Painéis.
+      let lastFocus = null;
+      const open = (id) => {
+        document.querySelectorAll(".sheet").forEach((s) => (s.hidden = true));
+        const s = document.getElementById(id);
+        lastFocus = lastFocus || document.activeElement;
+        s.hidden = false;
+        s.querySelector(".close").focus();
+      };
+      const closeAll = () => {
+        document.querySelectorAll(".sheet").forEach((s) => (s.hidden = true));
+        player.pause();
+        lastFocus?.focus();
+        lastFocus = null;
+      };
+      document.querySelectorAll("[data-open]").forEach((b) =>
+        b.addEventListener("click", (e) => {
+          e.preventDefault();
+          open(b.dataset.open);
+        }),
+      );
+      document
+        .querySelectorAll("[data-close]")
+        .forEach((b) => b.addEventListener("click", closeAll));
+      document.querySelectorAll(".sheet").forEach((s) =>
+        s.addEventListener("click", (e) => {
+          if (e.target === s) closeAll();
+        }),
+      );
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeAll();
+      });
+
+      // Meus trabalhos: abre o vídeo grande, com som.
+      const player = document.getElementById("player");
+      document.querySelectorAll(".tile").forEach((t) =>
+        t.addEventListener("click", () => {
+          document.getElementById("h-viewer").textContent = t.dataset.title;
+          player.src = t.dataset.video;
+          open("viewer");
+          player.play().catch(() => {});
+        }),
+      );
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches)
+        document.querySelectorAll(".tile video").forEach((v) => v.pause());
+
+      // Pix: copia a chave e avisa.
+      document.getElementById("copy-pix").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(document.getElementById("pix-key").textContent);
+        } catch {}
+        const t = document.createElement("div");
+        t.className = "toast";
+        t.setAttribute("role", "status");
+        t.textContent = "Chave copiada";
+        document.body.append(t);
+        setTimeout(() => t.remove(), 2000);
+      });
+
+      // Orçamento.
+      const answers = { what: [], kind: "", rooms: "", baths: "", freq: "" };
+      const sync = () => {
+        document.querySelectorAll(".opts").forEach((g) => {
+          const v = answers[g.dataset.q];
+          g.querySelectorAll(".opt").forEach((o) =>
+            o.setAttribute(
+              "aria-pressed",
+              String(Array.isArray(v) ? v.includes(o.textContent) : v === o.textContent),
+            ),
+          );
+        });
+        const hood = document.getElementById("hood").value.trim();
+        const miss = [];
+        if (!answers.what.length) miss.push("o que limpar");
+        if (!answers.kind) miss.push("o imóvel");
+        if (!answers.rooms) miss.push("os quartos");
+        if (!answers.baths) miss.push("os banheiros");
+        if (!hood) miss.push("o bairro");
+        document.getElementById("send").setAttribute("aria-disabled", String(miss.length > 0));
+        document.getElementById("missing").textContent = miss.length
+          ? `Falta escolher ${miss.join(", ")}.`
+          : "";
+        return { hood, ok: !miss.length };
+      };
+      document.querySelectorAll(".opts").forEach((g) =>
+        g.querySelectorAll(".opt").forEach((o) =>
+          o.addEventListener("click", () => {
+            const q = g.dataset.q;
+            const v = o.textContent;
+            if ("multi" in g.dataset) {
+              answers[q] = answers[q].includes(v)
+                ? answers[q].filter((x) => x !== v)
+                : [...answers[q], v];
+            } else {
+              answers[q] = answers[q] === v ? "" : v;
+            }
+            sync();
+          }),
+        ),
+      );
+      document.getElementById("hood").addEventListener("input", sync);
+      document.getElementById("send").addEventListener("click", () => {
+        const { hood, ok } = sync();
+        if (!ok) return;
+        const plural = (n, one, many) => `${n} ${n === "1" ? one : many}`;
+        const lines = [
+          "Oi, Ana Paula! Vim pelo Bio Site e gostaria de um orçamento.",
+          `• Limpeza: ${answers.what.join(", ")}`,
+          `• ${answers.kind} com ${plural(answers.rooms, "quarto", "quartos")} e ${plural(answers.baths, "banheiro", "banheiros")}`,
+          answers.freq && `• Frequência: ${answers.freq}`,
+          `• Bairro: ${hood}`,
+        ].filter(Boolean);
+        window.open(
+          `https://wa.me/5585987154785?text=${encodeURIComponent(lines.join("\n"))}`,
+          "_blank",
+          "noopener",
+        );
+      });
+      sync();
+
+      document.getElementById("share").addEventListener("click", () => {
+        navigator.share?.({ title: "Casa Limpa", url: location.href });
+      });
+    </script>
+  </body>
+</html>

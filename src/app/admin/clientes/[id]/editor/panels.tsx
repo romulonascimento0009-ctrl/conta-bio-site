@@ -16,7 +16,10 @@ import {
   MAX_CATALOG_CATEGORIES,
   MAX_CATALOG_PRODUCTS,
   MAX_PRODUCT_MEDIA,
+  MAX_QUOTE_OPTIONS,
+  MAX_QUOTE_QUESTIONS,
   MAX_TEAM_MEMBERS,
+  MAX_VIDEOS_BLOCK,
   resolveLink,
   type BioDocument,
   type CatalogCategory,
@@ -25,6 +28,7 @@ import {
   type Hero,
   type LinkAction,
   type MediaItem,
+  type QuoteQuestion,
   type TeamMember,
 } from "@/sites/bio";
 import { formatPrice, nextItemId, parsePrice } from "@/sites/catalog";
@@ -416,7 +420,11 @@ function blockLabel(b: Block): string {
                 ? "Catálogo"
                 : b.type === "team"
                   ? "Equipe"
-                  : "Texto";
+                  : b.type === "quote"
+                    ? "Orçamento"
+                    : b.type === "videos"
+                      ? "Vídeos"
+                      : "Texto";
   const title = "title" in b && b.title ? b.title : "";
   return title && title !== kind ? `${title} · ${kind}` : kind;
 }
@@ -442,7 +450,7 @@ export function BlocksPanel({
 
   function add() {
     const first = assets[0] && { assetId: assets[0].id, alt: assets[0].alt };
-    const b = newBlock(doc, newType, first);
+    const b = newBlock(doc, newType, first, videos[0] && { videoId: videos[0].id });
     if (!b) return;
     dispatch({ type: "block-add", block: b, afterId: selected });
     onSelect(b.id);
@@ -531,7 +539,8 @@ export function BlocksPanel({
           disabled={
             ((newType === "gallery" || newType === "catalog" || newType === "team") &&
               !assets.length) ||
-            (newType === "catalog" && doc.blocks.some((b) => b.type === "catalog"))
+            (newType === "catalog" && doc.blocks.some((b) => b.type === "catalog")) ||
+            (newType === "videos" && !videos.length)
           }
           className="rounded-md border border-border bg-white px-4 py-2 text-sm font-medium disabled:opacity-50"
         >
@@ -542,6 +551,9 @@ export function BlocksPanel({
         )}
         {(newType === "gallery" || newType === "catalog" || newType === "team") &&
           !assets.length && <p className="text-xs text-muted">Envie imagens antes.</p>}
+        {newType === "videos" && !videos.length && (
+          <p className="text-xs text-muted">Envie vídeos antes (aba Imagens → Vídeos).</p>
+        )}
       </div>
 
       {block ? (
@@ -814,6 +826,10 @@ function BlockEditor({
       return <CatalogEditor block={block} assets={assets} videos={videos} set={set} />;
     case "team":
       return <TeamEditor block={block} assets={assets} set={set} />;
+    case "quote":
+      return <QuoteEditor block={block} doc={doc} set={set} />;
+    case "videos":
+      return <VideosEditor block={block} assets={assets} videos={videos} set={set} />;
     case "text":
       return (
         <Section title="Texto">
@@ -1388,6 +1404,309 @@ function TeamEditor({
   );
 }
 
+/* ---------- Pedir orçamento ---------- */
+
+const QUOTE_KINDS: { value: QuoteQuestion["kind"]; label: string }[] = [
+  { value: "single", label: "Tocar numa opção" },
+  { value: "multi", label: "Tocar em várias opções" },
+  { value: "text", label: "Escrever (ex.: bairro)" },
+];
+
+function QuoteEditor({
+  block,
+  doc,
+  set,
+}: {
+  block: BlockOf<"quote">;
+  doc: BioDocument;
+  set: (patch: Record<string, unknown>, field: string) => void;
+}) {
+  const qs = block.questions;
+  const setQs = (list: QuoteQuestion[], field: string) =>
+    set({ questions: list }, `questions.${field}`);
+  const upd = (i: number, patch: Partial<QuoteQuestion>, field: string) =>
+    setQs(
+      qs.map((q, j) => (j === i ? clean({ ...q, ...patch }) : q)),
+      `${i}.${field}`,
+    );
+  return (
+    <Section title="Pedir orçamento">
+      {!doc.contact.whatsapp && (
+        <p role="note" className="rounded bg-amber-50 p-2 text-sm text-amber-900">
+          Preencha o número do WhatsApp na aba Contato: o orçamento chega lá com a mensagem pronta
+          (link de grupo não leva mensagem).
+        </p>
+      )}
+      <TextField
+        label="Título do cartão"
+        value={block.title}
+        onChange={(v) => set({ title: v }, "title")}
+        maxLength={40}
+      />
+      <TextField
+        label="Subtítulo do cartão (opcional)"
+        value={block.subtitle ?? ""}
+        placeholder="Ex.: Responda 4 perguntas rápidas"
+        onChange={(v) => set({ subtitle: v }, "subtitle")}
+        maxLength={90}
+      />
+      <TextField
+        label="Texto no alto das perguntas (opcional)"
+        value={block.intro ?? ""}
+        multiline
+        placeholder="Ex.: O valor depende do tamanho da casa. Responda e eu mando o orçamento."
+        onChange={(v) => set({ intro: v }, "intro")}
+        maxLength={200}
+      />
+      <TextField
+        label="Aviso antes do botão (opcional)"
+        value={block.note ?? ""}
+        placeholder="Ex.: Eu uso os produtos de limpeza da sua casa."
+        onChange={(v) => set({ note: v }, "note")}
+        maxLength={160}
+      />
+      <TextField
+        label="Primeira linha da mensagem"
+        value={block.greeting}
+        hint="As respostas vão embaixo, uma por linha (ex.: “• Quartos: 2”)."
+        onChange={(v) => set({ greeting: v }, "greeting")}
+        maxLength={200}
+      />
+      <ol className="grid gap-3">
+        {qs.map((q, i) => (
+          <li key={q.id} className="grid gap-2 rounded-md bg-slate-50 p-2">
+            <TextField
+              label={`Pergunta ${i + 1}`}
+              value={q.label}
+              onChange={(v) => upd(i, { label: v }, "label")}
+              maxLength={60}
+            />
+            <Select
+              label={`Pergunta ${i + 1} — como responder`}
+              value={q.kind}
+              options={QUOTE_KINDS}
+              onChange={(kind) => upd(i, { kind }, "kind")}
+            />
+            {q.kind === "text" ? (
+              <TextField
+                label={`Pergunta ${i + 1} — exemplo dentro da caixa (opcional)`}
+                value={q.placeholder ?? ""}
+                placeholder="Ex.: Messejana, Fortaleza"
+                onChange={(v) => upd(i, { placeholder: v }, "placeholder")}
+                maxLength={60}
+              />
+            ) : (
+              <ListField
+                label={`Pergunta ${i + 1} — opções`}
+                hint={`Uma por linha, de 2 a ${MAX_QUOTE_OPTIONS} (até 30 letras cada).`}
+                value={q.options}
+                format={(v) => v.join("\n")}
+                parse={(t) =>
+                  t
+                    .split("\n")
+                    .map((x) => x.trim().slice(0, 30))
+                    .filter(Boolean)
+                    .slice(0, MAX_QUOTE_OPTIONS)
+                }
+                onChange={(options) => upd(i, { options }, "options")}
+              />
+            )}
+            <Check
+              label="Obrigatória (o botão só libera com ela respondida)"
+              checked={q.required}
+              onChange={(required) => upd(i, { required }, "required")}
+            />
+            <div className="flex flex-wrap gap-2 text-sm">
+              <button
+                type="button"
+                disabled={i === 0}
+                aria-label={`Subir a pergunta ${i + 1}`}
+                onClick={() => setQs(moved(qs, i, -1), "order")}
+                className="rounded border border-border px-2 py-1 disabled:opacity-30"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                disabled={i === qs.length - 1}
+                aria-label={`Descer a pergunta ${i + 1}`}
+                onClick={() => setQs(moved(qs, i, 1), "order")}
+                className="rounded border border-border px-2 py-1 disabled:opacity-30"
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                disabled={qs.length === 1}
+                onClick={() =>
+                  setQs(
+                    qs.filter((_, j) => j !== i),
+                    "remove",
+                  )
+                }
+                className="rounded px-2 py-1 text-danger disabled:opacity-30"
+              >
+                Remover pergunta
+              </button>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <button
+        type="button"
+        disabled={qs.length >= MAX_QUOTE_QUESTIONS}
+        onClick={() =>
+          setQs(
+            [
+              ...qs,
+              {
+                id: nextItemId(
+                  qs.map((x) => x.id),
+                  "q",
+                ),
+                label: "Nova pergunta",
+                kind: "single",
+                options: ["Sim", "Não"],
+                required: true,
+              },
+            ],
+            "add",
+          )
+        }
+        className="justify-self-start rounded-md border border-border bg-white px-3 py-2 text-sm font-medium disabled:opacity-50"
+      >
+        + Adicionar pergunta ({qs.length}/{MAX_QUOTE_QUESTIONS})
+      </button>
+      <Check
+        label="Cartão em cor própria, com contorno claro (o principal da página)"
+        checked={!!block.colors}
+        onChange={(on) =>
+          set({ colors: on ? { top: "#1f6ee0", bottom: "#1a56c4" } : undefined }, "colors")
+        }
+      />
+      {block.colors && (
+        <div className="grid gap-2 xl:grid-cols-2">
+          <ColorField
+            label="Cor do cartão: início"
+            value={block.colors.top}
+            onChange={(top) => set({ colors: { ...block.colors!, top } }, "colors.top")}
+          />
+          <ColorField
+            label="Cor do cartão: fim"
+            value={block.colors.bottom}
+            onChange={(bottom) => set({ colors: { ...block.colors!, bottom } }, "colors.bottom")}
+          />
+        </div>
+      )}
+      <IconColor icon="quote" value={block.iconColor} set={set} />
+    </Section>
+  );
+}
+
+/* ---------- Vídeos em destaque ---------- */
+
+function VideosEditor({
+  block,
+  assets,
+  videos,
+  set,
+}: {
+  block: BlockOf<"videos">;
+  assets: EditorAsset[];
+  videos: EditorVideo[];
+  set: (patch: Record<string, unknown>, field: string) => void;
+}) {
+  const list = block.videos;
+  const full = list.length >= MAX_VIDEOS_BLOCK;
+  const thumb = (assetId: string | null | undefined) => {
+    const a = assetId ? assets.find((x) => x.id === assetId) : undefined;
+    return a ? mediaUrl(a.id, a.variants[0]) : undefined;
+  };
+  return (
+    <Section title="Vídeos em destaque">
+      <TextField
+        label="Título"
+        value={block.title}
+        onChange={(v) => set({ title: v }, "title")}
+        maxLength={40}
+      />
+      <TextField
+        label="Texto ao lado do título (opcional)"
+        value={block.subtitle ?? ""}
+        placeholder="Ex.: Toque para assistir"
+        onChange={(v) => set({ subtitle: v }, "subtitle")}
+        maxLength={40}
+      />
+      <fieldset className="grid gap-2">
+        <legend className="text-sm font-medium">
+          Vídeos (na ordem em que forem marcados, até {MAX_VIDEOS_BLOCK})
+        </legend>
+        <div className="flex flex-wrap gap-2">
+          {videos.map((v) => {
+            const on = list.some((x) => x.videoId === v.id);
+            const src = thumb(v.posterAssetId);
+            return (
+              <button
+                key={v.id}
+                type="button"
+                aria-pressed={on}
+                aria-label={`Vídeo: ${v.name}`}
+                disabled={(!on && full) || (on && list.length === 1)}
+                onClick={() =>
+                  set(
+                    {
+                      videos: on
+                        ? list.filter((x) => x.videoId !== v.id)
+                        : [...list, { videoId: v.id }],
+                    },
+                    "videos-" + v.id,
+                  )
+                }
+                className={`relative h-16 w-16 overflow-hidden rounded border ${on ? "border-accent ring-2 ring-accent" : "border-border opacity-60"} disabled:opacity-30`}
+              >
+                {src && (
+                  // eslint-disable-next-line @next/next/no-img-element -- miniatura própria
+                  <img src={src} alt="" className="h-full w-full object-cover" />
+                )}
+                <span className="absolute inset-x-0 bottom-0 bg-black/70 text-[10px] font-bold text-white">
+                  ▶ vídeo
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {videos.length === 0 && (
+          <p className="text-xs text-muted">Envie os vídeos na aba Imagens → Vídeos.</p>
+        )}
+      </fieldset>
+      {list.map((x, i) => (
+        <TextField
+          key={x.videoId}
+          label={`Vídeo ${i + 1} — nome (opcional)`}
+          value={x.title ?? ""}
+          placeholder="Ex.: Banheiro e cozinha"
+          onChange={(t) =>
+            set(
+              { videos: list.map((y, j) => (j === i ? clean({ ...y, title: t }) : y)) },
+              `videos.${i}.title`,
+            )
+          }
+          maxLength={40}
+        />
+      ))}
+      <Check
+        label="O primeiro vídeo toca sozinho, sem som"
+        checked={block.autoplay}
+        onChange={(autoplay) => set({ autoplay }, "autoplay")}
+      />
+      <p className="text-xs text-muted">
+        Cada visita baixa o primeiro vídeo inteiro (banda da Netlify): prefira o mais curto em
+        primeiro. Fica parado para quem desligou as animações.
+      </p>
+    </Section>
+  );
+}
+
 function LinkEditor({
   block,
   doc,
@@ -1617,6 +1936,14 @@ export function ProfilePanel({
           maxLength={40}
           placeholder="Ex.: Campinas/SP"
         />
+        <TextField
+          label="Área de atendimento (opcional)"
+          value={p.serviceArea ?? ""}
+          onChange={(v) => set({ serviceArea: v }, "serviceArea")}
+          maxLength={120}
+          placeholder="Ex.: Atendimento em toda Fortaleza e região metropolitana"
+          hint="Aparece no rodapé, com o ícone de localização (para quem atende na casa do cliente)."
+        />
         <Check
           label="Mostrar botão Compartilhar"
           checked={p.showShare}
@@ -1646,6 +1973,16 @@ export function ProfilePanel({
             label="O logo já tem o nome e o slogan (esconde os textos repetidos)"
             checked={!!p.logoHasName}
             onChange={(v) => set({ logoHasName: v || undefined }, "logoHasName")}
+          />
+        )}
+        {p.logo && p.logoFrame === "none" && (
+          <Range
+            label="Largura do logo"
+            value={p.logoWidth ?? 210}
+            min={120}
+            max={300}
+            unit="px"
+            onChange={(v) => set({ logoWidth: v === 210 ? undefined : v }, "logoWidth")}
           />
         )}
         {p.logo && p.logoHasName && (
@@ -2132,6 +2469,11 @@ function StandardDetails({ doc, dispatch }: { doc: BioDocument; dispatch: Dispat
         onChange={(on) => theme({ darkPanels: on || undefined })}
       />
       <Check
+        label="Ícones em círculo branco (desenho na cor do texto dos painéis)"
+        checked={!!th.iconsLight}
+        onChange={(on) => theme({ iconsLight: on || undefined })}
+      />
+      <Check
         label="Reflexo de luz passando no fundo"
         checked={!!th.shine}
         onChange={(on) => theme({ shine: on || undefined })}
@@ -2144,6 +2486,7 @@ function StandardDetails({ doc, dispatch }: { doc: BioDocument; dispatch: Dispat
           { value: "electric", label: "Elétrico (raios, neon, engrenagens, faíscas)" },
           { value: "glitter", label: "Glitter (brilho caindo, pétalas, anel no logo)" },
           { value: "slabs", label: "Placas com luz (placas em ângulo, luz nas quinas)" },
+          { value: "bubbles", label: "Bolhas e brilhos (bolhas subindo, brilhos, onda no rodapé)" },
         ]}
         onChange={(v) => theme({ effects: v === "none" ? undefined : v })}
       />
@@ -2157,6 +2500,13 @@ function StandardDetails({ doc, dispatch }: { doc: BioDocument; dispatch: Dispat
         <p className="text-xs text-muted">
           O glitter usa as cores da borda e a cor do texto dos painéis; o logo ganha um anel de
           brilho girando. Fica parado para quem desligou as animações no celular.
+        </p>
+      )}
+      {th.effects === "bubbles" && (
+        <p className="text-xs text-muted">
+          Bolhas de sabão sobem devagar, bolhas grandes desfocadas e brilhos de 4 pontas piscam no
+          fundo; o rodapé ganha uma onda na cor dos cartões. Fica parado para quem desligou as
+          animações no celular.
         </p>
       )}
       {th.effects === "slabs" && (

@@ -13,6 +13,7 @@ Status: **aprovada em 2026-10-13**; produto redefinido para Bio Sites (D19). Imp
 - `src/sites/render/` — `BioRenderer` (componente de servidor), `bio.css`, `Icon.tsx`, `client-buttons.tsx` (Compartilhar, Copiar senha — únicos trechos com JS no navegador), `fonts.ts`, `media.ts`.
 - `src/clients/` — slug (com `RESERVED_SLUGS`), segmentos, briefing (campos reutilizados pela edição rápida), situações.
 - `src/media/process.ts` — validação e variantes WebP com sharp (remove EXIF).
+- `src/sites/quote.ts` — mensagem do "Pedir orçamento" (D54); painel em `src/sites/render/Quote.tsx`. Vídeos em destaque (D55): `src/sites/render/VideoTiles.tsx`. Efeito bolhas (D56): `BubblesFx.tsx`.
 - `src/media/video.ts` — vídeos (D50): formato real pelo conteúdo, partes de 3 MB, trechos (Range) de até 2 MB; dados em `src/data/videos.ts`.
 - `src/sites/metrics.ts` — regras das métricas (origem, robôs, alvos aceitos, visitante diário); `src/data/metrics.ts` — `recordEvent` (público, via `src/app/api/m`) e `getMetrics`; `Tracker` em `src/sites/render/client-buttons.tsx`.
 - `src/data/` — **camada de acesso a dados**: única porta para o banco. Funções por cliente passam por `getClient()` (confere o acesso); exclusivas do operador chamam `requireOperator()`; públicas: `getPublishedSiteBySlug`, `findAssetVariant`, `lookupInvite`, `acceptInvite`.

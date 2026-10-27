@@ -178,8 +178,15 @@ export const themeSchema = z
      * (Mage Beauty); glitter nas cores da borda, contornado na cor do texto dos painéis.
      * "slabs" = placas em ângulo que deslizam sobre o fundo, com luz correndo pelas quinas, e o
      * fundo da página aproximando devagar (Reistyle); luz nas cores da borda.
+     * "bubbles" = bolhas de sabão subindo devagar, bolhas grandes desfocadas e brilhos de 4 pontas
+     * piscando, com uma onda no rodapé (Casa Limpa, limpeza residencial).
      */
-    effects: z.enum(["electric", "glitter", "slabs"]).optional(),
+    effects: z.enum(["electric", "glitter", "slabs", "bubbles"]).optional(),
+    /**
+     * Ícones em círculo branco com o desenho na cor do texto dos painéis (Casa Limpa). Ícones de
+     * marca (Instagram, Google, Pix) e os de cor própria continuam como são.
+     */
+    iconsLight: z.boolean().optional(),
     /** Cor dos cartões: cor do texto (ausente = branco), sobre o degradê cardTop → cardBottom. */
     cardText: hex.optional(),
     /** Visual padrão sobre fundo claro: topo com texto na cor dos painéis (o cetim já é assim). */
@@ -549,6 +556,83 @@ export const teamBlock = z
     });
   });
 
+/**
+ * Pedir orçamento (Casa Limpa, 2026-10-27): perguntas de tocar (uma ou várias opções) e de
+ * escrever; as respostas viram a mensagem pronta no WhatsApp do cliente (src/sites/quote.ts).
+ * Precisa do número em Contato (link de grupo não leva mensagem).
+ */
+export const MAX_QUOTE_QUESTIONS = 8;
+export const MAX_QUOTE_OPTIONS = 8;
+export const quoteQuestion = z.object({
+  id: itemId,
+  label: text(60),
+  /** "single" = uma opção; "multi" = várias; "text" = a pessoa escreve (ex.: bairro). */
+  kind: z.enum(["single", "multi", "text"]),
+  options: z.array(text(30)).max(MAX_QUOTE_OPTIONS).default([]),
+  required: z.boolean().default(true),
+  placeholder: optText(60),
+});
+export type QuoteQuestion = z.infer<typeof quoteQuestion>;
+export const quoteBlock = z
+  .object({
+    ...blockBase,
+    type: z.literal("quote"),
+    title: text(40).default("Pedir orçamento"),
+    subtitle: optText(90),
+    /** Texto no alto do painel (ex.: "O valor depende do tamanho da casa…"). */
+    intro: optText(200),
+    /** Aviso antes do botão de enviar (ex.: "Eu uso os produtos de limpeza da sua casa."). */
+    note: optText(160),
+    /** Primeira linha da mensagem; as respostas vêm embaixo, uma por linha. */
+    greeting: text(200).default("Oi! Vim pelo Bio Site e gostaria de um orçamento."),
+    questions: z.array(quoteQuestion).min(1).max(MAX_QUOTE_QUESTIONS),
+    /** Degradê próprio do cartão (texto branco), com contorno claro: o cartão principal. */
+    colors: z.object({ top: hex, bottom: hex }).optional(),
+    ...iconColor,
+  })
+  .superRefine((b, ctx) => {
+    checkIconColor(ctx, b.iconColor);
+    if (b.colors) {
+      checkContrast(ctx, ["colors", "top"], WHITE, b.colors.top, "branco/cor do cartão (topo)");
+      checkContrast(
+        ctx,
+        ["colors", "bottom"],
+        WHITE,
+        b.colors.bottom,
+        "branco/cor do cartão (base)",
+      );
+    }
+    const ids = new Set<string>();
+    b.questions.forEach((q, i) => {
+      if (ids.has(q.id))
+        ctx.addIssue({ code: "custom", path: ["questions", i, "id"], message: "id repetido" });
+      ids.add(q.id);
+      if (q.kind !== "text" && q.options.length < 2)
+        ctx.addIssue({
+          code: "custom",
+          path: ["questions", i, "options"],
+          message: `“${q.label}”: escreva ao menos duas opções`,
+        });
+    });
+  });
+
+/**
+ * Vídeos em destaque ("Meus trabalhos", Casa Limpa): quadro com os vídeos lado a lado; o
+ * primeiro toca sozinho, sem som (`autoplay`); tocar em qualquer um abre o vídeo grande, com som.
+ */
+export const MAX_VIDEOS_BLOCK = 6;
+export const videosBlock = z.object({
+  ...blockBase,
+  type: z.literal("videos"),
+  title: text(40).default("Meus trabalhos"),
+  subtitle: optText(40),
+  videos: z
+    .array(videoRef.extend({ title: optText(40) }))
+    .min(1)
+    .max(MAX_VIDEOS_BLOCK),
+  autoplay: z.boolean().default(true),
+});
+
 export const textBlock = z.object({
   ...blockBase,
   type: z.literal("text"),
@@ -565,6 +649,8 @@ export const anyBlock = z.discriminatedUnion("type", [
   pixBlock,
   catalogBlock,
   teamBlock,
+  quoteBlock,
+  videosBlock,
 ]);
 export type Block = z.infer<typeof anyBlock>;
 export type BlockOf<T extends Block["type"]> = Extract<Block, { type: T }>;
@@ -613,6 +699,10 @@ export const bioDocumentSchema = z
       logoHasName: z.boolean().optional(),
       /** Com `logoHasName`: o logo traz só o nome; o slogan continua à vista. */
       keepTagline: z.boolean().optional(),
+      /** Largura do logo sem moldura, em px (ausente = tamanho padrão). */
+      logoWidth: z.int().min(120).max(300).optional(),
+      /** Área de atendimento, no rodapé (ex.: "Atendimento em toda Fortaleza e região"). */
+      serviceArea: optText(120),
     }),
     contact: contactSchema,
     ticker: tickerSchema,
@@ -671,6 +761,15 @@ export const bioDocumentSchema = z
         message: "o botão Agendar abre o WhatsApp: preencha o WhatsApp ou o grupo em Contato",
       });
     }
+    doc.blocks.forEach((b, i) => {
+      if (b.type === "quote" && !doc.contact.whatsapp)
+        ctx.addIssue({
+          code: "custom",
+          path: ["blocks", i],
+          message:
+            "o orçamento vai pelo WhatsApp com a mensagem pronta: preencha o número em Contato",
+        });
+    });
     const seen = new Set<string>();
     doc.blocks.forEach((b, i) => {
       if (seen.has(b.id)) {
@@ -723,11 +822,13 @@ export function collectImageRefs(doc: BioDocument): ImageRef[] {
 /** Todos os vídeos referenciados (para carregar capa e dimensões e conferir a posse). */
 export function collectVideoRefs(doc: BioDocument): VideoRef[] {
   const refs: VideoRef[] = [];
-  for (const b of doc.blocks)
+  for (const b of doc.blocks) {
+    if (b.type === "videos") refs.push(...b.videos);
     if (b.type === "catalog")
       for (const c of b.categories)
         for (const p of c.products)
           for (const m of p.media ?? []) if (m.kind === "video") refs.push(m);
+  }
   return refs;
 }
 

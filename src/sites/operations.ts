@@ -160,6 +160,8 @@ export const NEW_BLOCK_TYPES = {
   pix: "Pix",
   catalog: "Catálogo de produtos (pedido pelo WhatsApp)",
   team: "Equipe (Meu time)",
+  quote: "Pedir orçamento (perguntas → WhatsApp)",
+  videos: "Vídeos em destaque (Meus trabalhos)",
 } as const;
 export type NewBlockType = keyof typeof NEW_BLOCK_TYPES;
 
@@ -168,6 +170,7 @@ export function newBlock(
   doc: BioDocument,
   type: NewBlockType,
   firstImage?: { assetId: string; alt: string },
+  firstVideo?: { videoId: string },
 ): Block | null {
   switch (type) {
     case "link":
@@ -248,6 +251,45 @@ export function newBlock(
             title: "Meu time",
             subtitle: "Conheça nossa equipe",
             members: [{ id: "m1", name: "Nome", role: "Função", photo: firstImage }],
+          }
+        : null;
+    case "quote":
+      // Perguntas de exemplo; o operador troca pelas do ramo do cliente.
+      return {
+        id: uniqueBlockId(doc, "orcamento"),
+        type: "quote",
+        hidden: false,
+        title: "Pedir orçamento",
+        subtitle: "Responda e envie pelo WhatsApp",
+        greeting: "Oi! Vim pelo Bio Site e gostaria de um orçamento.",
+        questions: [
+          {
+            id: "q1",
+            label: "O que você precisa?",
+            kind: "multi",
+            options: ["Serviço 1", "Serviço 2"],
+            required: true,
+          },
+          {
+            id: "q2",
+            label: "Bairro e cidade",
+            kind: "text",
+            options: [],
+            required: true,
+            placeholder: "Ex.: Centro, Fortaleza",
+          },
+        ],
+      };
+    case "videos":
+      return firstVideo
+        ? {
+            id: uniqueBlockId(doc, "videos"),
+            type: "videos",
+            hidden: false,
+            title: "Meus trabalhos",
+            subtitle: "Toque para assistir",
+            videos: [{ videoId: firstVideo.videoId }],
+            autoplay: true,
           }
         : null;
     case "text":

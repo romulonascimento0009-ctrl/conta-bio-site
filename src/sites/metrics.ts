@@ -76,6 +76,9 @@ export const TARGET_LABEL: Record<string, string> = {
   "catalog:book": "Catálogo: tocou em Agendar",
   team: "Equipe (abrir perfis)",
   "team:book": "Equipe: agendar com a pessoa",
+  quote: "Orçamento (abrir perguntas)",
+  "quote:send": "Orçamento: enviado pelo WhatsApp",
+  videos: "Vídeos: assistiu",
   "social:instagram": "Rodapé: Instagram",
   "social:facebook": "Rodapé: Facebook",
   "social:tiktok": "Rodapé: TikTok",
@@ -113,6 +116,14 @@ export function trackTargets(doc: BioDocument): Map<string, { target: string; la
       }
       if (!book)
         map.set("order", { target: "catalog:order", label: TARGET_LABEL["catalog:order"] });
+    } else if (b.type === "quote") {
+      map.set(`b:${b.id}`, { target: "quote", label: b.title });
+      map.set(`q:${b.id}`, { target: "quote:send", label: b.title });
+    } else if (b.type === "videos") {
+      // Toque em cada vídeo (abre o vídeo grande); o que toca sozinho não conta.
+      b.videos.forEach((v, i) =>
+        map.set(`v:${b.id}:${i}`, { target: "videos", label: v.title ?? `Vídeo ${i + 1}` }),
+      );
     } else if (b.type === "team") {
       map.set(`b:${b.id}`, { target: "team", label: b.title });
       for (const m of b.members)

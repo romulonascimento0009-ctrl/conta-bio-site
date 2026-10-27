@@ -2584,3 +2584,408 @@ a.bio-add {
   color: var(--dark-text);
   text-shadow: 0 2px 10px rgb(0 0 0 / 0.9);
 }
+
+/* ---------- Casa Limpa (2026-10-27; protótipo `prototipos/bio-site-casa-limpa.html`) ---------- */
+
+/* Largura própria do logo sem moldura (profile.logoWidth). */
+.bio--logo-w.bio--logo-free .bio-logo,
+.bio--logo-w.bio--logo-name.bio--logo-free .bio-logo {
+  width: min(var(--logo-w), 86%);
+}
+
+/* Ícones em círculo branco com o desenho na cor do texto dos painéis (theme.iconsLight).
+   Marcas (Instagram, Google), Pix (verde da marca), fotos e cor própria ficam como são. */
+.bio--icons-light .bio-card.std .bio-ico {
+  border-radius: 50%;
+}
+.bio--icons-light :is(.bio-ico, .bio-hico):not(.mono, .brand-instagram, .brand-google, .photo) {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 6px 14px -6px rgb(0 0 0 / 0.45);
+}
+.bio--icons-light :is(.bio-ico, .bio-hico)[data-ico="pix"]:not(.mono) {
+  color: #00897b;
+}
+.bio--icons-light
+  :is(.bio-ico, .bio-hico):not(.mono, .brand-instagram, .brand-google, .photo)::after {
+  content: none;
+}
+.bio--icons-light :is(.bio-ico, .bio-hico):not(.mono) svg {
+  filter: none;
+}
+
+/* Cartão com cor própria (orçamento): degradê dele e contorno claro — o principal da página. */
+.bio--std .bio-card.std.own {
+  color: #fff;
+  background:
+    linear-gradient(90deg, var(--card-top), var(--card-bottom)) padding-box,
+    linear-gradient(rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.85)) border-box;
+  border: 2px solid transparent;
+}
+.bio--std .bio-card.std.own small {
+  color: #fff;
+}
+.bio--std .bio-card.std.own::before {
+  content: none;
+}
+
+/* Pedir orçamento (Quote.tsx): perguntas de tocar dentro do painel. */
+.bio-quote {
+  display: grid;
+  gap: 16px;
+}
+.bio-quote-intro,
+.bio-quote-note {
+  line-height: 1.45;
+  opacity: 0.92;
+}
+.bio-quote-note {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.1);
+}
+.bio-quote-q {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.bio-quote-q legend,
+.bio-quote-q label {
+  padding: 0;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+.bio-quote-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bio-quote-opts button {
+  min-height: 42px;
+  padding: 8px 15px;
+  border: 1.5px solid rgb(255 255 255 / 0.35);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.bio-quote-opts button[aria-pressed="true"] {
+  background: #fff;
+  border-color: #fff;
+  color: var(--card-bottom, #13203a);
+}
+.bio-quote-q input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: #fff;
+  color: #13203a;
+  font: inherit;
+}
+.bio-quote-opts button:focus-visible,
+.bio-quote-q input:focus-visible,
+.bio-quote-send:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+.bio-quote-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  border: 0;
+  border-radius: 999px;
+  background: #137a40;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+.bio-quote-send svg {
+  width: 24px;
+  height: 24px;
+}
+.bio-quote-send[aria-disabled="true"] {
+  background: rgb(255 255 255 / 0.18);
+  color: rgb(255 255 255 / 0.85);
+  cursor: not-allowed;
+}
+.bio-quote-missing {
+  min-height: 1.2em;
+  margin-top: -6px;
+  text-align: center;
+  font-size: 0.88rem;
+  opacity: 0.9;
+}
+
+/* Vídeos em destaque (VideoTiles.tsx). */
+.bio-videos-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.bio-videos-head svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  opacity: 0.8;
+}
+.bio-videos-head h2 {
+  margin: 0;
+}
+.bio-videos-head small {
+  margin-left: auto;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+.bio-videos-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+.bio-videos-grid[data-count="1"] {
+  grid-template-columns: minmax(0, 60%);
+  justify-content: center;
+}
+.bio-videos-grid[data-count="2"] {
+  grid-template-columns: repeat(2, 1fr);
+}
+.bio-videos-grid button {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 9 / 14;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 16px;
+  background: #000;
+  cursor: pointer;
+}
+.bio-videos-grid :is(video, img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.bio-videos-play {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.92);
+  display: grid;
+  place-items: center;
+}
+.bio-videos-play svg {
+  width: 13px;
+  height: 13px;
+  margin-left: 2px;
+  fill: #13203a;
+}
+.bio-videos-cap {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 26px 8px 8px;
+  background: linear-gradient(transparent, rgb(0 0 0 / 0.72));
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: left;
+}
+.bio-videos-grid button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+.bio-videos-player {
+  width: 100%;
+  max-height: 74dvh;
+  border-radius: 18px;
+  background: #000;
+}
+
+/* Texto: parágrafo de linhas "- item" vira lista com marcas, em duas colunas. */
+.bio-checks {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.bio-checks li {
+  position: relative;
+  padding-left: 26px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.bio-checks li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.25;
+}
+.bio-checks li::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 4px;
+  width: 5px;
+  height: 9px;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Área de atendimento no rodapé. */
+.bio-sign .bio-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 auto 10px;
+  padding: 0;
+  max-width: 30ch;
+  background: none;
+  color: var(--hero-text, #fff);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.bio-sign .bio-area svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+/* Efeito "bolhas" (BubblesFx.tsx): bolhas grandes desfocadas, bolhas subindo, brilhos de 4 pontas
+   e onda no rodapé. Só transform/opacity. */
+.bio-bokeh {
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 40% 35%,
+    rgb(255 255 255 / 0.28),
+    rgb(255 255 255 / 0.06) 65%
+  );
+  border: 1px solid rgb(255 255 255 / 0.18);
+  filter: blur(1.5px);
+}
+.bio-bubble {
+  bottom: -60px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, rgb(255 255 255 / 0.9) 0 10%, transparent 11%),
+    radial-gradient(circle at 50% 50%, rgb(255 255 255 / 0.04) 50%, rgb(255 255 255 / 0.22) 100%);
+  border: 1px solid rgb(255 255 255 / 0.4);
+  animation: bio-rise var(--d, 18s) linear infinite;
+  animation-delay: var(--w, 0s);
+}
+@keyframes bio-rise {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate(var(--x, 14px), -55vh);
+  }
+  90% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(0, -115vh);
+    opacity: 0;
+  }
+}
+.bio-spark {
+  fill: #cfe6ff;
+  animation: bio-twinkle var(--d, 4s) ease-in-out infinite;
+  animation-delay: var(--w, 0s);
+}
+@keyframes bio-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.6) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(20deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bio-bubble {
+    display: none;
+  }
+  .bio-spark {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+.bio--fx-bubbles .bio-main {
+  padding-bottom: 0;
+}
+.bio--fx-bubbles .bio-sign {
+  position: relative;
+  margin: 30px 0 0;
+  padding: 72px 16px 110px;
+  background: linear-gradient(transparent 56px, var(--card-bottom, var(--ink)) 56px);
+}
+.bio-wave {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 60px;
+}
+.bio-wave .w1 {
+  fill: rgb(255 255 255 / 0.25);
+}
+.bio-wave .w2 {
+  fill: var(--card-bottom, var(--ink));
+}
+.bio--fx-bubbles .bio-sign > span:not(.bio-area) {
+  background: none;
+  color: rgb(255 255 255 / 0.8);
+  letter-spacing: 0.06em;
+}
+/* No visual "bolhas" o topo fica solto sobre o azul: slogan em texto branco (sem faixa) e
+   categorias maiores, sem espaçamento de letras (protótipo aprovado). */
+.bio--fx-bubbles .bio-tagline {
+  padding: 0;
+  background: none;
+  backdrop-filter: none;
+  color: var(--hero-text, #fff);
+  font: 600 1.35rem/1.2 var(--font-display);
+  text-shadow: 0 1px 8px rgb(8 35 100 / 0.35);
+}
+.bio--fx-bubbles .bio-chips {
+  margin-top: 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}

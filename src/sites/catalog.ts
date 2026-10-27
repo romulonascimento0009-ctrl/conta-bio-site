@@ -62,7 +62,7 @@ export function orderTotal(lines: { prod: { priceCents?: number }; qty: number }
 }
 
 /** Próximo id livre com o prefixo (ex.: "c3", "p11"). */
-export function nextItemId(taken: string[], prefix: "c" | "p" | "m"): string {
+export function nextItemId(taken: string[], prefix: "c" | "p" | "m" | "q"): string {
   const used = new Set(taken);
   for (let n = 1; ; n++) if (!used.has(`${prefix}${n}`)) return `${prefix}${n}`;
 }

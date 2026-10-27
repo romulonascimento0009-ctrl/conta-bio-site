@@ -40,8 +40,11 @@ import { GlitterFx } from "./GlitterFx";
 import { loadedFont } from "./fonts";
 import { Icon } from "./Icon";
 import { mediaUrl, videoUrl } from "./media";
+import { BubblesFx } from "./BubblesFx";
+import { QuoteForm } from "./Quote";
 import { SlabsFx } from "./SlabsFx";
 import { TeamProfiles, type TeamView } from "./Team";
+import { VideoTiles, type VideoTile } from "./VideoTiles";
 
 const RADIUS = {
   square: { card: "12px", ico: "8px", panel: "12px" },
@@ -102,7 +105,11 @@ function tileProps(icon: IconId | SectionIconId, base: string, custom?: string) 
   const def: { color: string; tile?: string } =
     icon in SECTION_ICONS ? SECTION_ICONS[icon as SectionIconId] : ICONS[icon as IconId];
   const cls = custom ? `${base} mono` : def.tile ? `${base} ${def.tile}` : base;
-  return { className: cls, style: glossVars(custom ?? def.color) as CSSProperties };
+  return {
+    className: cls,
+    style: glossVars(custom ?? def.color) as CSSProperties,
+    "data-ico": icon,
+  };
 }
 
 function SectionIcon({ icon, color }: { icon: SectionIconId; color?: string }) {
@@ -368,6 +375,63 @@ function TeamCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"team"> }) {
   );
 }
 
+/**
+ * "Pedir orçamento": cartão que abre as perguntas por cima da página. Com cor própria, o cartão
+ * leva o degradê dela e um contorno claro (o cartão principal da página).
+ */
+function QuoteCard({ ctx, block }: { ctx: Ctx; block: BlockOf<"quote"> }) {
+  const whatsapp = ctx.doc.contact.whatsapp;
+  if (!whatsapp) return null;
+  const base = stdCard(block.iconColor ?? ICONS.quote.color);
+  return (
+    <li>
+      <SheetCard
+        className={block.colors ? `${base.className} own` : base.className}
+        style={
+          block.colors
+            ? ({
+                ...base.style,
+                "--card-top": block.colors.top,
+                "--card-bottom": block.colors.bottom,
+              } as CSSProperties)
+            : base.style
+        }
+        track={`b:${block.id}`}
+        blockId={block.id}
+        title={block.title}
+        trigger={
+          <StdCardBody
+            icon="quote"
+            iconColor={block.iconColor}
+            title={block.title}
+            subtitle={cardSubtitle(block.subtitle)}
+          />
+        }
+      >
+        <QuoteForm block={block} whatsapp={whatsapp} />
+      </SheetCard>
+    </li>
+  );
+}
+
+/** Vídeos prontos do bloco (com capa) para o componente do navegador. */
+function videoTiles(ctx: Ctx, block: BlockOf<"videos">): VideoTile[] {
+  const list: VideoTile[] = [];
+  for (const ref of block.videos) {
+    const v = ctx.videos.get(ref.videoId);
+    if (!v) continue;
+    const poster = v.posterAssetId ? ctx.assets.get(v.posterAssetId) : undefined;
+    const pw = poster && (poster.variants.find((w) => w >= 480) ?? poster.variants.at(-1)!);
+    list.push({
+      src: videoUrl(v.id, v.mime),
+      type: v.mime === "video/quicktime" ? "video/mp4" : v.mime,
+      poster: poster && pw ? mediaUrl(poster.id, pw) : null,
+      title: ref.title,
+    });
+  }
+  return list;
+}
+
 /** Dados do Pix: recebedor, chave, botões de copiar e QR "copia e cola" (sem valor). */
 function PixInfo({ block }: { block: BlockOf<"pix"> }) {
   const payload = pixPayload(block);
@@ -569,6 +633,28 @@ function Panel({ block, ctx }: { block: Exclude<Block, BlockOf<"link">>; ctx: Ct
     }
     case "catalog":
       return <CatalogBlock ctx={ctx} block={block} />;
+    case "videos": {
+      const tiles = videoTiles(ctx, block);
+      if (!tiles.length) return null;
+      return (
+        <VideoTiles
+          blockId={block.id}
+          title={block.title}
+          subtitle={block.subtitle}
+          videos={tiles}
+          autoplay={block.autoplay}
+        />
+      );
+    }
+    case "quote":
+      // Fora do visual padrão as perguntas ficam num painel (o cartão é do visual padrão).
+      if (!ctx.doc.contact.whatsapp) return null;
+      return (
+        <section className="bio-panel" aria-labelledby={titleId} data-block-id={block.id}>
+          <h2 id={titleId}>{block.title}</h2>
+          <QuoteForm block={block} whatsapp={ctx.doc.contact.whatsapp} />
+        </section>
+      );
     case "team":
       // Fora do visual padrão a equipe fica num painel (o cartão é do visual padrão).
       return (
@@ -585,9 +671,19 @@ function Panel({ block, ctx }: { block: Exclude<Block, BlockOf<"link">>; ctx: Ct
           data-block-id={block.id}
         >
           {block.title && <h2 id={titleId}>{block.title}</h2>}
-          {block.body.split(/\n{2,}/).map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
+          {block.body.split(/\n{2,}/).map((p, i) => {
+            // Parágrafo só de linhas "- item" vira lista com marcas (ex.: compromissos).
+            const lines = p.split("\n");
+            return lines.every((l) => /^\s*-\s+\S/.test(l)) ? (
+              <ul key={i} className="bio-checks">
+                {lines.map((l, j) => (
+                  <li key={j}>{l.replace(/^\s*-\s+/, "")}</li>
+                ))}
+              </ul>
+            ) : (
+              <p key={i}>{p}</p>
+            );
+          })}
         </section>
       );
   }
@@ -687,7 +783,12 @@ function CatalogBlock({ ctx, block }: { ctx: Ctx; block: BlockOf<"catalog"> }) {
 /** Agrupa cartões consecutivos numa lista e intercala os painéis, mantendo a ordem do documento. */
 function Blocks({ ctx }: { ctx: Ctx }) {
   type CardBlock =
-    BlockOf<"link"> | BlockOf<"gallery"> | BlockOf<"pix"> | BlockOf<"wifi"> | BlockOf<"team">;
+    | BlockOf<"link">
+    | BlockOf<"gallery">
+    | BlockOf<"pix">
+    | BlockOf<"wifi">
+    | BlockOf<"team">
+    | BlockOf<"quote">;
   const groups: (CardBlock[] | Exclude<Block, BlockOf<"link">>)[] = [];
   // Galeria em cartão só no visual padrão; nos estilos antigos continua como painel.
   const std = isStandardStyle(ctx.doc.theme.cardStyle);
@@ -696,7 +797,7 @@ function Blocks({ ctx }: { ctx: Ctx }) {
     if (
       b.type === "link" ||
       (std && b.type === "gallery" && b.display === "card") ||
-      (std && (b.type === "pix" || b.type === "wifi" || b.type === "team"))
+      (std && (b.type === "pix" || b.type === "wifi" || b.type === "team" || b.type === "quote"))
     ) {
       const last = groups.at(-1);
       if (Array.isArray(last)) last.push(b);
@@ -717,6 +818,8 @@ function Blocks({ ctx }: { ctx: Ctx }) {
             <WifiCard key={b.id} block={b} />
           ) : b.type === "team" ? (
             <TeamCard key={b.id} ctx={ctx} block={b} />
+          ) : b.type === "quote" ? (
+            <QuoteCard key={b.id} ctx={ctx} block={b} />
           ) : (
             <GalleryCard key={b.id} ctx={ctx} block={b} />
           ),
@@ -832,6 +935,7 @@ export function BioRenderer({
   if (th.cardStyle === "deep") style["--card-text"] = th.cardText ?? "#ffffff";
   if (th.chips) Object.assign(style, { "--chip-bg": th.chips.bg, "--chip-fg": th.chips.fg });
   if (th.nameAccent) style["--name-accent"] = th.nameAccent;
+  if (doc.profile.logoWidth) style["--logo-w"] = `${doc.profile.logoWidth}px`;
 
   const social: { icon: IconId; href: string; label: string }[] = [];
   if (c.instagram)
@@ -865,6 +969,8 @@ export function BioRenderer({
   const electric = std && th.effects === "electric";
   const glitter = std && th.effects === "glitter";
   const slabs = std && th.effects === "slabs";
+  const bubbles = std && th.effects === "bubbles";
+  const iconsLight = std && !!th.iconsLight;
   // Fundo claro: topo com texto na cor dos painéis (cetim sempre; os demais quando marcado).
   const lightPage = std && (th.cardStyle === "satin" || !!th.lightPage);
   // Logo que já traz o nome e o slogan: os textos saem da tela (ficam para leitores e buscas).
@@ -888,7 +994,7 @@ export function BioRenderer({
 
   return (
     <div
-      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}${std ? ` bio--std bio--${doc.theme.cardStyle}` : ""}${page ? " bio--page" : ""}${logoFree ? " bio--logo-free" : ""}${std && th.taglineDark ? " bio--tagline-dark" : ""}${electric ? " bio--fx-electric" : ""}${glitter ? " bio--fx-glitter" : ""}${slabs ? " bio--fx-slabs" : ""}${lightPage ? " bio--light-page" : ""}${logoName ? " bio--logo-name" : ""}${darkPanels ? " bio--dark-panels" : ""}`}
+      className={`bio ${display.variable} ${body.variable}${embedded ? " bio--embedded" : ""}${cover ? " bio--cover" : ""}${doc.theme.cardStyle === "glass" ? " bio--glass" : ""}${std ? ` bio--std bio--${doc.theme.cardStyle}` : ""}${page ? " bio--page" : ""}${logoFree ? " bio--logo-free" : ""}${std && th.taglineDark ? " bio--tagline-dark" : ""}${electric ? " bio--fx-electric" : ""}${glitter ? " bio--fx-glitter" : ""}${slabs ? " bio--fx-slabs" : ""}${lightPage ? " bio--light-page" : ""}${logoName ? " bio--logo-name" : ""}${darkPanels ? " bio--dark-panels" : ""}${bubbles ? " bio--fx-bubbles" : ""}${iconsLight ? " bio--icons-light" : ""}${doc.profile.logoWidth ? " bio--logo-w" : ""}`}
       style={style as CSSProperties}
     >
       <div className="bio-photo" aria-hidden="true">
@@ -903,6 +1009,7 @@ export function BioRenderer({
       {std && th.shine && <div className="bio-shine" aria-hidden="true" />}
       {electric && <ElectricFx />}
       {slabs && <SlabsFx />}
+      {bubbles && <BubblesFx />}
       {glitter && (
         <GlitterFx
           colors={th.neonEdges ? [th.neonEdges.start, th.neonEdges.end] : [colors.accent]}
@@ -1007,6 +1114,23 @@ export function BioRenderer({
         )}
         {std && (
           <p className="bio-sign">
+            {bubbles && (
+              <svg
+                className="bio-wave"
+                viewBox="0 0 430 60"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <path className="w1" d="M0 30Q110 0 215 26T430 22V60H0Z" />
+                <path className="w2" d="M0 44Q120 14 230 42T430 36V60H0Z" />
+              </svg>
+            )}
+            {doc.profile.serviceArea && (
+              <span className="bio-area">
+                <Icon name="pin-outline" />
+                {doc.profile.serviceArea}
+              </span>
+            )}
             <span>
               {doc.profile.name}
               {doc.profile.city ? ` · ${doc.profile.city}` : ""}

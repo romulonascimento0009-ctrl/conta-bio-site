@@ -33,3 +33,6 @@ playwright/.cache/
 Thumbs.db
 *.log
 npm-debug.log*
+
+# vídeos de referência dos protótipos (pesados; o original fica com o cliente)
+/prototipos/ref/*.mp4
