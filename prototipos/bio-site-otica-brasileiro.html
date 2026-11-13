@@ -1,0 +1,1444 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ótica do Brasileiro · Mondubim (protótipo)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --azul: #0349b8;
+        --marinho: #062a66;
+        --amarelo: #fccf04;
+        --azul-texto: #0349b8;
+        --tinta: #0e1b33;
+        --cinza: #566176;
+        --nevoa: #f1f5fc;
+        --branco: #ffffff;
+        --linha: #dfe6f2;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        min-height: 100vh;
+        background: linear-gradient(180deg, #dce7fb 0, #eef3fd 420px, #f3f6fd 70%, #fff4cc 100%);
+        background-color: #eef3fd;
+        color: var(--tinta);
+        font:
+          400 15px/1.5 Figtree,
+          system-ui,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .pagina {
+        max-width: 480px;
+        margin: 0 auto;
+        padding-bottom: 96px;
+      }
+      a {
+        color: inherit;
+      }
+      :focus-visible {
+        outline: 3px solid var(--amarelo);
+        outline-offset: 2px;
+        border-radius: 6px;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: Quicksand, sans-serif;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+
+      /* Topo */
+      .topo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 16px 12px;
+      }
+      .marca {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        flex: none;
+        box-shadow: 0 0 0 1px var(--linha);
+      }
+      .topo h1 {
+        font-size: 21px;
+        line-height: 1.15;
+      }
+      .topo p {
+        margin: 2px 0 0;
+        color: var(--cinza);
+        font-size: 13px;
+      }
+      .topo .wpp {
+        margin-left: auto;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--branco);
+        display: grid;
+        place-items: center;
+        flex: none;
+      }
+
+      /* Destaques (stories) */
+      .destaques {
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        padding: 6px 16px 14px;
+        scrollbar-width: none;
+      }
+      .destaques::-webkit-scrollbar {
+        display: none;
+      }
+      .destaque {
+        flex: none;
+        width: 76px;
+        border: 0;
+        background: none;
+        padding: 0;
+        cursor: pointer;
+        color: var(--tinta);
+        font:
+          600 12px/1.25 Figtree,
+          sans-serif;
+        text-align: center;
+      }
+      .aro {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 6px;
+        border-radius: 50%;
+        padding: 3px;
+        background: conic-gradient(
+          from 210deg,
+          var(--amarelo),
+          #fccf04,
+          var(--amarelo),
+          var(--azul),
+          var(--amarelo)
+        );
+      }
+      .destaque.visto .aro {
+        background: var(--linha);
+      }
+      .aro-in {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 3px solid var(--branco);
+        overflow: hidden;
+        position: relative;
+        background: var(--nevoa);
+      }
+      .aro-in svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .aro-in::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0 18%, transparent 34%);
+      }
+
+      /* Oferta principal */
+      .oferta {
+        margin: 4px 16px 0;
+        border-radius: 20px;
+        overflow: hidden;
+        background: var(--marinho);
+        color: var(--branco);
+        position: relative;
+        min-height: 200px;
+        display: flex;
+      }
+      .oferta .txt {
+        padding: 22px 0 22px 20px;
+        position: relative;
+        z-index: 1;
+        max-width: 62%;
+      }
+      .etq {
+        display: inline-block;
+        background: var(--amarelo);
+        color: #0e1b33;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 999px;
+      }
+      .oferta h2 {
+        font-size: 26px;
+        line-height: 1.12;
+        margin: 12px 0 8px;
+      }
+      .oferta p {
+        margin: 0 0 14px;
+        font-size: 13.5px;
+        color: #d5e2fa;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 999px;
+        font:
+          700 14px Figtree,
+          sans-serif;
+        padding: 11px 16px;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .btn-claro {
+        background: var(--branco);
+        color: var(--azul);
+      }
+      .oferta .txt {
+        max-width: 56%;
+      }
+      .oferta .arte {
+        position: absolute;
+        right: -56px;
+        bottom: -34px;
+        width: 210px;
+        opacity: 0.95;
+      }
+
+      .faixas {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 10px 16px 0;
+      }
+      .faixa {
+        border-radius: 16px;
+        padding: 14px 14px 50px;
+        background: var(--branco);
+        position: relative;
+        overflow: hidden;
+        min-height: 96px;
+        text-decoration: none;
+      }
+      .faixa b {
+        display: block;
+        font-family: Quicksand, sans-serif;
+        font-weight: 700;
+        font-size: 17px;
+        line-height: 1.15;
+      }
+      .faixa span {
+        font-size: 12.5px;
+        color: var(--azul-texto);
+        font-weight: 700;
+      }
+      .faixa svg {
+        position: absolute;
+        right: -12px;
+        bottom: -6px;
+        width: 86px;
+        opacity: 0.9;
+      }
+
+      /* Catálogo */
+      section {
+        margin-top: 30px;
+      }
+      .titulo {
+        padding: 0 16px;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .titulo h2 {
+        font-size: 24px;
+      }
+      .titulo small {
+        color: var(--cinza);
+        font-size: 13px;
+      }
+      .filtros {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 12px 16px 4px;
+        scrollbar-width: none;
+      }
+      .filtros::-webkit-scrollbar {
+        display: none;
+      }
+      .filtro {
+        flex: none;
+        border: 1px solid var(--linha);
+        background: var(--branco);
+        color: var(--tinta);
+        border-radius: 999px;
+        padding: 8px 14px;
+        font:
+          600 13px Figtree,
+          sans-serif;
+        cursor: pointer;
+      }
+      .filtro[aria-pressed="true"] {
+        background: var(--azul);
+        border-color: var(--azul);
+        color: var(--branco);
+      }
+      .grade {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px 12px;
+        padding: 12px 16px 0;
+      }
+      .produto {
+        display: flex;
+        flex-direction: column;
+        border: 0;
+        background: none;
+        padding: 0;
+        text-align: left;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+      .foto {
+        width: 100%;
+        aspect-ratio: 1/1;
+        border-radius: 16px;
+        background: var(--branco);
+        display: grid;
+        place-items: center;
+        position: relative;
+      }
+      .foto svg {
+        width: 86%;
+      }
+      .selo {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: var(--azul);
+        color: var(--branco);
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 999px;
+      }
+      .produto h3 {
+        font-family: Figtree, sans-serif;
+        font-weight: 600;
+        font-size: 14px;
+        margin: 9px 0 1px;
+        line-height: 1.3;
+      }
+      .produto .tipo {
+        font-size: 12px;
+        color: var(--cinza);
+      }
+      .preco {
+        margin: 4px 0 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .preco s {
+        font-weight: 400;
+        color: var(--cinza);
+        font-size: 12.5px;
+        margin-left: 4px;
+      }
+      .angulos {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid var(--linha);
+        color: var(--marinho);
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 7px;
+        border-radius: 999px;
+      }
+      .produto:hover .foto {
+        border-color: var(--azul);
+      }
+      .foto {
+        border: 1px solid var(--linha);
+      }
+
+      /* Ficha do produto: ângulos + zoom */
+      .ficha {
+        position: fixed;
+        inset: 0;
+        z-index: 15;
+        background: rgba(6, 42, 102, 0.45);
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+      }
+      .ficha.aberto {
+        display: flex;
+      }
+      .ficha-caixa {
+        width: 100%;
+        max-width: 480px;
+        max-height: 94vh;
+        overflow: auto;
+        background: var(--branco);
+        border-radius: 24px 24px 0 0;
+        padding: 10px 16px 22px;
+        position: relative;
+      }
+      .ficha-alca {
+        width: 40px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--linha);
+        margin: 0 auto 8px;
+      }
+      .ficha-fechar {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 0;
+        background: var(--nevoa);
+        color: var(--marinho);
+        font-size: 26px;
+        line-height: 1;
+        cursor: pointer;
+        z-index: 2;
+      }
+      .palco {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #f4f7fe, #ffffff);
+        border: 1px solid var(--linha);
+        scrollbar-width: none;
+        margin-top: 6px;
+      }
+      .palco::-webkit-scrollbar {
+        display: none;
+      }
+      .palco.travado {
+        overflow: hidden;
+      }
+      .vista {
+        flex: 0 0 100%;
+        aspect-ratio: 1/1;
+        scroll-snap-align: center;
+        border: 0;
+        background: none;
+        display: grid;
+        place-items: center;
+        cursor: zoom-in;
+        overflow: hidden;
+        padding: 0;
+      }
+      .vista svg {
+        width: 84%;
+        transition: transform 0.25s ease;
+      }
+      .vista.zoom {
+        cursor: zoom-out;
+      }
+      .vista.zoom svg {
+        transform: scale(2.4);
+      }
+      .dica {
+        font-size: 12.5px;
+        color: var(--cinza);
+        text-align: center;
+        margin: 8px 0 0;
+      }
+      .miniaturas {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .mini-vista {
+        flex: 1;
+        border: 1px solid var(--linha);
+        background: var(--branco);
+        border-radius: 12px;
+        padding: 6px 4px 4px;
+        cursor: pointer;
+        font:
+          600 11.5px Figtree,
+          sans-serif;
+        color: var(--cinza);
+      }
+      .mini-vista svg {
+        width: 100%;
+        height: 34px;
+        display: block;
+      }
+      .mini-vista[aria-current="true"] {
+        border: 2px solid var(--azul);
+        color: var(--azul);
+      }
+      .ficha h2 {
+        font-size: 22px;
+        margin: 16px 0 0;
+      }
+      .ficha .tipo {
+        color: var(--cinza);
+        font-size: 13px;
+      }
+      .ficha .preco {
+        font-size: 20px;
+        margin: 6px 0 16px;
+      }
+      .pedir {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+        background: var(--marinho);
+        color: var(--branco);
+        border-radius: 14px;
+        padding: 14px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .vista svg {
+          transition: none;
+        }
+      }
+      .vazio {
+        grid-column: 1/-1;
+        color: var(--cinza);
+        text-align: center;
+        padding: 20px 0;
+      }
+
+      /* Sobre */
+      .sobre {
+        margin: 30px 16px 0;
+        padding: 22px 20px;
+        border-radius: 20px;
+        background: var(--branco);
+      }
+      .sobre h2 {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+      .sobre p {
+        margin: 0 0 10px;
+        color: #334055;
+      }
+      .info {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+        font-size: 14px;
+      }
+      .info div {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      .info svg {
+        flex: none;
+        margin-top: 2px;
+      }
+
+      /* Cartões Google e Instagram */
+      .cartoes {
+        display: grid;
+        gap: 10px;
+        margin: 14px 16px 0;
+      }
+      .cartao {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px;
+        border-radius: 18px;
+        text-decoration: none;
+        border: 1px solid var(--linha);
+        background: var(--branco);
+      }
+      .cartao .ic {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        flex: none;
+      }
+      .cartao b {
+        display: block;
+        font-size: 15px;
+      }
+      .cartao span {
+        font-size: 13px;
+        color: var(--cinza);
+      }
+      .cartao .seta {
+        margin-left: auto;
+        color: var(--cinza);
+      }
+      .google {
+        background: var(--marinho);
+        border-color: var(--marinho);
+        color: var(--branco);
+      }
+      .google span {
+        color: #d5e2fa;
+      }
+      .google .ic {
+        background: var(--branco);
+      }
+      .estrelas {
+        display: flex;
+        gap: 2px;
+        margin-top: 4px;
+      }
+      .insta .ic {
+        background: radial-gradient(
+          circle at 30% 107%,
+          #fdf497 0%,
+          #fd5949 45%,
+          #d6249f 60%,
+          #285aeb 90%
+        );
+      }
+
+      .rodape {
+        text-align: center;
+        color: var(--cinza);
+        font-size: 12.5px;
+        padding: 26px 16px 0;
+      }
+
+      .flutuante {
+        position: fixed;
+        right: 16px;
+        bottom: 18px;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: #25d366;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 6px 18px rgba(6, 42, 102, 0.3);
+        z-index: 5;
+      }
+
+      /* Visualizador de destaques */
+      .story {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        background: #000;
+        display: none;
+      }
+      .story.aberto {
+        display: block;
+      }
+      .story-quadro {
+        position: relative;
+        max-width: 480px;
+        height: 100%;
+        margin: 0 auto;
+        overflow: hidden;
+      }
+      .barras {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        display: flex;
+        gap: 4px;
+        z-index: 3;
+      }
+      .barra {
+        flex: 1;
+        height: 3px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.35);
+        overflow: hidden;
+      }
+      .barra i {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: #fff;
+      }
+      .story-topo {
+        position: absolute;
+        top: 22px;
+        left: 12px;
+        right: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #fff;
+        z-index: 3;
+      }
+      .story-topo .mini {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 2px solid var(--amarelo);
+      }
+      .story-topo b {
+        font-size: 14px;
+      }
+      .story-topo span {
+        font-size: 12px;
+        opacity: 0.8;
+      }
+      .fechar {
+        margin-left: auto;
+        background: none;
+        border: 0;
+        color: #fff;
+        width: 44px;
+        height: 44px;
+        cursor: pointer;
+        font-size: 28px;
+        line-height: 1;
+      }
+      .cena {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 0 22px 40px;
+        color: #fff;
+      }
+      .cena .arte-story {
+        position: absolute;
+        inset: 0;
+      }
+      .cena .arte-story svg {
+        width: 100%;
+        height: 100%;
+      }
+      .cena .conteudo {
+        position: relative;
+        z-index: 2;
+      }
+      .cena h2 {
+        font-size: 34px;
+        line-height: 1.08;
+        margin: 12px 0 8px;
+      }
+      .cena p {
+        margin: 0 0 18px;
+        font-size: 15px;
+        opacity: 0.92;
+        max-width: 30ch;
+      }
+      .cena .btn {
+        background: #25d366;
+        color: #062a66;
+      }
+      .toque {
+        position: absolute;
+        top: 80px;
+        bottom: 120px;
+        width: 40%;
+        z-index: 2;
+        background: none;
+        border: 0;
+        cursor: pointer;
+      }
+      .toque.ant {
+        left: 0;
+      }
+      .toque.prox {
+        right: 0;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .barra i {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="pagina">
+      <header class="topo">
+        <img class="marca" src="ref/otica-logo.png" alt="" width="60" height="60" />
+        <div>
+          <h1>Ótica do Brasileiro</h1>
+          <p>Unidade Mondubim</p>
+        </div>
+        <a
+          class="wpp"
+          href="#"
+          data-wpp="Oi, vim pelo site da Ótica do Brasileiro (Mondubim)."
+          aria-label="Falar no WhatsApp"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#062A66" aria-hidden="true">
+            <path
+              d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3a.5.5 0 0 0 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.4.8 3.2.6a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"
+            />
+          </svg>
+        </a>
+      </header>
+
+      <nav class="destaques" aria-label="Destaques"></nav>
+
+      <div class="oferta">
+        <div class="txt">
+          <span class="etq">Só esta semana</span>
+          <h2>Armação + lentes a partir de R$ 199</h2>
+          <p>Exame de vista grátis na compra dos óculos de grau.</p>
+          <a
+            class="btn btn-claro"
+            href="#"
+            data-wpp="Oi! Quero saber da oferta armação + lentes a partir de R$ 199."
+            >Quero essa oferta</a
+          >
+        </div>
+        <svg class="arte" viewBox="0 0 240 200" aria-hidden="true">
+          <circle cx="150" cy="110" r="96" fill="#0349B8" />
+          <circle
+            cx="150"
+            cy="110"
+            r="70"
+            fill="none"
+            stroke="#FCCF04"
+            stroke-opacity=".45"
+            stroke-width="2"
+          />
+          <g
+            transform="translate(40 80) rotate(-8)"
+            fill="none"
+            stroke="#FCCF04"
+            stroke-width="7"
+            stroke-linecap="round"
+          >
+            <rect x="0" y="0" width="74" height="56" rx="24" />
+            <rect x="96" y="0" width="74" height="56" rx="24" />
+            <path d="M74 20q11-10 22 0" />
+            <path d="M0 14-18 6" />
+            <path d="M170 14l18-8" />
+          </g>
+          <g transform="translate(40 80) rotate(-8)">
+            <rect x="6" y="6" width="22" height="10" rx="5" fill="#fff" opacity=".35" />
+            <rect x="102" y="6" width="22" height="10" rx="5" fill="#fff" opacity=".35" />
+          </g>
+        </svg>
+      </div>
+
+      <div class="faixas">
+        <a class="faixa" href="#" data-wpp="Oi! Quero ver os óculos de sol com desconto.">
+          <b>Óculos de sol</b><span>até 30% off</span>
+          <svg viewBox="0 0 120 60" aria-hidden="true">
+            <g fill="#16231D">
+              <path d="M4 12h48c0 22-8 34-24 34S4 34 4 12Z" />
+              <path d="M68 12h48c0 22-8 34-24 34S68 34 68 12Z" />
+            </g>
+            <path d="M52 16q8-6 16 0" stroke="#16231D" stroke-width="4" fill="none" />
+          </svg>
+        </a>
+        <a class="faixa" href="#" data-wpp="Oi! Quero saber das lentes com filtro de luz azul.">
+          <b>Lentes antirreflexo</b><span>filtro de luz azul</span>
+          <svg viewBox="0 0 120 60" aria-hidden="true">
+            <g fill="#cfe3f5" stroke="#062A66" stroke-width="4">
+              <circle cx="32" cy="30" r="22" />
+              <circle cx="88" cy="30" r="22" />
+            </g>
+            <path d="M54 26q6-6 12 0" stroke="#062A66" stroke-width="4" fill="none" />
+          </svg>
+        </a>
+      </div>
+
+      <section aria-labelledby="t-cat">
+        <div class="titulo">
+          <h2 id="t-cat">Armações</h2>
+          <small id="contagem"></small>
+        </div>
+        <div class="filtros" role="group" aria-label="Filtrar armações"></div>
+        <div class="grade" id="grade"></div>
+      </section>
+
+      <div class="sobre">
+        <h2>Sobre a Ótica</h2>
+        <p>
+          A Ótica do Brasileiro ajuda o Mondubim a enxergar melhor: armações para todos os estilos,
+          lentes de qualidade e atendimento de perto, do exame à entrega dos óculos.
+        </p>
+        <p>
+          Traga sua receita ou faça o exame com a gente. Ajustamos a armação no seu rosto sem custo.
+        </p>
+        <div class="info">
+          <div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#062A66" aria-hidden="true">
+              <path
+                d="M12 2a7 7 0 0 0-7 7c0 5.3 7 13 7 13s7-7.7 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z"
+              /></svg
+            ><span>Av. Maria Gomes de Sá, 1654 · Mondubim, Fortaleza</span>
+          </div>
+          <div>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#062A66"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" /></svg
+            ><span>Seg a sáb · horário a confirmar</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cartoes">
+        <a
+          class="cartao google"
+          href="https://search.google.com/local/writereview?placeid=ChIJk4qkb_FNxwcRbdUDgUUXK1M"
+          target="_blank"
+          rel="noopener"
+        >
+          <span class="ic" aria-hidden="true"
+            ><svg width="24" height="24" viewBox="0 0 48 48">
+              <path
+                fill="#FFC107"
+                d="M43.6 20.5H42V20H24v8h11.3A12 12 0 1 1 32 15.1l5.7-5.7A20 20 0 1 0 44 24c0-1.2-.1-2.3-.4-3.5Z"
+              />
+              <path
+                fill="#FF3D00"
+                d="m6.3 14.7 6.6 4.8A12 12 0 0 1 32 15.1l5.7-5.7A20 20 0 0 0 6.3 14.7Z"
+              />
+              <path
+                fill="#4CAF50"
+                d="M24 44a20 20 0 0 0 13.4-5.2l-6.2-5.2A12 12 0 0 1 12.7 28l-6.5 5A20 20 0 0 0 24 44Z"
+              />
+              <path
+                fill="#1976D2"
+                d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.2-.1-2.3-.4-3.5Z"
+              /></svg
+          ></span>
+          <span
+            ><b>Avalie a loja no Google</b><span>Sua opinião ajuda outros clientes</span>
+            <span class="estrelas" aria-hidden="true"
+              ><svg width="16" height="16" viewBox="0 0 24 24" fill="#FCCF04">
+                <path d="m12 2 3 6.5 7 .7-5.3 4.7 1.6 7L12 17.3 5.7 21l1.6-7L2 9.2l7-.7Z" /></svg
+              ><svg width="16" height="16" viewBox="0 0 24 24" fill="#FCCF04">
+                <path d="m12 2 3 6.5 7 .7-5.3 4.7 1.6 7L12 17.3 5.7 21l1.6-7L2 9.2l7-.7Z" /></svg
+              ><svg width="16" height="16" viewBox="0 0 24 24" fill="#FCCF04">
+                <path d="m12 2 3 6.5 7 .7-5.3 4.7 1.6 7L12 17.3 5.7 21l1.6-7L2 9.2l7-.7Z" /></svg
+              ><svg width="16" height="16" viewBox="0 0 24 24" fill="#FCCF04">
+                <path d="m12 2 3 6.5 7 .7-5.3 4.7 1.6 7L12 17.3 5.7 21l1.6-7L2 9.2l7-.7Z" /></svg
+              ><svg width="16" height="16" viewBox="0 0 24 24" fill="#FCCF04">
+                <path d="m12 2 3 6.5 7 .7-5.3 4.7 1.6 7L12 17.3 5.7 21l1.6-7L2 9.2l7-.7Z" /></svg
+            ></span>
+          </span>
+        </a>
+        <a
+          class="cartao insta"
+          href="https://www.instagram.com/oticadobrasileiro/"
+          target="_blank"
+          rel="noopener"
+        >
+          <span class="ic" aria-hidden="true"
+            ><svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#fff"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="5" />
+              <circle cx="12" cy="12" r="4" />
+              <circle cx="17.5" cy="6.5" r="1" fill="#fff" /></svg
+          ></span>
+          <span><b>@oticadobrasileiro</b><span>Siga no Instagram</span></span>
+          <span class="seta" aria-hidden="true">›</span>
+        </a>
+      </div>
+
+      <p class="rodape">
+        Ótica do Brasileiro · Mondubim<br />Preços e fotos ilustrativos neste protótipo.
+      </p>
+    </div>
+
+    <a
+      class="flutuante"
+      href="#"
+      data-wpp="Oi, vim pelo site da Ótica do Brasileiro (Mondubim)."
+      aria-label="Falar no WhatsApp"
+    >
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+        <path
+          d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3a.5.5 0 0 0 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.4.8 3.2.6a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"
+        />
+      </svg>
+    </a>
+
+    <div class="ficha" id="ficha" role="dialog" aria-modal="true" aria-labelledby="ficha-nome">
+      <div class="ficha-caixa">
+        <div class="ficha-alca" aria-hidden="true"></div>
+        <button class="ficha-fechar" id="ficha-fechar" aria-label="Fechar">×</button>
+        <div class="palco" id="palco"></div>
+        <p class="dica">Toque na foto para ampliar · deslize para ver outros ângulos</p>
+        <div class="miniaturas" id="miniaturas" aria-label="Ângulos"></div>
+        <h2 id="ficha-nome"></h2>
+        <span class="tipo" id="ficha-tipo"></span>
+        <div class="preco" id="ficha-preco"></div>
+        <a class="btn pedir" id="ficha-pedir" target="_blank" rel="noopener">Pedir pelo WhatsApp</a>
+      </div>
+    </div>
+
+    <div class="story" role="dialog" aria-modal="true" aria-label="Destaque" id="story">
+      <div class="story-quadro">
+        <div class="barras" id="barras"></div>
+        <div class="story-topo">
+          <img class="mini" src="ref/otica-logo.png" alt="" width="34" height="34" />
+          <span><b id="story-nome"></b><br /><span>Ótica do Brasileiro</span></span>
+          <button class="fechar" id="fechar" aria-label="Fechar destaque">×</button>
+        </div>
+        <div id="cena"></div>
+        <button class="toque ant" id="ant" aria-label="Anterior"></button>
+        <button class="toque prox" id="prox" aria-label="Próximo"></button>
+      </div>
+    </div>
+
+    <script>
+      // WhatsApp comercial da unidade Mondubim (+55 85 8576-3863), enviado pelo usuário em 2026-11-12.
+      const WHATSAPP = "558585763863";
+      const wa = (msg) => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+      document.querySelectorAll("[data-wpp]").forEach((a) => {
+        a.href = wa(a.dataset.wpp);
+        a.target = "_blank";
+        a.rel = "noopener";
+      });
+
+      // Desenho de armação por formato (ilustrativo, até chegarem as fotos)
+      function oculos(forma, cor, lente = "#E9EEF2", haste = cor) {
+        const L = {
+          redondo: '<circle cx="34" cy="34" r="24"/><circle cx="106" cy="34" r="24"/>',
+          quadrado:
+            '<rect x="8" y="12" width="52" height="42" rx="7"/><rect x="80" y="12" width="52" height="42" rx="7"/>',
+          gatinho:
+            '<path d="M6 14q30-8 56 4-2 32-28 34Q8 50 6 14Z"/><path d="M134 14q-30-8-56 4 2 32 28 34 26-2 28-38Z"/>',
+          aviador:
+            '<path d="M8 14h54c0 26-8 40-26 40S6 38 8 14Z"/><path d="M78 14h54c2 24-10 40-28 40S78 40 78 14Z"/>',
+          hexagonal:
+            '<path d="M20 12h28l12 22-12 22H20L8 34Z"/><path d="M92 12h28l12 22-12 22H92L80 34Z"/>',
+          retangular:
+            '<rect x="6" y="18" width="56" height="32" rx="10"/><rect x="78" y="18" width="56" height="32" rx="10"/>',
+        }[forma];
+        const ponte =
+          forma === "aviador"
+            ? '<path d="M62 18q8-4 16 0M62 12q8-4 16 0"/>'
+            : '<path d="M58 28q12-10 24 0"/>';
+        return `<svg viewBox="-12 -4 164 76" aria-hidden="true"><g fill="${lente}" fill-opacity=".85" stroke="${cor}" stroke-width="5" stroke-linejoin="round">${L}</g><g fill="none" stroke="${haste}" stroke-width="4" stroke-linecap="round">${ponte}<path d="M6 20-8 16M134 20l14-4"/></g><g fill="#fff" opacity=".6"><rect x="16" y="20" width="14" height="5" rx="2.5"/><rect x="88" y="20" width="14" height="5" rx="2.5"/></g></svg>`;
+      }
+
+      // Catálogo (ilustrativo)
+      const produtos = [
+        {
+          nome: "Clássico Redondo",
+          tipo: "Grau",
+          estilo: ["Grau", "Unissex"],
+          forma: "redondo",
+          cor: "#3B2A1E",
+          preco: 189,
+          de: 239,
+        },
+        {
+          nome: "Aviador Dourado",
+          tipo: "Sol",
+          estilo: ["Sol", "Masculino"],
+          forma: "aviador",
+          cor: "#B8893A",
+          lente: "#2E4B3F",
+          preco: 249,
+        },
+        {
+          nome: "Gatinho Vinho",
+          tipo: "Grau",
+          estilo: ["Grau", "Feminino"],
+          forma: "gatinho",
+          cor: "#6E1E2E",
+          preco: 219,
+        },
+        {
+          nome: "Quadrado Tartaruga",
+          tipo: "Grau",
+          estilo: ["Grau", "Masculino", "Unissex"],
+          forma: "quadrado",
+          cor: "#7A4A22",
+          preco: 199,
+          de: 259,
+        },
+        {
+          nome: "Hexagonal Fino",
+          tipo: "Grau",
+          estilo: ["Grau", "Unissex"],
+          forma: "hexagonal",
+          cor: "#8C8F93",
+          preco: 229,
+        },
+        {
+          nome: "Retrô Preto",
+          tipo: "Sol",
+          estilo: ["Sol", "Unissex"],
+          forma: "retangular",
+          cor: "#16231D",
+          lente: "#26302B",
+          preco: 159,
+        },
+        {
+          nome: "Infantil Azul",
+          tipo: "Infantil",
+          estilo: ["Infantil", "Grau"],
+          forma: "redondo",
+          cor: "#2A6FDB",
+          preco: 149,
+        },
+        {
+          nome: "Gatinho Sol",
+          tipo: "Sol",
+          estilo: ["Sol", "Feminino"],
+          forma: "gatinho",
+          cor: "#16231D",
+          lente: "#5B3A2A",
+          preco: 199,
+          de: 249,
+        },
+      ];
+      const filtros = ["Todos", "Grau", "Sol", "Feminino", "Masculino", "Unissex", "Infantil"];
+      const real = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const zap =
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3a.5.5 0 0 0 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.4.8 3.2.6a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg>';
+      const olho =
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>';
+      let filtro = "Todos";
+      const elFiltros = document.querySelector(".filtros"),
+        grade = document.getElementById("grade");
+      function desenhar() {
+        elFiltros.innerHTML = filtros
+          .map((f) => `<button class="filtro" aria-pressed="${f === filtro}">${f}</button>`)
+          .join("");
+        const lista = produtos.filter((p) => filtro === "Todos" || p.estilo.includes(filtro));
+        document.getElementById("contagem").textContent = `${lista.length} modelos`;
+        grade.innerHTML = lista.length
+          ? lista
+              .map(
+                (p) => `
+    <button class="produto" data-p="${produtos.indexOf(p)}" aria-label="${p.nome}, ${real(p.preco)}. Ver ângulos">
+      <span class="foto">${p.de ? `<span class="selo">-${Math.round((1 - p.preco / p.de) * 100)}%</span>` : ""}${oculos(p.forma, p.cor, p.lente)}<span class="angulos" aria-hidden="true">${olho} 3</span></span>
+      <h3>${p.nome}</h3><span class="tipo">${p.tipo}</span>
+      <span class="preco">${real(p.preco)}${p.de ? `<s>${real(p.de)}</s>` : ""}</span>
+    </button>`,
+              )
+              .join("")
+          : '<p class="vazio">Nenhum modelo neste filtro.</p>';
+      }
+      elFiltros.addEventListener("click", (e) => {
+        const b = e.target.closest(".filtro");
+        if (b) {
+          filtro = b.textContent;
+          desenhar();
+        }
+      });
+
+      // Ângulos (desenhos ilustrativos; no sistema, as fotos do produto)
+      const miolo = (svg) => svg.replace(/^<svg[^>]*>|<\/svg>$/g, "");
+      function diagonal(p) {
+        return `<svg viewBox="-20 -20 200 110" aria-hidden="true"><g transform="translate(6 6) skewY(-7) scale(.8 1)">${miolo(oculos(p.forma, p.cor, p.lente))}</g><path d="M116 20q34-10 64-4q8 2 10 12" fill="none" stroke="${p.cor}" stroke-width="5" stroke-linecap="round"/></svg>`;
+      }
+      function lateral(p) {
+        return `<svg viewBox="-10 -10 200 90" aria-hidden="true"><ellipse cx="22" cy="36" rx="7" ry="24" fill="${p.lente || "#E9EEF2"}" fill-opacity=".85" stroke="${p.cor}" stroke-width="5"/><path d="M26 18h120q22 0 30 26" fill="none" stroke="${p.cor}" stroke-width="6" stroke-linecap="round"/><circle cx="34" cy="18" r="3" fill="#fff" opacity=".7"/></svg>`;
+      }
+      const ficha = document.getElementById("ficha"),
+        palco = document.getElementById("palco"),
+        miniaturas = document.getElementById("miniaturas");
+      let fichaOrigem;
+      function abrirFicha(i, botao) {
+        const p = produtos[i],
+          vistas = [
+            ["Frente", oculos(p.forma, p.cor, p.lente)],
+            ["Diagonal", diagonal(p)],
+            ["Lateral", lateral(p)],
+          ];
+        fichaOrigem = botao;
+        document.getElementById("ficha-nome").textContent = p.nome;
+        document.getElementById("ficha-tipo").textContent = p.tipo;
+        document.getElementById("ficha-preco").innerHTML =
+          `${real(p.preco)}${p.de ? `<s>${real(p.de)}</s>` : ""}`;
+        document.getElementById("ficha-pedir").href = wa(
+          `Oi! Quero o modelo ${p.nome} (${real(p.preco)}) que vi no site.`,
+        );
+        palco.innerHTML = vistas
+          .map(
+            ([n, svg]) =>
+              `<button class="vista" aria-label="${n}: toque para ampliar">${svg}</button>`,
+          )
+          .join("");
+        miniaturas.innerHTML = vistas
+          .map(
+            ([n, svg], k) =>
+              `<button class="mini-vista" aria-current="${k === 0}" data-k="${k}">${svg}<span>${n}</span></button>`,
+          )
+          .join("");
+        palco.scrollLeft = 0;
+        ficha.classList.add("aberto");
+        document.body.style.overflow = "hidden";
+        document.getElementById("ficha-fechar").focus();
+      }
+      function fecharFicha() {
+        ficha.classList.remove("aberto");
+        document.body.style.overflow = "";
+        fichaOrigem && fichaOrigem.focus();
+      }
+      grade.addEventListener("click", (e) => {
+        const b = e.target.closest(".produto");
+        if (b) abrirFicha(+b.dataset.p, b);
+      });
+      document.getElementById("ficha-fechar").onclick = fecharFicha;
+      ficha.addEventListener("click", (e) => {
+        if (e.target === ficha) fecharFicha();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && ficha.classList.contains("aberto")) fecharFicha();
+      });
+      miniaturas.addEventListener("click", (e) => {
+        const b = e.target.closest(".mini-vista");
+        if (b)
+          palco.scrollTo({
+            left: +b.dataset.k * palco.clientWidth,
+            behavior: reduzir ? "auto" : "smooth",
+          });
+      });
+      palco.addEventListener("scroll", () => {
+        const k = Math.round(palco.scrollLeft / palco.clientWidth);
+        [...miniaturas.children].forEach((m, j) => m.setAttribute("aria-current", j === k));
+        [...palco.children].forEach((v) => v.classList.remove("zoom"));
+      });
+      // Zoom: toque amplia no ponto tocado; arrastar o dedo/mouse percorre a foto; novo toque volta.
+      function pontoZoom(v, e) {
+        const r = v.getBoundingClientRect();
+        v.firstElementChild.style.transformOrigin = `${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`;
+      }
+      palco.addEventListener("click", (e) => {
+        const v = e.target.closest(".vista");
+        if (!v) return;
+        pontoZoom(v, e);
+        v.classList.toggle("zoom");
+        palco.classList.toggle("travado", v.classList.contains("zoom"));
+      });
+      palco.addEventListener("pointermove", (e) => {
+        const v = e.target.closest(".vista.zoom");
+        if (v) pontoZoom(v, e);
+      });
+      desenhar();
+
+      // Destaques (stories), ilustrativos
+      const fundo = (c1, c2, extra = "") =>
+        `<svg viewBox="0 0 400 720" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="400" height="720" fill="url(#g)"/><circle cx="200" cy="300" r="170" fill="#fff" opacity=".06"/><circle cx="200" cy="300" r="120" fill="none" stroke="#FCCF04" stroke-opacity=".5" stroke-width="2"/>${extra}</svg>`;
+      const noCentro = (svg) =>
+        `<g transform="translate(70 250) scale(1.6)">${svg.replace(/^<svg[^>]*>|<\/svg>$/g, "")}</g>`;
+      const destaques = [
+        {
+          nome: "Promoções do Dia",
+          icone: oculos("redondo", "#062A66", "#FCCF04"),
+          slides: [
+            {
+              etq: "Só hoje",
+              titulo: "Armação + lentes por R$ 199",
+              texto: "Lentes com antirreflexo inclusas.",
+              arte: fundo("#062A66", "#03163A", noCentro(oculos("quadrado", "#FCCF04", "#cfe3f5"))),
+            },
+            {
+              etq: "Só hoje",
+              titulo: "Exame de vista grátis",
+              texto: "Na compra dos óculos de grau completos.",
+              arte: fundo("#0349B8", "#062A66", noCentro(oculos("redondo", "#fff", "#cfe3f5"))),
+            },
+          ],
+        },
+        {
+          nome: "Ofertas",
+          icone: oculos("aviador", "#B8893A", "#2E4B3F"),
+          slides: [
+            {
+              etq: "Até 30% off",
+              titulo: "Óculos de sol com proteção UV400",
+              texto: "Aviador, retrô e gatinho.",
+              arte: fundo("#0B5BD3", "#03163A", noCentro(oculos("aviador", "#FCCF04", "#2E4B3F"))),
+            },
+          ],
+        },
+        {
+          nome: "Novidades",
+          icone: oculos("gatinho", "#6E1E2E"),
+          slides: [
+            {
+              etq: "Chegou",
+              titulo: "Coleção gatinho",
+              texto: "Vinho, preto e tartaruga.",
+              arte: fundo("#6E1E2E", "#2A0B12", noCentro(oculos("gatinho", "#F6D3DA", "#EADFE1"))),
+            },
+            {
+              etq: "Chegou",
+              titulo: "Hexagonal metal fino",
+              texto: "Leve e discreto no rosto.",
+              arte: fundo(
+                "#3E4A52",
+                "#141B20",
+                noCentro(oculos("hexagonal", "#D7DCE0", "#cfe3f5")),
+              ),
+            },
+          ],
+        },
+        {
+          nome: "Lentes",
+          icone: oculos("redondo", "#2A6FDB", "#cfe3f5"),
+          slides: [
+            {
+              etq: "Lentes",
+              titulo: "Filtro de luz azul",
+              texto: "Para quem passa o dia no celular e no computador.",
+              arte: fundo(
+                "#14355E",
+                "#07162A",
+                noCentro(oculos("retangular", "#9CC3FF", "#cfe3f5")),
+              ),
+            },
+            {
+              etq: "Lentes",
+              titulo: "Multifocais",
+              texto: "Perto e longe na mesma lente. Peça um orçamento.",
+              arte: fundo("#062A66", "#0349B8", noCentro(oculos("redondo", "#FCCF04", "#cfe3f5"))),
+            },
+          ],
+        },
+        {
+          nome: "Infantil",
+          icone: oculos("redondo", "#2A6FDB", "#FCE7A8"),
+          slides: [
+            {
+              etq: "Para crianças",
+              titulo: "Armações flexíveis",
+              texto: "Resistentes para o dia a dia da escola.",
+              arte: fundo("#2A6FDB", "#0C2F6B", noCentro(oculos("redondo", "#FCE7A8", "#cfe3f5"))),
+            },
+          ],
+        },
+      ];
+      const nav = document.querySelector(".destaques");
+      nav.innerHTML = destaques
+        .map(
+          (d, i) =>
+            `<button class="destaque" data-i="${i}"><div class="aro"><div class="aro-in">${d.icone.replace('viewBox="-12 -4 164 76"', 'viewBox="-30 -50 200 176"')}</div></div>${d.nome}</button>`,
+        )
+        .join("");
+
+      const story = document.getElementById("story"),
+        cena = document.getElementById("cena"),
+        barras = document.getElementById("barras");
+      const DUR = 5000,
+        reduzir = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let atual = 0,
+        slide = 0,
+        timer,
+        origem;
+      function mostrar() {
+        const d = destaques[atual],
+          s = d.slides[slide];
+        document.getElementById("story-nome").textContent = d.nome;
+        barras.innerHTML = d.slides
+          .map((_, i) => `<span class="barra"><i style="width:${i < slide ? 100 : 0}%"></i></span>`)
+          .join("");
+        cena.innerHTML = `<div class="cena"><div class="arte-story">${s.arte}</div><div class="conteudo"><span class="etq">${s.etq}</span><h2>${s.titulo}</h2><p>${s.texto}</p><a class="btn" target="_blank" rel="noopener" href="${wa(`Oi! Vi o destaque "${s.titulo}" no site e quero saber mais.`)}">${zap} Quero esta oferta</a></div></div>`;
+        clearTimeout(timer);
+        const barra = barras.children[slide].firstElementChild;
+        if (!reduzir) {
+          requestAnimationFrame(() => {
+            barra.style.transition = `width ${DUR}ms linear`;
+            barra.style.width = "100%";
+          });
+          timer = setTimeout(proximo, DUR);
+        } else barra.style.width = "100%";
+      }
+      function abrir(i, botao) {
+        atual = i;
+        slide = 0;
+        origem = botao;
+        story.classList.add("aberto");
+        document.body.style.overflow = "hidden";
+        mostrar();
+        document.getElementById("fechar").focus();
+      }
+      function fechar() {
+        clearTimeout(timer);
+        story.classList.remove("aberto");
+        document.body.style.overflow = "";
+        nav.children[atual].classList.add("visto");
+        origem && origem.focus();
+      }
+      function proximo() {
+        const d = destaques[atual];
+        if (slide < d.slides.length - 1) {
+          slide++;
+          mostrar();
+        } else if (atual < destaques.length - 1) {
+          nav.children[atual].classList.add("visto");
+          atual++;
+          slide = 0;
+          mostrar();
+        } else fechar();
+      }
+      function anterior() {
+        if (slide > 0) slide--;
+        else if (atual > 0) {
+          atual--;
+          slide = destaques[atual].slides.length - 1;
+        }
+        mostrar();
+      }
+      nav.addEventListener("click", (e) => {
+        const b = e.target.closest(".destaque");
+        if (b) abrir(+b.dataset.i, b);
+      });
+      document.getElementById("fechar").onclick = fechar;
+      document.getElementById("prox").onclick = proximo;
+      document.getElementById("ant").onclick = anterior;
+      document.addEventListener("keydown", (e) => {
+        if (!story.classList.contains("aberto")) return;
+        if (e.key === "Escape") fechar();
+        if (e.key === "ArrowRight") proximo();
+        if (e.key === "ArrowLeft") anterior();
+      });
+    </script>
+  </body>
+</html>

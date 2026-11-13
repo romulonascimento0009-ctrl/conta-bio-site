@@ -8,6 +8,7 @@ import {
   Lora,
   Manrope,
   Playfair_Display,
+  Quicksand,
   Work_Sans,
 } from "next/font/google";
 import type { FontId } from "@/sites/fonts";
@@ -65,6 +66,13 @@ const fredoka = Fredoka({
   preload: false,
   variable: "--f-fredoka",
 });
+const quicksand = Quicksand({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  display: "swap",
+  preload: false,
+  variable: "--f-quicksand",
+});
 const exo2 = Exo_2({
   subsets: ["latin"],
   style: "italic",
@@ -86,6 +94,7 @@ const LOADED: Record<FontId, { variable: string; family: string }> = {
   "work-sans": { variable: workSans.variable, family: "var(--f-work-sans), system-ui, sans-serif" },
   "dm-sans": { variable: dmSans.variable, family: "var(--f-dm-sans), system-ui, sans-serif" },
   fredoka: { variable: fredoka.variable, family: "var(--f-fredoka), system-ui, sans-serif" },
+  quicksand: { variable: quicksand.variable, family: "var(--f-quicksand), system-ui, sans-serif" },
   "exo-2": { variable: exo2.variable, family: "var(--f-exo-2), system-ui, sans-serif" },
 };
 

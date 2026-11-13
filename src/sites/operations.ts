@@ -74,6 +74,7 @@ export function applyOperation(doc: BioDocument, op: Operation): BioDocument {
         "shine",
         "effects",
         "darkPanels",
+        "layout",
       ] as const) {
         if (doc.theme[k] !== undefined)
           Object.assign(next.theme, { [k]: structuredClone(doc.theme[k]) });
@@ -162,6 +163,8 @@ export const NEW_BLOCK_TYPES = {
   team: "Equipe (Meu time)",
   quote: "Pedir orçamento (perguntas → WhatsApp)",
   videos: "Vídeos em destaque (Meus trabalhos)",
+  stories: "Destaques em círculo (stories)",
+  promos: "Ofertas (faixas com botão)",
 } as const;
 export type NewBlockType = keyof typeof NEW_BLOCK_TYPES;
 
@@ -292,6 +295,47 @@ export function newBlock(
             autoplay: true,
           }
         : null;
+    case "stories":
+      // Um destaque com um quadro (a primeira imagem); o operador completa no painel.
+      return firstImage
+        ? {
+            id: uniqueBlockId(doc, "destaques"),
+            type: "stories",
+            hidden: false,
+            title: "Destaques",
+            items: [
+              {
+                id: "s1",
+                name: "Ofertas",
+                cover: firstImage,
+                slides: [
+                  {
+                    id: "q1",
+                    image: firstImage,
+                    title: "Oferta da semana",
+                    button: "Quero esta oferta",
+                  },
+                ],
+              },
+            ],
+          }
+        : null;
+    case "promos":
+      return {
+        id: uniqueBlockId(doc, "ofertas"),
+        type: "promos",
+        hidden: false,
+        items: [
+          {
+            id: "o1",
+            size: "large",
+            tag: "Só esta semana",
+            title: "Oferta da semana",
+            text: "Escreva aqui o que está em promoção.",
+            button: "Quero essa oferta",
+          },
+        ],
+      };
     case "text":
       return {
         id: uniqueBlockId(doc, "texto"),

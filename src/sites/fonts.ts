@@ -11,6 +11,8 @@ export const FONTS = {
   "dm-sans": { label: "DM Sans", category: "sans" },
   /** Arredondada e alegre (ramos infantis, festas); só para títulos. */
   fredoka: { label: "Fredoka", category: "sans" },
+  /** Arredondada e limpa (óticas, lojas de bairro; combina com logos de letra redonda). */
+  quicksand: { label: "Quicksand", category: "sans" },
   /** Esportiva e inclinada (oficinas, autopeças, academias); só para títulos, sempre em itálico. */
   "exo-2": { label: "Exo 2 (esportiva)", category: "sans", italic: true },
 } as const satisfies Record<string, { label: string; category: string; italic?: boolean }>;

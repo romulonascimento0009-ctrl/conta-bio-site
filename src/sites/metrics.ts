@@ -74,6 +74,11 @@ export const TARGET_LABEL: Record<string, string> = {
   "catalog:add": "Catálogo: adicionou ao pedido",
   "catalog:order": "Catálogo: pedido enviado pelo WhatsApp",
   "catalog:book": "Catálogo: tocou em Agendar",
+  "catalog:view": "Vitrine: abriu o produto",
+  "catalog:whatsapp": "Vitrine: pediu o produto pelo WhatsApp",
+  stories: "Destaques: abriu",
+  "stories:whatsapp": "Destaques: tocou no botão do WhatsApp",
+  promo: "Ofertas: tocou",
   team: "Equipe (abrir perfis)",
   "team:book": "Equipe: agendar com a pessoa",
   quote: "Orçamento (abrir perguntas)",
@@ -106,15 +111,20 @@ export function trackTargets(doc: BioDocument): Map<string, { target: string; la
       // Catálogo: abrir categoria, adicionar cada produto (só o primeiro toque) e enviar o pedido;
       // no modo "Agendar", o toque em Agendar de cada serviço.
       const book = b.mode === "book";
+      // Vitrine (só no layout Vitrine; nos outros funciona como pedido): abrir a ficha e pedir.
+      const shop = b.mode === "shop" && doc.theme.layout === "shop";
       for (const c of b.categories) {
-        map.set(`k:${c.id}`, { target: "catalog", label: c.name });
-        for (const p of c.products)
+        if (!shop) map.set(`k:${c.id}`, { target: "catalog", label: c.name });
+        for (const p of c.products) {
+          const label = `${p.name} (${c.name})`;
           map.set(`p:${c.id}:${p.id}`, {
-            target: book ? "catalog:book" : "catalog:add",
-            label: `${p.name} (${c.name})`,
+            target: shop ? "catalog:view" : book ? "catalog:book" : "catalog:add",
+            label,
           });
+          if (shop) map.set(`w:${c.id}:${p.id}`, { target: "catalog:whatsapp", label });
+        }
       }
-      if (!book)
+      if (!book && !shop)
         map.set("order", { target: "catalog:order", label: TARGET_LABEL["catalog:order"] });
     } else if (b.type === "quote") {
       map.set(`b:${b.id}`, { target: "quote", label: b.title });
@@ -124,6 +134,14 @@ export function trackTargets(doc: BioDocument): Map<string, { target: string; la
       b.videos.forEach((v, i) =>
         map.set(`v:${b.id}:${i}`, { target: "videos", label: v.title ?? `Vídeo ${i + 1}` }),
       );
+    } else if (b.type === "stories") {
+      for (const s of b.items) {
+        map.set(`d:${b.id}:${s.id}`, { target: "stories", label: s.name });
+        if (s.slides.some((sl) => sl.button))
+          map.set(`dw:${b.id}:${s.id}`, { target: "stories:whatsapp", label: s.name });
+      }
+    } else if (b.type === "promos") {
+      for (const p of b.items) map.set(`o:${b.id}:${p.id}`, { target: "promo", label: p.title });
     } else if (b.type === "team") {
       map.set(`b:${b.id}`, { target: "team", label: b.title });
       for (const m of b.members)

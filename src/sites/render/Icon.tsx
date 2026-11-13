@@ -1,6 +1,7 @@
 import type { IconId } from "@/sites/icons";
 
-type UiIcon = "share" | "chevron" | "qr" | "wifi" | "clock" | "photos" | "pin-outline" | "copy";
+type UiIcon =
+  "share" | "chevron" | "qr" | "wifi" | "clock" | "photos" | "pin-outline" | "copy" | "rotate";
 
 const stroke = {
   fill: "none",
@@ -11,6 +12,13 @@ const stroke = {
 } as const;
 
 const PATHS: Record<IconId | UiIcon, React.ReactNode> = {
+  /** Outros ângulos (Vitrine). */
+  rotate: (
+    <g {...stroke}>
+      <path d="M21 12a9 9 0 1 1-3-6.7" />
+      <path d="M21 4v5h-5" />
+    </g>
+  ),
   instagram: (
     <g {...stroke}>
       <rect x="3" y="3" width="18" height="18" rx="5" />

@@ -16,6 +16,9 @@ import {
   MAX_CATALOG_CATEGORIES,
   MAX_CATALOG_PRODUCTS,
   MAX_PRODUCT_MEDIA,
+  MAX_PROMOS,
+  MAX_STORIES,
+  MAX_STORY_SLIDES,
   MAX_QUOTE_OPTIONS,
   MAX_QUOTE_QUESTIONS,
   MAX_TEAM_MEMBERS,
@@ -28,7 +31,10 @@ import {
   type Hero,
   type LinkAction,
   type MediaItem,
+  type PromoItem,
   type QuoteQuestion,
+  type StoryItem,
+  type StorySlide,
   type TeamMember,
 } from "@/sites/bio";
 import { formatPrice, nextItemId, parsePrice } from "@/sites/catalog";
@@ -424,7 +430,11 @@ function blockLabel(b: Block): string {
                     ? "Orçamento"
                     : b.type === "videos"
                       ? "Vídeos"
-                      : "Texto";
+                      : b.type === "stories"
+                        ? "Destaques"
+                        : b.type === "promos"
+                          ? "Ofertas"
+                          : "Texto";
   const title = "title" in b && b.title ? b.title : "";
   return title && title !== kind ? `${title} · ${kind}` : kind;
 }
@@ -537,7 +547,10 @@ export function BlocksPanel({
           type="button"
           onClick={add}
           disabled={
-            ((newType === "gallery" || newType === "catalog" || newType === "team") &&
+            ((newType === "gallery" ||
+              newType === "catalog" ||
+              newType === "team" ||
+              newType === "stories") &&
               !assets.length) ||
             (newType === "catalog" && doc.blocks.some((b) => b.type === "catalog")) ||
             (newType === "videos" && !videos.length)
@@ -549,7 +562,10 @@ export function BlocksPanel({
         {newType === "catalog" && doc.blocks.some((b) => b.type === "catalog") && (
           <p className="text-xs text-muted">Este Bio Site já tem um catálogo.</p>
         )}
-        {(newType === "gallery" || newType === "catalog" || newType === "team") &&
+        {(newType === "gallery" ||
+          newType === "catalog" ||
+          newType === "team" ||
+          newType === "stories") &&
           !assets.length && <p className="text-xs text-muted">Envie imagens antes.</p>}
         {newType === "videos" && !videos.length && (
           <p className="text-xs text-muted">Envie vídeos antes (aba Imagens → Vídeos).</p>
@@ -823,7 +839,11 @@ function BlockEditor({
         </Section>
       );
     case "catalog":
-      return <CatalogEditor block={block} assets={assets} videos={videos} set={set} />;
+      return <CatalogEditor block={block} doc={doc} assets={assets} videos={videos} set={set} />;
+    case "stories":
+      return <StoriesEditor block={block} doc={doc} assets={assets} set={set} />;
+    case "promos":
+      return <PromosEditor block={block} doc={doc} assets={assets} set={set} />;
     case "team":
       return <TeamEditor block={block} assets={assets} set={set} />;
     case "quote":
@@ -847,9 +867,396 @@ function BlockEditor({
             maxLength={1000}
             hint="Deixe uma linha em branco para separar parágrafos."
           />
+          <Check
+            label="Mostrar o endereço (Contato) embaixo do texto (Vitrine)"
+            checked={!!block.showAddress}
+            onChange={(v) => set({ showAddress: v || undefined }, "showAddress")}
+          />
         </Section>
       );
   }
+}
+
+/* ---------- Vitrine: destaques e ofertas ---------- */
+
+/** Aviso nos blocos que só aparecem no layout Vitrine. */
+function ShopOnly({ doc }: { doc: BioDocument }) {
+  if (doc.theme.layout === "shop") return null;
+  return (
+    <p role="note" className="rounded bg-amber-50 p-2 text-sm text-amber-900">
+      Este bloco só aparece no layout Vitrine (Aparência → Tipo de página).
+    </p>
+  );
+}
+
+function StoriesEditor({
+  block,
+  doc,
+  assets,
+  set,
+}: {
+  block: BlockOf<"stories">;
+  doc: BioDocument;
+  assets: EditorAsset[];
+  set: (patch: Record<string, unknown>, field: string) => void;
+}) {
+  const items = block.items;
+  const ref = (id: string | undefined) => {
+    const a = id ? assets.find((x) => x.id === id) : undefined;
+    return a ? { assetId: a.id, alt: a.alt } : undefined;
+  };
+  const first = assets[0] && { assetId: assets[0].id, alt: assets[0].alt };
+  const setItems = (next: StoryItem[], field: string) => set({ items: next }, `items.${field}`);
+  const updItem = (i: number, patch: Partial<StoryItem>, field: string) =>
+    setItems(
+      items.map((x, j) => (j === i ? clean({ ...x, ...patch }) : x)),
+      `${i}.${field}`,
+    );
+  return (
+    <Section title="Destaques em círculo">
+      <ShopOnly doc={doc} />
+      <TextField
+        label="Nome do grupo (leitores de tela)"
+        value={block.title}
+        onChange={(v) => set({ title: v }, "title")}
+        maxLength={40}
+      />
+      <p className="text-xs text-muted">
+        Cada destaque abre em tela cheia, como os stories do Instagram, e troca de quadro sozinho a
+        cada 5 s. Quadro com texto no botão abre o WhatsApp de Contato. Até {MAX_STORIES} destaques
+        com {MAX_STORY_SLIDES} quadros cada. Use fotos em pé (9:16) nos quadros.
+      </p>
+      {items.map((s, i) => (
+        <details key={s.id} open={i === 0} className="rounded-md border border-border p-3">
+          <summary className="cursor-pointer text-sm font-semibold">
+            {s.name} · {s.slides.length} {s.slides.length === 1 ? "quadro" : "quadros"}
+          </summary>
+          <div className="mt-3 grid gap-3">
+            <TextField
+              label="Nome (embaixo do círculo)"
+              value={s.name}
+              onChange={(v) => updItem(i, { name: v }, "name")}
+              maxLength={20}
+            />
+            <ImagePicker
+              label="Foto do círculo"
+              assets={assets}
+              value={s.cover.assetId}
+              onChange={(id) => {
+                const img = ref(id);
+                if (img) updItem(i, { cover: img }, "cover");
+              }}
+            />
+            <div className="flex flex-wrap gap-2 text-sm">
+              <button
+                type="button"
+                disabled={i === 0}
+                onClick={() => setItems(moved(items, i, -1), "order")}
+                className="rounded border border-border px-2 py-1 disabled:opacity-30"
+              >
+                ↑ Subir destaque
+              </button>
+              <button
+                type="button"
+                disabled={i === items.length - 1}
+                onClick={() => setItems(moved(items, i, 1), "order")}
+                className="rounded border border-border px-2 py-1 disabled:opacity-30"
+              >
+                ↓ Descer
+              </button>
+              <button
+                type="button"
+                disabled={items.length === 1}
+                onClick={() =>
+                  setItems(
+                    items.filter((_, j) => j !== i),
+                    "remove",
+                  )
+                }
+                className="rounded px-2 py-1 text-danger disabled:opacity-30"
+              >
+                Remover destaque
+              </button>
+            </div>
+            <ol className="grid gap-3">
+              {s.slides.map((sl, k) => {
+                const updSlide = (patch: Partial<StorySlide>, field: string) =>
+                  updItem(
+                    i,
+                    { slides: s.slides.map((x, m) => (m === k ? clean({ ...x, ...patch }) : x)) },
+                    `slides.${k}.${field}`,
+                  );
+                return (
+                  <li key={sl.id} className="grid gap-2 rounded-md bg-slate-50 p-2">
+                    <ImagePicker
+                      label={`Quadro ${k + 1} — foto`}
+                      assets={assets}
+                      value={sl.image.assetId}
+                      onChange={(id) => {
+                        const img = ref(id);
+                        if (img) updSlide({ image: img }, "image");
+                      }}
+                    />
+                    <TextField
+                      label={`Quadro ${k + 1} — etiqueta (opcional)`}
+                      value={sl.tag ?? ""}
+                      placeholder="Ex.: Só hoje"
+                      onChange={(v) => updSlide({ tag: v }, "tag")}
+                      maxLength={24}
+                    />
+                    <TextField
+                      label={`Quadro ${k + 1} — título (opcional)`}
+                      value={sl.title ?? ""}
+                      onChange={(v) => updSlide({ title: v }, "title")}
+                      maxLength={60}
+                    />
+                    <TextField
+                      label={`Quadro ${k + 1} — texto (opcional)`}
+                      value={sl.text ?? ""}
+                      onChange={(v) => updSlide({ text: v }, "text")}
+                      maxLength={140}
+                    />
+                    <TextField
+                      label={`Quadro ${k + 1} — botão do WhatsApp (vazio = sem botão)`}
+                      value={sl.button ?? ""}
+                      placeholder="Ex.: Quero esta oferta"
+                      onChange={(v) => updSlide({ button: v }, "button")}
+                      maxLength={30}
+                    />
+                    <div className="flex flex-wrap gap-2 text-sm">
+                      <button
+                        type="button"
+                        disabled={k === 0}
+                        aria-label={`Subir quadro ${k + 1}`}
+                        onClick={() => updItem(i, { slides: moved(s.slides, k, -1) }, "order")}
+                        className="rounded border border-border px-2 py-1 disabled:opacity-30"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        disabled={k === s.slides.length - 1}
+                        aria-label={`Descer quadro ${k + 1}`}
+                        onClick={() => updItem(i, { slides: moved(s.slides, k, 1) }, "order")}
+                        className="rounded border border-border px-2 py-1 disabled:opacity-30"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        disabled={s.slides.length === 1}
+                        onClick={() =>
+                          updItem(i, { slides: s.slides.filter((_, m) => m !== k) }, "remove")
+                        }
+                        className="rounded px-2 py-1 text-danger disabled:opacity-30"
+                      >
+                        Remover quadro
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+            <button
+              type="button"
+              disabled={!first || s.slides.length >= MAX_STORY_SLIDES}
+              onClick={() =>
+                first &&
+                updItem(
+                  i,
+                  {
+                    slides: [
+                      ...s.slides,
+                      {
+                        id: nextItemId(
+                          s.slides.map((x) => x.id),
+                          "q",
+                        ),
+                        image: first,
+                      },
+                    ],
+                  },
+                  "add",
+                )
+              }
+              className="justify-self-start rounded-md border border-border bg-white px-3 py-2 text-sm font-medium disabled:opacity-50"
+            >
+              + Adicionar quadro ({s.slides.length}/{MAX_STORY_SLIDES})
+            </button>
+          </div>
+        </details>
+      ))}
+      <button
+        type="button"
+        disabled={!first || items.length >= MAX_STORIES}
+        onClick={() =>
+          first &&
+          setItems(
+            [
+              ...items,
+              {
+                id: nextItemId(
+                  items.map((x) => x.id),
+                  "s",
+                ),
+                name: "Novo destaque",
+                cover: first,
+                slides: [{ id: "q1", image: first }],
+              },
+            ],
+            "add",
+          )
+        }
+        className="justify-self-start rounded-md border border-border bg-white px-4 py-2 text-sm font-medium disabled:opacity-50"
+      >
+        + Adicionar destaque
+      </button>
+    </Section>
+  );
+}
+
+function PromosEditor({
+  block,
+  doc,
+  assets,
+  set,
+}: {
+  block: BlockOf<"promos">;
+  doc: BioDocument;
+  assets: EditorAsset[];
+  set: (patch: Record<string, unknown>, field: string) => void;
+}) {
+  const items = block.items;
+  const setItems = (next: PromoItem[], field: string) => set({ items: next }, `items.${field}`);
+  const upd = (i: number, patch: Partial<PromoItem>, field: string) =>
+    setItems(
+      items.map((x, j) => (j === i ? clean({ ...x, ...patch }) : x)),
+      `${i}.${field}`,
+    );
+  return (
+    <Section title="Ofertas">
+      <ShopOnly doc={doc} />
+      <p className="text-xs text-muted">
+        A oferta grande fica num quadro escuro com botão; as pequenas, lado a lado em cartões
+        claros. Tocar abre o WhatsApp com o título da oferta. Imagem com fundo transparente (PNG)
+        fica melhor. Até {MAX_PROMOS} ofertas.
+      </p>
+      {items.map((p, i) => (
+        <div key={p.id} className="grid gap-2 rounded-md bg-slate-50 p-2">
+          <Select
+            label={`Oferta ${i + 1} — tamanho`}
+            value={p.size}
+            options={[
+              { value: "large", label: "Grande (quadro escuro com botão)" },
+              { value: "small", label: "Pequena (cartão claro, lado a lado)" },
+            ]}
+            onChange={(v) =>
+              upd(
+                i,
+                v === "small" ? { size: v, button: undefined, tag: undefined } : { size: v },
+                "size",
+              )
+            }
+          />
+          {p.size === "large" && (
+            <TextField
+              label={`Oferta ${i + 1} — etiqueta (opcional)`}
+              value={p.tag ?? ""}
+              placeholder="Ex.: Só esta semana"
+              onChange={(v) => upd(i, { tag: v }, "tag")}
+              maxLength={24}
+            />
+          )}
+          <TextField
+            label={`Oferta ${i + 1} — título`}
+            value={p.title}
+            onChange={(v) => upd(i, { title: v }, "title")}
+            maxLength={60}
+          />
+          <TextField
+            label={`Oferta ${i + 1} — texto (opcional)`}
+            value={p.text ?? ""}
+            onChange={(v) => upd(i, { text: v }, "text")}
+            maxLength={120}
+          />
+          {p.size === "large" && (
+            <TextField
+              label={`Oferta ${i + 1} — botão`}
+              value={p.button ?? ""}
+              placeholder="Quero essa oferta"
+              onChange={(v) => upd(i, { button: v }, "button")}
+              maxLength={30}
+            />
+          )}
+          <ImagePicker
+            label={`Oferta ${i + 1} — imagem no canto (opcional)`}
+            assets={assets}
+            value={p.image?.assetId}
+            onChange={(id) => {
+              const a = id ? assets.find((x) => x.id === id) : undefined;
+              upd(i, { image: a ? { assetId: a.id, alt: "" } : undefined }, "image");
+            }}
+          />
+          <div className="flex flex-wrap gap-2 text-sm">
+            <button
+              type="button"
+              disabled={i === 0}
+              aria-label={`Subir oferta ${i + 1}`}
+              onClick={() => setItems(moved(items, i, -1), "order")}
+              className="rounded border border-border px-2 py-1 disabled:opacity-30"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              disabled={i === items.length - 1}
+              aria-label={`Descer oferta ${i + 1}`}
+              onClick={() => setItems(moved(items, i, 1), "order")}
+              className="rounded border border-border px-2 py-1 disabled:opacity-30"
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              disabled={items.length === 1}
+              onClick={() =>
+                setItems(
+                  items.filter((_, j) => j !== i),
+                  "remove",
+                )
+              }
+              className="rounded px-2 py-1 text-danger disabled:opacity-30"
+            >
+              Remover oferta
+            </button>
+          </div>
+        </div>
+      ))}
+      <button
+        type="button"
+        disabled={items.length >= MAX_PROMOS}
+        onClick={() =>
+          setItems(
+            [
+              ...items,
+              {
+                id: nextItemId(
+                  items.map((x) => x.id),
+                  "o",
+                ),
+                size: "small",
+                title: "Nova oferta",
+              },
+            ],
+            "add",
+          )
+        }
+        className="justify-self-start rounded-md border border-border bg-white px-4 py-2 text-sm font-medium disabled:opacity-50"
+      >
+        + Adicionar oferta
+      </button>
+    </Section>
+  );
 }
 
 /* ---------- Catálogo ---------- */
@@ -916,12 +1323,15 @@ function ProductMedia({
   assets,
   videos,
   onChange,
+  titles,
 }: {
   label: string;
   media: MediaItem[];
   assets: EditorAsset[];
   videos: EditorVideo[];
   onChange: (media: MediaItem[] | undefined, field: string) => void;
+  /** Vitrine: nome de cada ângulo (ex.: "Diagonal") nas miniaturas da ficha. */
+  titles?: boolean;
 }) {
   const full = media.length >= MAX_PRODUCT_MEDIA;
   const has = (m: MediaItem, id: string) =>
@@ -989,36 +1399,57 @@ function ProductMedia({
       {videos.length === 0 && (
         <p className="text-xs text-muted">Para usar vídeos, envie-os na aba Imagens → Vídeos.</p>
       )}
-      {media.map((m, i) => (
-        <TextField
-          key={m.kind === "image" ? m.assetId : m.videoId}
-          label={`${m.kind === "image" ? "Foto" : "Vídeo"} ${i + 2} — legenda (opcional)`}
-          value={m.caption ?? ""}
-          onChange={(v) =>
-            onChange(
-              media.map((x, j) => (j === i ? clean({ ...x, caption: v }) : x)),
-              `media.${i}.caption`,
-            )
-          }
-          maxLength={240}
-        />
-      ))}
+      {media.map((m, i) =>
+        titles ? (
+          m.kind === "image" && (
+            <TextField
+              key={m.assetId}
+              label={`Foto ${i + 2} — nome do ângulo`}
+              value={m.title ?? ""}
+              placeholder="Ex.: Diagonal, Lateral"
+              onChange={(v) =>
+                onChange(
+                  media.map((x, j) => (j === i ? clean({ ...x, title: v }) : x)),
+                  `media.${i}.title`,
+                )
+              }
+              maxLength={60}
+            />
+          )
+        ) : (
+          <TextField
+            key={m.kind === "image" ? m.assetId : m.videoId}
+            label={`${m.kind === "image" ? "Foto" : "Vídeo"} ${i + 2} — legenda (opcional)`}
+            value={m.caption ?? ""}
+            onChange={(v) =>
+              onChange(
+                media.map((x, j) => (j === i ? clean({ ...x, caption: v }) : x)),
+                `media.${i}.caption`,
+              )
+            }
+            maxLength={240}
+          />
+        ),
+      )}
     </fieldset>
   );
 }
 
 function CatalogEditor({
   block,
+  doc,
   assets,
   videos,
   set,
 }: {
   block: BlockOf<"catalog">;
+  doc: BioDocument;
   assets: EditorAsset[];
   videos: EditorVideo[];
   set: (patch: Record<string, unknown>, field: string) => void;
 }) {
   const book = block.mode === "book";
+  const shop = block.mode === "shop";
   const cats = block.categories;
   const setCats = (categories: CatalogCategory[], field: string) =>
     set({ categories }, `categories.${field}`);
@@ -1053,16 +1484,28 @@ function CatalogEditor({
         options={[
           { value: "order", label: "Pedido: carrinho enviado pelo WhatsApp (lojas)" },
           { value: "book", label: "Agendar: botão Agendar em cada serviço (barbearias, salões)" },
+          {
+            value: "shop",
+            label: "Vitrine: grade com filtros e ficha com ângulos (óticas, lojas)",
+          },
         ]}
         onChange={(v) => set({ mode: v === "order" ? undefined : v }, "mode")}
       />
       <p className="text-xs text-muted">
         {book
           ? "Cada serviço mostra o preço e um botão Agendar, que abre o WhatsApp (ou o grupo, sem número) em Contato."
-          : "Quem visita escolhe produtos de várias categorias e envia o pedido inteiro pelo WhatsApp (Contato)."}{" "}
+          : shop
+            ? "Todos os produtos numa grade, com filtros pelas categorias e etiquetas. Tocar abre a ficha com as fotos (ângulos), zoom e “Pedir pelo WhatsApp”."
+            : "Quem visita escolhe produtos de várias categorias e envia o pedido inteiro pelo WhatsApp (Contato)."}{" "}
         Até {MAX_CATALOG_CATEGORIES} categorias com {MAX_CATALOG_PRODUCTS}{" "}
         {book ? "serviços" : "produtos"} cada.
       </p>
+      {shop && doc.theme.layout !== "shop" && (
+        <p role="note" className="rounded bg-amber-50 p-2 text-sm text-amber-900">
+          A grade só aparece no layout Vitrine (Aparência → Tipo de página). Nos outros, o catálogo
+          funciona como Pedido.
+        </p>
+      )}
       {cats.map((c, i) => (
         <details key={c.id} open={i === 0} className="rounded-md border border-border p-3">
           <summary className="cursor-pointer text-sm font-semibold">
@@ -1152,11 +1595,51 @@ function CatalogEditor({
                       cents={p.priceCents}
                       onChange={(v) => updProd({ priceCents: v }, "price")}
                     />
+                    {shop && (
+                      <>
+                        <PriceField
+                          label={`Produto ${k + 1} — preço "de", riscado (opcional)`}
+                          cents={p.compareAtCents}
+                          onChange={(v) => updProd({ compareAtCents: v }, "compareAt")}
+                        />
+                        <ListField
+                          label={`Produto ${k + 1} — etiquetas para os filtros (opcional)`}
+                          hint="Separadas por vírgula, ex.: Feminino, Unissex (até 4)."
+                          multiline={false}
+                          value={p.tags ?? []}
+                          format={(t) => t.join(", ")}
+                          parse={(v) =>
+                            v
+                              .split(",")
+                              .map((x) => x.trim())
+                              .filter(Boolean)
+                              .slice(0, 4)
+                          }
+                          onChange={(tags) =>
+                            updProd({ tags: tags.length ? tags : undefined }, "tags")
+                          }
+                        />
+                        <TextField
+                          label={`Produto ${k + 1} — nome do ângulo da foto principal`}
+                          value={p.image.title ?? ""}
+                          placeholder="Ex.: Frente"
+                          onChange={(v) =>
+                            updProd({ image: clean({ ...p.image, title: v }) }, "image.title")
+                          }
+                          maxLength={60}
+                        />
+                      </>
+                    )}
                     <ProductMedia
-                      label={`Produto ${k + 1} — mais fotos e vídeos (opcional)`}
+                      label={
+                        shop
+                          ? `Produto ${k + 1} — outros ângulos (fotos)`
+                          : `Produto ${k + 1} — mais fotos e vídeos (opcional)`
+                      }
                       media={p.media ?? []}
                       assets={assets}
-                      videos={videos}
+                      videos={shop ? [] : videos}
+                      titles={shop}
                       onChange={(media, field) => updProd({ media }, field)}
                     />
                     <div className="flex flex-wrap gap-2 text-sm">
@@ -2522,8 +3005,50 @@ function StandardDetails({ doc, dispatch }: { doc: BioDocument; dispatch: Dispat
 
 export function LookPanel({ doc, dispatch }: { doc: BioDocument; dispatch: Dispatch }) {
   const th = doc.theme;
+  const shop = th.layout === "shop";
+  const chips = th.chips ?? { bg: "#fccf04", fg: "#062a66" };
   return (
     <div className="grid gap-4">
+      <Section title="Tipo de página">
+        <Select
+          label="Tipo de página"
+          value={th.layout ?? "bio"}
+          options={[
+            { value: "bio", label: "Bio Site (cartões)" },
+            { value: "shop", label: "Vitrine (loja: destaques, ofertas, grade de produtos)" },
+          ]}
+          onChange={(v) =>
+            dispatch({
+              type: "theme",
+              patch: v === "shop" ? { layout: "shop", chips } : { layout: undefined },
+            })
+          }
+        />
+        {shop && (
+          <>
+            <p className="text-xs text-muted">
+              Vitrine: topo com logo e WhatsApp, destaques em círculo, ofertas, catálogo no modo
+              Vitrine, texto, horários e cartões. Wi-Fi, Pix, galerias, equipe, orçamento e vídeos
+              não aparecem. Cores: “Cartões (topo)” é a cor principal (botões, filtros), “Cartões
+              (base)” a escura (ofertas, ficha), Cor 1 o alto da página e Cor 2 o rodapé.
+            </p>
+            <ColorField
+              label="Etiquetas e aros dos destaques"
+              value={chips.bg}
+              onChange={(bg) =>
+                dispatch({ type: "theme", patch: { chips: { ...chips, bg } } }, "theme.chips.bg")
+              }
+            />
+            <ColorField
+              label="Letra das etiquetas"
+              value={chips.fg}
+              onChange={(fg) =>
+                dispatch({ type: "theme", patch: { chips: { ...chips, fg } } }, "theme.chips.fg")
+              }
+            />
+          </>
+        )}
+      </Section>
       <Section title="Tema pronto">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {THEME_IDS.map((id) => {

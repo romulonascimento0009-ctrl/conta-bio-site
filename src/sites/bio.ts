@@ -197,6 +197,13 @@ export const themeSchema = z
      * cartões só nas cores da borda (sem a cor de cada ícone).
      */
     darkPanels: z.boolean().optional(),
+    /**
+     * Vitrine (Ótica do Brasileiro, D57): página de loja no lugar dos cartões — topo compacto (logo,
+     * nome, WhatsApp), destaques em círculo, ofertas, catálogo em grade com filtros e ficha do
+     * produto (ângulos e zoom). Fundo em degradê Cor 1 (glow1) → base → Cor 2 (glow2); cor
+     * principal `cardTop`, escura `cardBottom`, etiquetas em `chips`. Ausente = Bio Site de cartões.
+     */
+    layout: z.enum(["shop"]).optional(),
   })
   .superRefine((t, ctx) => {
     const c = t.colors;
@@ -251,6 +258,18 @@ export const themeSchema = z
         standardCardBase(c.ink),
         "do texto branco sobre os cartões (cor do texto dos painéis)",
       );
+    }
+    if (t.layout === "shop") {
+      // Texto direto sobre o degradê da página (alto, meio e rodapé) e links na cor principal.
+      for (const [bg, name] of [
+        [c.glow1, "Cor 1 (alto da página)"],
+        [c.base, "fundo da página"],
+        [c.glow2, "Cor 2 (rodapé)"],
+      ] as const) {
+        checkContrast(ctx, ["colors", "ink"], c.ink, bg, `do texto sobre ${name}`);
+        checkContrast(ctx, ["colors", "inkMuted"], c.inkMuted, bg, `do texto suave sobre ${name}`);
+      }
+      checkContrast(ctx, ["colors", "cardTop"], c.cardTop, WHITE, "da cor principal sobre branco");
     }
     if (isItalicFont(t.fonts.body)) {
       ctx.addIssue({
@@ -480,6 +499,10 @@ export const catalogProduct = z.object({
   image: imageRef,
   /** Mais fotos e vídeos do produto/serviço, depois da foto principal (abrem ao tocar na foto). */
   media: z.array(mediaItem).max(MAX_PRODUCT_MEDIA).optional(),
+  /** Vitrine: preço "de" riscado (maior que o preço); o desconto em % aparece na foto. */
+  compareAtCents: z.int().min(0).max(10_000_000).optional(),
+  /** Vitrine: filtros extras além da categoria (ex.: "Feminino", "Unissex"). */
+  tags: z.array(text(20)).max(4).optional(),
 });
 export const catalogCategory = z.object({
   id: itemId,
@@ -499,9 +522,12 @@ export const catalogBlock = z
     subtitle: optText(120),
     /**
      * "order" (ausente) = carrinho e pedido pelo WhatsApp; "book" = serviços com preço e botão
-     * "Agendar" em cada um, sem carrinho (abre o WhatsApp ou o grupo).
+     * "Agendar" em cada um, sem carrinho (abre o WhatsApp ou o grupo). "shop" = vitrine em grade
+     * com filtros (categorias e etiquetas); tocar no produto abre a ficha com as fotos (ângulos,
+     * título de cada foto), zoom e "Pedir pelo WhatsApp" (só no layout Vitrine; nos outros, como
+     * "order").
      */
-    mode: z.enum(["order", "book"]).optional(),
+    mode: z.enum(["order", "book", "shop"]).optional(),
     categories: z.array(catalogCategory).min(1).max(MAX_CATALOG_CATEGORIES),
   })
   .superRefine((b, ctx) => {
@@ -519,7 +545,98 @@ export const catalogBlock = z
             message: "id repetido",
           });
         prods.add(p.id);
+        if (
+          p.compareAtCents !== undefined &&
+          (p.priceCents === undefined || p.compareAtCents <= p.priceCents)
+        )
+          ctx.addIssue({
+            code: "custom",
+            path: ["categories", i, "products", j, "compareAtCents"],
+            message: `“${p.name}”: o preço "de" precisa ser maior que o preço`,
+          });
       });
+    });
+  });
+
+/**
+ * Destaques em círculo (estilo stories do Instagram, Ótica do Brasileiro): cada destaque abre um
+ * visualizador em tela cheia com seus quadros (troca sozinho a cada 5 s; tocar nas laterais
+ * avança/volta). Quadro com botão abre o WhatsApp com o nome do destaque na mensagem.
+ */
+export const MAX_STORIES = 10;
+export const MAX_STORY_SLIDES = 8;
+export const storySlide = z.object({
+  id: itemId,
+  image: imageRef,
+  tag: optText(24),
+  title: optText(60),
+  text: optText(140),
+  /** Texto do botão do WhatsApp (ausente = sem botão). */
+  button: optText(30),
+});
+export type StorySlide = z.infer<typeof storySlide>;
+export const storyItem = z.object({
+  id: itemId,
+  name: text(20),
+  cover: imageRef,
+  slides: z.array(storySlide).min(1).max(MAX_STORY_SLIDES),
+});
+export type StoryItem = z.infer<typeof storyItem>;
+export const storiesBlock = z
+  .object({
+    ...blockBase,
+    type: z.literal("stories"),
+    title: text(40).default("Destaques"),
+    items: z.array(storyItem).min(1).max(MAX_STORIES),
+  })
+  .superRefine((b, ctx) => {
+    const ids = new Set<string>();
+    b.items.forEach((s, i) => {
+      if (ids.has(s.id))
+        ctx.addIssue({ code: "custom", path: ["items", i, "id"], message: "id repetido" });
+      ids.add(s.id);
+      const slides = new Set<string>();
+      s.slides.forEach((sl, j) => {
+        if (slides.has(sl.id))
+          ctx.addIssue({
+            code: "custom",
+            path: ["items", i, "slides", j, "id"],
+            message: "id repetido",
+          });
+        slides.add(sl.id);
+      });
+    });
+  });
+
+/**
+ * Ofertas (vitrine): faixa grande escura com botão e faixas pequenas claras lado a lado. Tocar
+ * abre o WhatsApp com o título da oferta na mensagem.
+ */
+export const MAX_PROMOS = 6;
+export const promoItem = z.object({
+  id: itemId,
+  size: z.enum(["large", "small"]),
+  tag: optText(24),
+  title: text(60),
+  text: optText(120),
+  /** Só na grande: texto do botão (ausente = "Quero essa oferta"). */
+  button: optText(30),
+  /** Desenho/foto recortada no canto (PNG transparente fica melhor). */
+  image: imageRef.optional(),
+});
+export type PromoItem = z.infer<typeof promoItem>;
+export const promosBlock = z
+  .object({
+    ...blockBase,
+    type: z.literal("promos"),
+    items: z.array(promoItem).min(1).max(MAX_PROMOS),
+  })
+  .superRefine((b, ctx) => {
+    const ids = new Set<string>();
+    b.items.forEach((p, i) => {
+      if (ids.has(p.id))
+        ctx.addIssue({ code: "custom", path: ["items", i, "id"], message: "id repetido" });
+      ids.add(p.id);
     });
   });
 
@@ -638,6 +755,8 @@ export const textBlock = z.object({
   type: z.literal("text"),
   title: optText(60),
   body: text(1000),
+  /** Mostra o endereço de Contato embaixo do texto (abre o mapa). */
+  showAddress: z.boolean().optional(),
 });
 
 export const anyBlock = z.discriminatedUnion("type", [
@@ -651,6 +770,8 @@ export const anyBlock = z.discriminatedUnion("type", [
   teamBlock,
   quoteBlock,
   videosBlock,
+  storiesBlock,
+  promosBlock,
 ]);
 export type Block = z.infer<typeof anyBlock>;
 export type BlockOf<T extends Block["type"]> = Extract<Block, { type: T }>;
@@ -815,6 +936,9 @@ export function collectImageRefs(doc: BioDocument): ImageRef[] {
         }
       }
     if (b.type === "team") refs.push(...b.members.map((m) => m.photo));
+    if (b.type === "stories")
+      for (const s of b.items) refs.push(s.cover, ...s.slides.map((sl) => sl.image));
+    if (b.type === "promos") for (const p of b.items) if (p.image) refs.push(p.image);
   }
   return refs;
 }
