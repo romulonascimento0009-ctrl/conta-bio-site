@@ -370,11 +370,12 @@
   font-size: 14px;
   text-decoration: none;
 }
+/* Imagem no canto sem passar por baixo do texto (coluna de 58%). */
 .shop-offer .shop-art {
   position: absolute;
-  right: -40px;
-  bottom: -20px;
-  width: 220px;
+  right: -36px;
+  bottom: -28px;
+  width: 172px;
 }
 .shop-strips {
   display: grid;
@@ -390,7 +391,7 @@
   height: 100%;
   min-height: 112px;
   overflow: hidden;
-  padding: 14px 14px 52px;
+  padding: 14px 14px 76px;
   border-radius: 16px;
   background: var(--shop-white);
   color: var(--ink);
@@ -411,9 +412,9 @@
 }
 .shop-strip .shop-art {
   position: absolute;
-  right: -10px;
-  bottom: -4px;
-  width: 92px;
+  right: -8px;
+  bottom: -8px;
+  width: 80px;
 }
 
 /* Catálogo */
