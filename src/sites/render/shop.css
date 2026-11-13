@@ -727,9 +727,13 @@
   justify-content: space-between;
   gap: 12px;
 }
+.shop-hours dt {
+  flex: none;
+}
 .shop-hours dd {
   margin: 0;
   font-weight: 600;
+  text-align: right;
 }
 
 /* Cartões */
